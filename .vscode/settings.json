@@ -1,0 +1,5 @@
+{
+    "C_Cpp.default.compilerPath": "arm-none-eabi-gcc.exe",
+    "C_Cpp.default.intelliSenseMode": "gcc-arm",
+    "C_Cpp.default.cStandard": "c11",
+}
