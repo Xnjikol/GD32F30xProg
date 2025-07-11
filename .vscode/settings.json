@@ -2,4 +2,6 @@
     "C_Cpp.default.compilerPath": "arm-none-eabi-gcc.exe",
     "C_Cpp.default.intelliSenseMode": "gcc-arm",
     "C_Cpp.default.cStandard": "c11",
+    "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
+    "cortex-debug.variableUseNaturalFormat": true,
 }

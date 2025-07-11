@@ -46,7 +46,7 @@
 			},
 			"command": "",
 			"args": [
-				"${workspaceFolder}/tools/a2ltool.exe",
+				"${workspaceFolder}/utils/a2ltool.exe",
 				"--create",
 				"--elffile",
 				"build/${workspaceFolderBasename}.elf",
@@ -58,7 +58,7 @@
 				"build/${workspaceFolderBasename}.a2l",
 				"&&",
 				"python",
-				"tools/A2LFilter.py",
+				"utils/A2LFilter.py",
 				"--input",
 				"build/${workspaceFolderBasename}.a2l",
 				"--output",
