@@ -29,7 +29,7 @@ void relay_init(void);
 int main(void)
 {
     systick_config(); // systick provides delay_ms
-    TIM1_Init(); // TIM1 provides delay_us
+    TIM1_Init();      // TIM1 provides delay_us
     DWT_Init();
     /* initialize Serial port */
     USART_Init(&husart0);
