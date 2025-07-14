@@ -57,11 +57,12 @@
 				"--output",
 				"build/${workspaceFolderBasename}.a2l",
 				"&&",
-				"python",
-				"utils/A2LFilter.py",
-				"--input",
+				"powershell",
+				"-File",
+				"utils/A2LFilter.ps1",
+				"-InputFile",
 				"build/${workspaceFolderBasename}.a2l",
-				"--output",
+				"-OutputFile",
 				"build/${workspaceFolderBasename}.a2l"
 			],
 			"group": {
