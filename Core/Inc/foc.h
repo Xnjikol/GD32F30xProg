@@ -3,6 +3,14 @@
 
 #include "main.h"
 
+/* 前向声明 */
+typedef struct SensorlessManager_t SensorlessManager_t;
+
+/* 位置传感器类型定义 */
+#define RESOLVER_POSITION    /* 旋转变压器 */
+//#define ENCODER_POSITION   /* 编码器 */
+//#define SENSORLESS_POSITION /* 无位置传感器 */
+
 /*  Gate polarity definition */
 #ifndef GATE_POLARITY_HIGH_ACTIVE
 #ifndef GATE_POLARITY_LOW_ACTIVE
@@ -62,6 +70,7 @@ typedef enum
     VF_MODE,
     IF_MODE,
     Speed_Mode,
+    Sensorless_Mode,  // 添加无位置传感器模式
     EXIT,
     space
 } FOC_Mode;
@@ -142,6 +151,7 @@ typedef struct
     float_t Iq_ref;
     float_t PWM_ARR; /* PWM period */
     FOC_Mode Mode;   // 当前控制模式
+    uint8_t SensorlessEnabled;  // 无位置传感器使能标志
 } FOC_Parameter_t;
 
 typedef struct
@@ -170,6 +180,8 @@ extern FOC_Parameter_t FOC_Parameter;
 
 void Gate_state(void);
 void FOC_Main(void);
+void FOC_Sensorless_Init(void);  // 无位置传感器初始化
+void FOC_Sensorless_Update(void); // 无位置传感器更新
 void ClarkeTransform(float_t Ia, float_t Ib, float_t Ic, Clarke_t *out);
 void ParkTransform(float_t Ialpha, float_t Ibeta, float_t theta, Park_t *out);
 void InvParkTransform(float_t Ud, float_t Uq, float_t theta, InvPark_t *out);

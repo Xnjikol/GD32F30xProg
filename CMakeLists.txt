@@ -117,6 +117,9 @@ target_sources(${PROJECT_NAME} PRIVATE
     
     # 应用功能模块
     Core/Src/foc.c           # FOC 电机控制算法
+    Core/Src/filter.c        # 滤波器算法库
+    Core/Src/sensorless.c    # 无位置传感器算法
+    Core/Src/sensorless_interface.c # 无位置传感器接口
     Core/Src/position_sensor.c # 位置传感器处理
     Core/Src/temp_table.c    # 温度查找表
 )
