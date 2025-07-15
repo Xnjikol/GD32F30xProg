@@ -13,7 +13,6 @@
 ```powershell
 winget install -e --id Arm.GnuArmEmbeddedToolchain
 winget install -e --id BrechtSanders.WinLibs.POSIX.UCRT
-winget install -e --id Kitware.CMake
 winget install -e --id Ninja-build.Ninja
 ```
 
