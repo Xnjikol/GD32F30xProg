@@ -47,13 +47,12 @@
 /*       Constants      */
 #define SQRT3 1.73205080757f
 #define SQRT3_2 0.86602540378f /* √3/2 */
-#define T_Main 0.0005f         /* T 2kHz */
-#define T_2kHz 0.0005f         /* T 2kHz */
-#define f_2kHz 2000.0f         /* f 2kHz */
-#define T_1kHz 0.0001f         /* T 1kHz */
-#define T_200Hz 0.005f         /* T 200Hz */
-#define T_10kHz 0.0001f        /* 10kHz sampling time */
-
+#define T_2K_HZ 0.0005f        /* T 2kHz */
+#define F_2K_HZ 2000.0f        /* f 2kHz */
+#define T_1K_HZ 0.0001f        /* T 1kHz */
+#define T_200_HZ 0.005f        /* T 200Hz */
+#define T_10K_HZ 0.0001f       /* 10kHz sampling time */
+#define T_MAIN 0.0005f         /* T 2kHz */
 
 /*    Type Definitions   */
 typedef enum

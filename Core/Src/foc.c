@@ -249,14 +249,14 @@ void Parameter_Init(void)
     Speed_PID.previous_error = 0.0f;
     Speed_PID.integral = 0.0f;
     Speed_PID.output = 0.0f;
-    Speed_PID.Ts = T_2kHz;
-    
+    Speed_PID.Ts = T_2K_HZ;
+
     Speed_Ramp.slope = 50.0f; // limit to 50 rpm/s
     Speed_Ramp.limit_min = -1800.0f;
     Speed_Ramp.limit_max = 1800.0f;
     Speed_Ramp.value = 0.0f;
     Speed_Ramp.target = 0.0f;
-    Speed_Ramp.Ts = T_200Hz;
+    Speed_Ramp.Ts = T_200_HZ;
 
     Id_PID.Kp = 73.8274273f;
     Id_PID.Ki = 408.40704496f;
@@ -267,7 +267,7 @@ void Parameter_Init(void)
     Id_PID.previous_error = 0.0f;
     Id_PID.integral = 0.0f;
     Id_PID.output = 0.0f;
-    Id_PID.Ts = T_2kHz;
+    Id_PID.Ts = T_2K_HZ;
 
     Iq_PID.Kp = 27.646015f;
     Iq_PID.Ki = 408.40704496f;
@@ -278,7 +278,7 @@ void Parameter_Init(void)
     Iq_PID.previous_error = 0.0f;
     Iq_PID.integral = 0.0f;
     Iq_PID.output = 0.0f;
-    Iq_PID.Ts = T_2kHz;
+    Iq_PID.Ts = T_2K_HZ;
 
     VF.Vref_Ud = 0.0f;
     VF.Vref_Uq = 0.0f;
@@ -382,7 +382,7 @@ static inline void Theta_Process(void)
 
     last_theta = theta_mech;
 
-    float Speed = delta_theta * f_2kHz * 60.0f / (2.0f * M_PI);
+    float Speed = delta_theta * F_2K_HZ * 60.0f / (2.0f * M_PI);
     FOC.Speed = LowPassFilter_Update(&Speed_Filter, Speed);
 }
 // !SECTION
@@ -395,7 +395,7 @@ static inline float RampGenerator(RampGenerator_t *ramp)
         ramp->value = 0.0f;
         ramp->target = 0.0f;
     }
-    
+
     float delta = ramp->target - ramp->value;
     float step = ramp->slope * ramp->Ts;
 
@@ -464,7 +464,7 @@ void Set_PWM_Duty(float_t Ta, float_t Tb, float_t Tc, float_t pwm_arr)
 static inline float Get_Theta(float Freq, float Theta)
 {
     // 电角度递推：θ += ω·Ts，ω = 2π·f
-    Theta += 2.0f * M_PI * Freq * T_2kHz;
+    Theta += 2.0f * M_PI * Freq * T_2K_HZ;
     if (Theta > 2.0f * M_PI)
         Theta -= 2.0f * M_PI;
     else if (Theta < 0.0f)
