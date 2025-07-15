@@ -2,7 +2,7 @@
 	"version": "2.0.0",
 	"tasks": [
 		{
-			"label": "Configure Project",
+			"label": "Configure CMake",
 			"type": "shell",
 			"command": "cmake",
 			"args": [
@@ -17,7 +17,7 @@
 			}
 		},
 		{
-			"label": "Build only",
+			"label": "Build Hex File",
 			"type": "shell",
 			"command": "cmake",
 			"args": [
@@ -94,10 +94,10 @@
 			"problemMatcher": []
 		},
 		{
-			"label": "Build and deploy",
+			"label": "Build Whole Project",
 			"dependsOn": [
-				"Configure Project",
-				"Build only",
+				"Configure CMake",
+				"Build Hex File",
 				"Generate A2L"
 			],
 			"dependsOrder": "sequence",
