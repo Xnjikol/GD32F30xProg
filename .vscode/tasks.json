@@ -119,7 +119,7 @@
 				},
 				"cwd": "${workspaceFolder}"
 			},
-			"command": "JLink.exe -CommanderScript .vscode/flash.jlink",
+			"command": "JLink.exe -CommanderScript Utils/flash.jlink",
 			"group": {
 				"kind": "build",
 				"isDefault": false
