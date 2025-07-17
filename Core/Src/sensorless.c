@@ -5,11 +5,13 @@
 /*======================*/
 /*    Global Variables  */
 /*======================*/
+
 Sensorless_t Sensorless;
 
 /*======================*/
 /*    Private Functions */
 /*======================*/
+
 static void Sensorless_AlgorithmSwitch(void);
 static void Sensorless_InitAllAlgorithms(void);
 static inline float Sensorless_WrapTheta2Pi(float angle);

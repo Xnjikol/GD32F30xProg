@@ -40,6 +40,7 @@ static inline void Parameter_Init(void);
 static inline void Theta_Process(void);
 static inline float wrap_theta_2pi(float theta);
 static inline float RampGenerator(RampGenerator_t *ramp);
+static inline void Speed_Loop(RampGenerator_t *Ramp, float Ref, float Fdbk, PID_Controller_t *Handle);
 
 extern uint16_t receive;
 // SECTION - FOC Main
@@ -110,15 +111,7 @@ void FOC_Main(void)
     {
 
         ParkTransform(Clarke.Ialpha, Clarke.Ibeta, FOC.Theta, &Park);
-        static uint16_t Speed_Count = 0;
-        Speed_Count++;
-        if (Speed_Count > 9)
-        {
-            Speed_Count = 0;
-            Speed_Ramp.target = Speed_Ref;
-
-            PID_Controller(RampGenerator(&Speed_Ramp), FOC.Speed, &Speed_PID);
-        }
+        Speed_Loop(&Speed_Ramp, Speed_Ref, FOC.Speed, &Speed_PID);
 
         FOC.Iq_ref = Speed_PID.output;        // Iq_ref = Speed_PID.output
         FOC.Id_ref = 0.37446808 * FOC.Iq_ref; // Id_ref = 0
@@ -145,14 +138,7 @@ void FOC_Main(void)
         ParkTransform(Clarke.Ialpha, Clarke.Ibeta, FOC.Theta, &Park);
 
         /* 速度控制 */
-        static uint16_t Speed_Count = 0;
-        Speed_Count++;
-        if (Speed_Count > 9)
-        {
-            Speed_Count = 0;
-            Speed_Ramp.target = Speed_Ref;
-            PID_Controller(RampGenerator(&Speed_Ramp), FOC.Speed, &Speed_PID);
-        }
+        Speed_Loop(&Speed_Ramp, Speed_Ref, FOC.Speed, &Speed_PID);
 
         FOC.Iq_ref = Speed_PID.output;
         FOC.Id_ref = 0.0f; // 无位置传感器通常设Id_ref=0
@@ -197,7 +183,23 @@ void FOC_Main(void)
     InvParkTransform(FOC.Ud_ref, FOC.Uq_ref, FOC.Theta, &Inv_Park);
     SVPWM_Generate(Inv_Park.Ualpha, Inv_Park.Ubeta, inv_Udc, FOC.PWM_ARR);
 }
-// !SECTION
+
+static inline void Speed_Loop(
+    RampGenerator_t *Ramp,
+    float Ref,
+    float Fdbk,
+    PID_Controller_t *Handle)
+{
+    static uint16_t count = 0;
+    count++;
+    if (count > 9)
+    {
+        count = 0;
+        Ramp->target = Ref;
+        PID_Controller(RampGenerator(Ramp), Fdbk, Handle);
+    }
+}
+
 void Gate_state(void)
 {
 
@@ -396,7 +398,7 @@ void FOC_Sensorless_Update(void)
     {
         current_state = MOTOR_STOP;
     }
-    else if (fabsf(Sensorless_Speed) < 50.0f)
+    else if (ABS(Sensorless_Speed) < 50.0f)
     {
         current_state = MOTOR_LOW_SPEED;
     }
