@@ -43,12 +43,14 @@ typedef struct SensorlessManager_t SensorlessManager_t;
 
 #define COS(x) arm_cos_f32(x)
 #define SIN(x) arm_sin_f32(x)
+#define MOD(x, y) fmodf((x), (y))
 
 #else
 #include <math.h>
 
 #define COS(x) cosf(x)
 #define SIN(x) sinf(x)
+#define MOD(x, y) fmodf((x), (y))
 
 #endif
 
@@ -96,7 +98,7 @@ typedef struct
     uint16_t Position_Scale;
     float Resolver_Pn;
     float inv_MotorPn;
-    float Positon_Offset; // Zero Position
+    float Position_Offset; // Zero Position
 } Motor_Parameter_t;
 
 typedef struct

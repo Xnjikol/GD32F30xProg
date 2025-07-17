@@ -46,18 +46,17 @@
     <hardware_channel>CAN1</hardware_channel>
     <calibration_area include_gaps="true" />
     <file path="E:\Prj\STM32\GD32F30xProg\build\GD32F30xProg.a2l" relative="build\GD32F30xProg.a2l" symbols="true" prompt_before_overwrite="true" enabled="true" load="false" download="false" flash="false" upload="false" save="false" percent_complete="0" operation_in_progress="false">
-      <properties load_memory_type="file_data" time_operation_started="2013-05-01T00:10:05.6640000+08:00" last_time_loaded="2013-05-01T00:10:05.6640000+08:00" disk_properties_error="" exists_on_disk="true" time_disk_modified="2025-07-10T21:31:48.7995696+08:00" size_bytes_on_disk="27977">
+      <properties load_memory_type="file_data" time_operation_started="2013-05-01T01:31:57.2730000+08:00" last_time_loaded="2013-05-01T01:31:57.2730000+08:00" disk_properties_error="" exists_on_disk="true" time_disk_modified="2025-07-17T15:38:13.3092913+08:00" size_bytes_on_disk="52850" last_time_downloaded="0001-01-01T00:00:00.0000000" last_time_flashed="0001-01-01T00:00:00.0000000" last_time_saved="0001-01-01T00:00:00.0000000">
         <upload_area type="manually_defined" manual_regions_contiguous="true" const_regions_contiguous="false">
           <upload_region start_address="Calibration" byte_length="" />
           <upload_region start_address=".cal_sec" byte_length="" />
           <upload_region start_address=".fl_adap" byte_length="" />
           <upload_region start_address=".sdata2" byte_length="" />
         </upload_area>
-        <upload_by_parameters c_template_path="" c_template_relative="">
-        </upload_by_parameters>
+        <upload_by_parameters c_template_path="" c_template_relative="" />
       </properties>
     </file>
-    <window_attributes window_state="normal" details_shown="true">
+    <window_attributes window_state="minimized" details_shown="true">
       <rectangle top="192" left="192" width="709" height="589" />
     </window_attributes>
   </snoop_ecu>
@@ -66,30 +65,23 @@
     <window_attributes window_state="maximized">
       <rectangle top="95" left="193" width="1266" height="814" />
     </window_attributes>
-    <display scope_showing="true" scope_horizontal="false" autohide_buttons="true" scope_split_vertical="0.233019853709509" scope_split_horizontal="0.5" enums="decimal_and_label" pointers="label_or_hex" scope_timebase_sec="1" scope_acq_period_ms="10" scope_exclude_cals_from_daq="true" scope_exclude_unselected_signals_from_daq="true" scope_black_background="false" scope_show_points="true" scope_use_steps="false" scope_autoscale_mode="stacked_separated" />
+    <display scope_showing="true" scope_horizontal="false" autohide_buttons="true" scope_split_vertical="0.282654127481714" scope_split_horizontal="0.5" enums="decimal_and_label" pointers="label_or_hex" scope_timebase_sec="1" scope_acq_period_ms="10" scope_exclude_cals_from_daq="true" scope_exclude_unselected_signals_from_daq="true" scope_black_background="false" scope_show_points="true" scope_use_steps="false" scope_autoscale_mode="stacked_separated" />
     <can_signals dbc_to_timeout_mult="10" no_dbc_period_timeout_ms="3000" />
     <logging target_period_ms="100" filename_style="date_time_sortable" format="compact" can_format="with_variables" enums="decimal" pointers="label_or_hex" logfile_absolute="E:\Prj\STM32\GD32F30xProg\" logfile_relative="" paused_loaded_from_file="false" />
     <columns>
       <column name="ColAddress" index="0" visible="false" visible_scope_on="false" width="40" width_scope_on="40" font_name="Courier New" font_size="8.25" />
-      <column name="ColHex" index="1" visible="false" visible_scope_on="true" width="130" width_scope_on="83" font_name="等距更纱黑体 SC" font_size="7.8" />
-      <column name="ColValue" index="2" visible="true" visible_scope_on="true" width="173" width_scope_on="105" font_name="等距更纱黑体 SC" font_size="7.8" />
-      <column name="ColName" index="3" visible="true" visible_scope_on="true" width="588" width_scope_on="197" font_name="等距更纱黑体 SC" font_size="7.8" />
+      <column name="ColHex" index="1" visible="false" visible_scope_on="true" width="130" width_scope_on="77" font_name="等距更纱黑体 SC" font_size="7.8" />
+      <column name="ColValue" index="2" visible="true" visible_scope_on="true" width="173" width_scope_on="131" font_name="等距更纱黑体 SC" font_size="7.8" />
+      <column name="ColName" index="3" visible="true" visible_scope_on="true" width="588" width_scope_on="259" font_name="等距更纱黑体 SC" font_size="7.8" />
       <column name="ColType" index="4" visible="false" visible_scope_on="false" width="66" width_scope_on="66" font_name="Arial Narrow" font_size="8.25" />
       <column name="ColUnits" index="5" visible="false" visible_scope_on="false" width="37" width_scope_on="37" font_name="Arial Narrow" font_size="8.25" />
       <column name="ColDescription" index="6" visible="false" visible_scope_on="false" width="105" width_scope_on="105" font_name="Arial Narrow" font_size="8.25" />
-      <column name="ColScope" index="7" visible="true" visible_scope_on="true" width="127" width_scope_on="58" font_name="Arial" font_size="8.25" />
+      <column name="ColScope" index="7" visible="true" visible_scope_on="true" width="127" width_scope_on="71" font_name="Arial" font_size="8.25" />
     </columns>
     <rows>
       <row displayed_name="adc_ch0_offset" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="adc_ch1_offset" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="adc_ch2_offset" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="adc_value" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="AHB_CLK" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="APB1_CLK" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="APB2_CLK" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="can_buffer_head" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="can_buffer_tail" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="AD2S1210_Ready" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="FOC.Mode" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Ia" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Ib" nesting_depth="0" ecu="ECU1" scope_on="false" />
@@ -100,6 +92,22 @@
       <row displayed_name="VF.Vref_Uq" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Position_Data" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="STOP" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Udc" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="220" scope_zero_divs="0" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
+      <row displayed_name="Motor.Position_Offset" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="FOC.Speed" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="1000" scope_zero_divs="3" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
+      <row displayed_name="FOC.Theta" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="6.3" scope_zero_divs="1" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
+      <row displayed_name="theta_elec" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="6.3" scope_zero_divs="3" scope_colour_set="true" scope_colour_user="false" scope_colour="-10496" />
+      <row displayed_name="theta_mech" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="6.3" scope_zero_divs="0" scope_colour_set="true" scope_colour_user="false" scope_colour="-16711936" />
+      <row displayed_name="IF.Id_ref" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="IF.IF_Freq" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="IF.Iq_ref" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="IF.Sensor_State" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="IF.Theta" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Speed_PID.Ki" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Speed_PID.Kp" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Speed_PID.Ts" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Speed_Ref" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Protect_Flag" nesting_depth="0" ecu="ECU1" scope_on="false" />
     </rows>
   </snoop_watch>
 </snoop_workspace>

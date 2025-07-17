@@ -16,7 +16,7 @@
             "servertype": "jlink",
             "serverArgs": [
                 "-speed",
-                "12000"
+                "50000"
             ],
             "svdFile": "./Hardware_Configure/GD32F30x_HD.svd",
             "liveWatch": {

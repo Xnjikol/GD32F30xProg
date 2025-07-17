@@ -12,7 +12,6 @@ uint16_t ccr3 = 0;
 uint16_t receive = 0;
 uint16_t transmit = 0;
 
-
 void DWT_Init(void);
 void daq_trigger(void);
 void nvic_config(void);
@@ -61,10 +60,9 @@ int main(void)
         ccpSendCallBack();
         Gate_state();
         ADC_Read_Regular();
-        pin = gpio_input_bit_get(GPIOE, GPIO_PIN_15);
+        pin = gpio_input_bit_get(GPIOE, GPIO_PIN_4);
         // DWT_Count = DWT->CYCCNT; // 读取DWT计数器
         Temperature_Protect();
-        printf("hello world\r\n");
     }
 }
 
@@ -78,7 +76,7 @@ void nvic_config(void)
 {
     nvic_priority_group_set(NVIC_PRIGROUP_PRE2_SUB2); // 设置中断优先级分组
     nvic_irq_enable(TIMER0_BRK_IRQn, 0, 0);
-    nvic_irq_enable(EXTI5_9_IRQn, 1U, 0U);
+    nvic_irq_enable(EXTI4_IRQn, 1U, 0U);
     nvic_irq_enable(ADC0_1_IRQn, 2, 0);
     nvic_irq_enable(TIMER3_IRQn, 3, 0);
     nvic_irq_enable(USBD_LP_CAN0_RX0_IRQn, 5, 0);
@@ -105,9 +103,10 @@ void relay_init(void)
 
 void EXIT_Config(void)
 {
-    gpio_exti_source_select(GPIO_PORT_SOURCE_GPIOB, GPIO_PIN_SOURCE_7);
-    exti_init(EXTI_7, EXTI_INTERRUPT, EXTI_TRIG_FALLING);
-    exti_interrupt_flag_clear(EXTI_7);
+    gpio_init(GPIOE, GPIO_MODE_IPD, GPIO_OSPEED_50MHZ, GPIO_PIN_4);
+    gpio_exti_source_select(GPIO_PORT_SOURCE_GPIOE, GPIO_PIN_SOURCE_4);
+    exti_init(EXTI_4, EXTI_INTERRUPT, EXTI_TRIG_RISING);
+    exti_interrupt_flag_clear(EXTI_4);
 }
 
 void DWT_Init(void)

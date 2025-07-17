@@ -256,7 +256,6 @@ float FluxObserver_GetTheta(FluxObserver_t *observer);
 float FluxObserver_GetSpeed(FluxObserver_t *observer);
 
 /* 辅助函数 */
-float Sensorless_WrapAngle(float angle);
 float Sensorless_AngleDifference(float angle1, float angle2);
 void Sensorless_StateTransition(MotorState_t new_state);
 

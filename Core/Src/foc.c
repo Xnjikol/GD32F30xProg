@@ -1,6 +1,6 @@
 #include "foc.h"
-#include "filter.h"  // 添加滤波器模块支持  
-#include "sensorless.h"  // 添加无位置传感器支持
+#include "filter.h"     // 添加滤波器模块支持
+#include "sensorless.h" // 添加无位置传感器支持
 
 uint16_t STOP = 1;
 
@@ -25,6 +25,9 @@ float theta_elec = 0.0f;
 float theta_factor = 0.0f; // Sensor data to mechanic angle conversion factor
 
 float Speed_Ref = 0.0f;
+
+float View_Angle = 0.0f;
+float View_Speed = 0.0f;
 
 // 无位置传感器相关变量
 extern Sensorless_t Sensorless;
@@ -134,13 +137,13 @@ void FOC_Main(void)
     {
         /* 无位置传感器模式 */
         FOC_Sensorless_Update();
-        
+
         /* 使用无位置传感器估计的角度和速度 */
         FOC.Theta = Sensorless_Theta;
         FOC.Speed = Sensorless_Speed;
-        
+
         ParkTransform(Clarke.Ialpha, Clarke.Ibeta, FOC.Theta, &Park);
-        
+
         /* 速度控制 */
         static uint16_t Speed_Count = 0;
         Speed_Count++;
@@ -159,7 +162,7 @@ void FOC_Main(void)
 
         FOC.Ud_ref = Id_PID.output;
         FOC.Uq_ref = Iq_PID.output;
-        
+
         /* 如果使用高频注入，叠加注入电压 */
         if (Sensorless.algorithm == SENSORLESS_HFI || Sensorless.algorithm == SENSORLESS_HYBRID)
         {
@@ -275,22 +278,22 @@ void Parameter_Init(void)
     STOP = 1;
     Protect_Flag = No_Protect;
 
-    Motor.Pn = 2;
+    Motor.Pn = 5;
     Motor.Resolver_Pn = 1;
-    Motor.Position_Scale = 10000 - 1;
+    Motor.Position_Scale = UINT16_MAX;
     Motor.inv_MotorPn = 1.0f / Motor.Pn; // 1/Pn
-    Motor.Rs = 0.65f;
-    Motor.Lq = 0.044f;  //
-    Motor.Ld = 0.1175f; //
-    Motor.Positon_Offset = 107.0f;
+    Motor.Rs = 1.25f;
+    Motor.Ld = 0.006f; // 6mH
+    Motor.Lq = 0.009f; // 9mH
+    Motor.Position_Offset = 13110.0f;
 #ifdef Resolver_Position
     theta_factor = 2.0f * M_PI / ((Motor.Position_Scale + 1) * Motor.Resolver_Pn);
 #endif
 #ifdef Encoder_Position
     theta_factor = 2.0f * M_PI / (Motor.Position_Scale + 1);
 #endif
-    Speed_PID.Kp = 0.0f;
-    Speed_PID.Ki = 0.0f;
+    Speed_PID.Kp = 0.010f;
+    Speed_PID.Ki = 0.005f;
     Speed_PID.Kd = 0.0f;
     Speed_PID.MaxOutput = 0.7 * I_Max; // Maximum Iq
     Speed_PID.MinOutput = -0.7 * I_Max;
@@ -307,8 +310,8 @@ void Parameter_Init(void)
     Speed_Ramp.target = 0.0f;
     Speed_Ramp.Ts = T_200_HZ;
 
-    Id_PID.Kp = 73.8274273f;
-    Id_PID.Ki = 408.40704496f;
+    Id_PID.Kp = 7.5398223686f;
+    Id_PID.Ki = 1570.796326794f;
     Id_PID.Kd = 0.0f;
     Id_PID.MaxOutput = 50.0f; // Maximum Udc/sqrt(3)
     Id_PID.MinOutput = -50.0f;
@@ -318,8 +321,8 @@ void Parameter_Init(void)
     Id_PID.output = 0.0f;
     Id_PID.Ts = T_2K_HZ;
 
-    Iq_PID.Kp = 27.646015f;
-    Iq_PID.Ki = 408.40704496f;
+    Iq_PID.Kp = 11.30973355f;
+    Iq_PID.Ki = 1570.796326794f;
     Iq_PID.Kd = 0.0f;
     Iq_PID.MaxOutput = 50.0f;
     Iq_PID.MinOutput = -50.0f;
@@ -341,7 +344,7 @@ void Parameter_Init(void)
     IF.Sensor_State = DISABLE;
 
     FOC.PWM_ARR = PWM_ARR;
-    FOC.SensorlessEnabled = 0;  // 默认禁用无位置传感器
+    FOC.SensorlessEnabled = 0; // 默认禁用无位置传感器
 }
 // !SECTION
 
@@ -352,7 +355,7 @@ void FOC_Sensorless_Init(void)
 {
     /* 初始化无位置传感器算法 */
     Sensorless_Init();
-    
+
     /* 根据配置选择算法 */
 #ifdef SENSORLESS_POSITION
     /* 设置为混合算法，自动根据速度切换 */
@@ -370,33 +373,40 @@ void FOC_Sensorless_Init(void)
  */
 void FOC_Sensorless_Update(void)
 {
-    if (!FOC.SensorlessEnabled) {
+    if (!FOC.SensorlessEnabled)
+    {
         return;
     }
-    
+
     /* 更新无位置传感器算法 */
     extern float Ia, Ib, Ic;
     float ua = 0.0f, ub = 0.0f, uc = 0.0f; // 如果有电压反馈，在此处获取
-    
+
     Sensorless_Update(Ia, Ib, Ic, ua, ub, uc);
-    
+
     /* 获取估计的角度和速度 */
     Sensorless_Theta = Sensorless_GetTheta();
     Sensorless_Speed = Sensorless_GetSpeed();
-    
+
     /* 状态机处理 */
     static MotorState_t last_state = MOTOR_STOP;
     MotorState_t current_state = MOTOR_STOP;
-    
-    if (STOP) {
+
+    if (STOP)
+    {
         current_state = MOTOR_STOP;
-    } else if (fabsf(Sensorless_Speed) < 50.0f) {
+    }
+    else if (fabsf(Sensorless_Speed) < 50.0f)
+    {
         current_state = MOTOR_LOW_SPEED;
-    } else {
+    }
+    else
+    {
         current_state = MOTOR_HIGH_SPEED;
     }
-    
-    if (current_state != last_state) {
+
+    if (current_state != last_state)
+    {
         Sensorless_StateTransition(current_state);
         last_state = current_state;
     }
@@ -444,11 +454,15 @@ void PID_Controller(float setpoint, float measured_value,
     PID_Controller->output = output_value;
 }
 
+/**
+ * @brief 角度归一化到[0, 2π)
+ * @param angle 输入角度
+ * @return 归一化后的角度
+ */
 static inline float wrap_theta_2pi(float theta)
 {
-    if (theta >= 2.0f * M_PI)
-        theta -= 2.0f * M_PI;
-    else if (theta < 0.0f)
+    theta = MOD(theta, 2.0f * M_PI);
+    if (theta < 0.0f)
         theta += 2.0f * M_PI;
     return theta;
 }
@@ -460,13 +474,14 @@ static inline void Theta_Process(void)
 {
 #ifdef SENSORLESS_POSITION
     /* 无位置传感器模式，使用估计的角度 */
-    if (FOC.SensorlessEnabled && Sensorless.enabled) {
+    if (FOC.SensorlessEnabled && Sensorless.enabled)
+    {
         theta_elec = Sensorless_Theta;
         FOC.Theta = theta_elec;
-        
+
         /* 从电角度反推机械角度 */
         theta_mech = theta_elec / Motor.Pn;
-        
+
         /* 速度已经在无位置传感器算法中计算 */
         FOC.Speed = Sensorless_Speed;
         return;
@@ -474,14 +489,14 @@ static inline void Theta_Process(void)
 #endif
 
     /* 传统位置传感器模式 */
-    int32_t pos_delta = Position_Data - Motor.Positon_Offset;
+    int32_t pos_delta = Position_Data - Motor.Position_Offset;
     if (pos_delta < 0)
         pos_delta += (Motor.Position_Scale + 1);
 
     theta_mech = pos_delta * theta_factor;
 
-    theta_elec = theta_mech * Motor.Pn;
-    FOC.Theta = wrap_theta_2pi(theta_elec);
+    theta_elec = wrap_theta_2pi(theta_mech * Motor.Pn);
+    FOC.Theta = theta_elec;
 
     static float last_theta = 0.0f;
     float delta_theta = theta_mech - last_theta;
@@ -494,6 +509,7 @@ static inline void Theta_Process(void)
     last_theta = theta_mech;
 
     float Speed = delta_theta * F_2K_HZ * 60.0f / (2.0f * M_PI);
+    View_Speed = Speed; // 更新全局速度变量
     FOC.Speed = LowPassFilter_Update(&Speed_Filter, Speed);
 }
 // !SECTION

@@ -173,13 +173,13 @@ void ADC0_1_IRQHandler(void)
     }
 }
 
-void EXTI5_9_IRQHandler(void)
+void EXTI4_IRQHandler(void)
 {
-    if (RESET != exti_interrupt_flag_get(EXTI_7))
+    if (RESET != exti_interrupt_flag_get(EXTI_4))
     {
         TIMER_SWEVG(TIMER0) |= TIMER_SWEVG_BRKG;
         STOP = 1;
-        exti_interrupt_flag_clear(EXTI_7);
+        exti_interrupt_flag_clear(EXTI_4);
     }
 }
 

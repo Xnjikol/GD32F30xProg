@@ -12,6 +12,7 @@ Sensorless_t Sensorless;
 /*======================*/
 static void Sensorless_AlgorithmSwitch(void);
 static void Sensorless_InitAllAlgorithms(void);
+static inline float Sensorless_WrapTheta2Pi(float angle);
 
 /*======================*/
 /*    Main Functions    */
@@ -105,7 +106,7 @@ void Sensorless_Update(float ia, float ib, float ic, float ua, float ub, float u
     }
     
     /* 角度归一化 */
-    Sensorless.theta_est = Sensorless_WrapAngle(Sensorless.theta_est);
+    Sensorless.theta_est = Sensorless_WrapTheta2Pi(Sensorless.theta_est);
 }
 
 /**
@@ -257,7 +258,7 @@ void HFI_Update(HFI_t *hfi, float id, float iq, float ud, float uq)
     hfi->theta_est += correction * T_2K_HZ;
     
     /* 角度归一化 */
-    hfi->theta_est = Sensorless_WrapAngle(hfi->theta_est);
+    hfi->theta_est = Sensorless_WrapTheta2Pi(hfi->theta_est);
 }
 
 /**
@@ -357,7 +358,7 @@ void SMO_Update(SMO_t *smo, float ialpha, float ibeta, float ualpha, float ubeta
     
     /* 位置估计 */
     smo->theta_est = atan2f(smo->ebeta_filt, smo->ealpha_filt) - M_PI_2;
-    smo->theta_est = Sensorless_WrapAngle(smo->theta_est);
+    smo->theta_est = Sensorless_WrapTheta2Pi(smo->theta_est);
     
     /* 速度估计 */
     static float last_theta = 0.0f;
@@ -453,7 +454,7 @@ void PLL_Update(PLL_t *pll, float sin_theta, float cos_theta)
     
     /* 积分得到位置 */
     pll->theta_est += freq * T_2K_HZ;
-    pll->theta_est = Sensorless_WrapAngle(pll->theta_est);
+    pll->theta_est = Sensorless_WrapTheta2Pi(pll->theta_est);
     
     /* 更新速度估计 */
     pll->speed_est = freq * 60.0f / (2.0f * M_PI);
@@ -617,7 +618,7 @@ void FluxObserver_Update(FluxObserver_t *observer, float ialpha, float ibeta, fl
     
     /* 位置估计 */
     observer->theta_est = atan2f(observer->psi_beta_filt, observer->psi_alpha_filt);
-    observer->theta_est = Sensorless_WrapAngle(observer->theta_est);
+    observer->theta_est = Sensorless_WrapTheta2Pi(observer->theta_est);
     
     /* 速度估计 */
     static float last_theta = 0.0f;
@@ -663,12 +664,10 @@ float FluxObserver_GetSpeed(FluxObserver_t *observer)
  * @param angle 输入角度
  * @return 归一化后的角度
  */
-float Sensorless_WrapAngle(float angle)
+static inline float Sensorless_WrapTheta2Pi(float angle)
 {
-    while (angle >= 2.0f * M_PI) {
-        angle -= 2.0f * M_PI;
-    }
-    while (angle < 0.0f) {
+    angle = MOD(angle, 2.0f * M_PI);
+    if (angle < 0.0f) {
         angle += 2.0f * M_PI;
     }
     return angle;

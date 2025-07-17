@@ -63,4 +63,6 @@ void USBD_LP_CAN0_RX0_IRQHandler(void);
 void ADC0_1_IRQHandler(void);
 
 void TIMER3_IRQHandler(void);
+
+void EXTI4_IRQHandler(void);
 #endif /* GD32F30X_IT_H */
