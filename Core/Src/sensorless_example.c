@@ -67,18 +67,18 @@ void Sensorless_Example_Run(void)
             /* 启动状态 - 等待十二脉冲完成 */
             if (SensorlessInterface.twelve_pulse_completed) {
                 /* 启动完成，切换到运行模式 */
-                FOC.Mode = Sensorless_Mode;
+                FOC.Mode = NoSensorMode;
             }
             break;
             
         case MOTOR_LOW_SPEED:
             /* 低速运行 - 使用HFI算法 */
-            FOC.Mode = Sensorless_Mode;
+            FOC.Mode = NoSensorMode;
             break;
             
         case MOTOR_HIGH_SPEED:
             /* 高速运行 - 使用SMO算法 */
-            FOC.Mode = Sensorless_Mode;
+            FOC.Mode = NoSensorMode;
             break;
     }
     

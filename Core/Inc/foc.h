@@ -2,6 +2,7 @@
 #define _FOC_H_
 
 #include "main.h"
+#include "math_utils.h"
 
 /* 前向声明 */
 typedef struct SensorlessManager_t SensorlessManager_t;
@@ -19,7 +20,8 @@ typedef struct SensorlessManager_t SensorlessManager_t;
 #endif
 
 #if !defined(GATE_POLARITY_HIGH_ACTIVE) && !defined(GATE_POLARITY_LOW_ACTIVE)
-#error "Please define GATE_POLARITY_HIGH_ACTIVE or GATE_POLARITY_LOW_ACTIVE in foc.h"
+#error \
+    "Please define GATE_POLARITY_HIGH_ACTIVE or GATE_POLARITY_LOW_ACTIVE in foc.h"
 #endif
 
 /* Current sensing phase setting */
@@ -30,7 +32,8 @@ typedef struct SensorlessManager_t SensorlessManager_t;
 #endif
 
 #if !defined(TWO_PHASE_CURRENT_SENSING) && !defined(THREE_PHASE_CURRENT_SENSING)
-#error "Please define TWO_PHASE_CURRENT_SENSING or THREE_PHASE_CURRENT_SENSING in foc.h"
+#error \
+    "Please define TWO_PHASE_CURRENT_SENSING or THREE_PHASE_CURRENT_SENSING in foc.h"
 #endif
 
 /*  DSP math function    */
@@ -38,26 +41,7 @@ typedef struct SensorlessManager_t SensorlessManager_t;
 #define ARM_DSP
 #endif
 
-#ifdef ARM_DSP
-#include "arm_math.h" /* CMSIS-DSP math */
-
-#define COS(x) arm_cos_f32(x)
-#define SIN(x) arm_sin_f32(x)
-#define MOD(x, y) fmodf((x), (y))
-#define ABS(x) arm_abs_f32(x)
-
-#else
-#include <math.h>
-
-#define COS(x) cosf(x)
-#define SIN(x) sinf(x)
-#define MOD(x, y) fmodf((x), (y))
-#define ABS(x) fabsf(x)
-
-#endif
-
 /*       Constants      */
-#define SQRT3 1.73205080757f
 #define SQRT3_2 0.86602540378f /* √3/2 */
 #define T_2K_HZ 0.0005f        /* T 2kHz */
 #define F_2K_HZ 2000.0f        /* f 2kHz */
@@ -74,7 +58,8 @@ typedef enum
     VF_MODE,
     IF_MODE,
     Speed_Mode,
-    Sensorless_Mode, // 添加无位置传感器模式
+    NoSensorMode, // 添加无位置传感器模式
+    Pulse_Mode,   // 添加十二脉冲模式
     EXIT,
     space
 } FOC_Mode;
@@ -186,12 +171,14 @@ void Gate_state(void);
 void FOC_Main(void);
 void FOC_Sensorless_Init(void);   // 无位置传感器初始化
 void FOC_Sensorless_Update(void); // 无位置传感器更新
+void FOC_Pulse_Start(void);       // 启动十二脉冲模式
 void ClarkeTransform(float_t Ia, float_t Ib, float_t Ic, Clarke_t *out);
 void ParkTransform(float_t Ialpha, float_t Ibeta, float_t theta, Park_t *out);
 void InvParkTransform(float_t Ud, float_t Uq, float_t theta, InvPark_t *out);
 void SVPWM_Generate(float Ualpha, float Ubeta, float inv_Vdc, float pwm_arr);
 void Set_PWM_Duty(float_t Ta, float_t Tb, float_t Tc, float_t pwm_arr);
-void PID_Controller(float setpoint, float measured_value, PID_Controller_t *PID_Controller);
+void PID_Controller(float setpoint, float measured_value,
+                    PID_Controller_t *PID_Controller);
 void Temperature_Protect(void);
 
 #endif /* _FOC_H_ */

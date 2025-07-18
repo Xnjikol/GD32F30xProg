@@ -121,7 +121,7 @@ void SensorlessInterface_StartupSequence(void)
     
 #if SENSORLESS_STARTUP_USE_TWELVE_PULSE
     /* 使用十二脉冲确定初始位置 */
-    TwelvePulse_Start(&Sensorless.twelve_pulse);
+    TwelvePulse_Start(&Sensorless.pulse);
 #endif
 }
 
@@ -405,7 +405,7 @@ static void SensorlessInterface_UpdateStatus(void)
     SensorlessInterface.hfi_active = Sensorless.hfi.enabled;
     SensorlessInterface.smo_active = Sensorless.smo.enabled;
     SensorlessInterface.pll_active = Sensorless.pll.enabled;
-    SensorlessInterface.twelve_pulse_completed = TwelvePulse_IsCompleted(&Sensorless.twelve_pulse);
+    SensorlessInterface.twelve_pulse_completed = TwelvePulse_IsCompleted(&Sensorless.pulse);
     
     /* 计算置信度 */
     SensorlessInterface.estimation_confidence = SensorlessInterface_CalculateConfidence();

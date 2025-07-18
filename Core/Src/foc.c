@@ -1,4 +1,5 @@
 #include "foc.h"
+#include "math_utils.h"
 #include "filter.h"     // 添加滤波器模块支持
 #include "sensorless.h" // 添加无位置传感器支持
 
@@ -23,6 +24,7 @@ float I_Max = 10.0f;
 float theta_mech = 0.0f;
 float theta_elec = 0.0f;
 float theta_factor = 0.0f; // Sensor data to mechanic angle conversion factor
+float theta_error = 0.0f;  // 位置误差
 
 float Speed_Ref = 0.0f;
 
@@ -38,9 +40,10 @@ static inline void Current_Protect(void);
 static inline float Get_Theta(float Freq, float Theta);
 static inline void Parameter_Init(void);
 static inline void Theta_Process(void);
-static inline float wrap_theta_2pi(float theta);
 static inline float RampGenerator(RampGenerator_t *ramp);
-static inline void Speed_Loop(RampGenerator_t *Ramp, float Ref, float Fdbk, PID_Controller_t *Handle);
+static inline void Speed_Loop(RampGenerator_t *Ramp,
+                              float Ref, float Fdbk,
+                              PID_Controller_t *Handle);
 
 extern uint16_t receive;
 // SECTION - FOC Main
@@ -59,6 +62,10 @@ void FOC_Main(void)
     case INIT:
     {
         Parameter_Init();
+
+        /* 初始化十二脉冲算法 */
+        TwelvePulse_Init(&Sensorless.pulse);
+
         if (Udc > 200.0f) // 200V
         {
             timer_interrupt_enable(TIMER0, TIMER_INT_BRK); // 启用BRK中断
@@ -113,8 +120,8 @@ void FOC_Main(void)
         ParkTransform(Clarke.Ialpha, Clarke.Ibeta, FOC.Theta, &Park);
         Speed_Loop(&Speed_Ramp, Speed_Ref, FOC.Speed, &Speed_PID);
 
-        FOC.Iq_ref = Speed_PID.output;        // Iq_ref = Speed_PID.output
-        FOC.Id_ref = 0.37446808 * FOC.Iq_ref; // Id_ref = 0
+        FOC.Iq_ref = Speed_PID.output; // Iq_ref = Speed_PID.output
+        FOC.Id_ref = 0;                // Id_ref = 0
 
         PID_Controller(FOC.Id_ref, Park.Id, &Id_PID);
         PID_Controller(FOC.Iq_ref, Park.Iq, &Iq_PID);
@@ -125,8 +132,51 @@ void FOC_Main(void)
         break;
     }
     // !SECTION
+    // SECTION - TwelvePulse Mode
+    case Pulse_Mode:
+    {
+        FOC.Theta = 0.0f; // 重置Theta，确保从零开始
+
+        /* 十二脉冲初始定位模式 */
+        ParkTransform(Clarke.Ialpha, Clarke.Ibeta, FOC.Theta, &Park);
+
+        /* 更新十二脉冲算法 */
+        TwelvePulse_Update(&Sensorless.pulse, Park.Id, Park.Iq);
+
+        /* 获取测试电压 */
+        float ud_test = 0.0f, uq_test = 0.0f;
+        TwelvePulse_GetVoltageReference(&Sensorless.pulse, &ud_test, &uq_test);
+
+        /* 设置电压参考 */
+        FOC.Ud_ref = ud_test;
+        FOC.Uq_ref = uq_test;
+
+        /* 设置电流参考为0（仅电压控制） */
+        FOC.Id_ref = 0.0f;
+        FOC.Iq_ref = 0.0f;
+
+        /* 如果十二脉冲完成，切换到无位置传感器模式 */
+        if (TwelvePulse_IsCompleted(&Sensorless.pulse))
+        {
+            /* 使用估计的初始位置 */
+            FOC.Theta = TwelvePulse_GetTheta(&Sensorless.pulse);
+
+            theta_error = MathUtils_AngleDifference(FOC.Theta, theta_mech);
+
+            /* 切换到无位置传感器模式 */
+            // FOC.Mode = NoSensorMode;
+
+            // /* 启用无位置传感器算法 */
+            // FOC.SensorlessEnabled = 1;
+            // Sensorless.enabled = 1;
+            // Sensorless_SetAlgorithm(SENSORLESS_HYBRID);
+        }
+
+        break;
+    }
+    // !SECTION
     // SECTION - Sensorless Mode
-    case Sensorless_Mode:
+    case NoSensorMode:
     {
         /* 无位置传感器模式 */
         FOC_Sensorless_Update();
@@ -351,6 +401,27 @@ void Parameter_Init(void)
 // !SECTION
 
 /**
+ * @brief 启动十二脉冲初始定位
+ */
+void FOC_Pulse_Start(void)
+{
+    /* 初始化十二脉冲算法 */
+    TwelvePulse_Init(&Sensorless.pulse);
+
+    /* 启动十二脉冲测试 */
+    TwelvePulse_Start(&Sensorless.pulse);
+
+    /* 切换到十二脉冲模式 */
+    FOC.Mode = Pulse_Mode;
+
+    /* 禁用保护，准备测试 */
+    STOP = 0;
+
+    /* 初始角度设为0 */
+    FOC.Theta = 0.0f;
+}
+
+/**
  * @brief 无位置传感器初始化
  */
 void FOC_Sensorless_Init(void)
@@ -398,7 +469,7 @@ void FOC_Sensorless_Update(void)
     {
         current_state = MOTOR_STOP;
     }
-    else if (ABS(Sensorless_Speed) < 50.0f)
+    else if (fabsf(Sensorless_Speed) < 50.0f)
     {
         current_state = MOTOR_LOW_SPEED;
     }
@@ -456,19 +527,6 @@ void PID_Controller(float setpoint, float measured_value,
     PID_Controller->output = output_value;
 }
 
-/**
- * @brief 角度归一化到[0, 2π)
- * @param angle 输入角度
- * @return 归一化后的角度
- */
-static inline float wrap_theta_2pi(float theta)
-{
-    theta = MOD(theta, 2.0f * M_PI);
-    if (theta < 0.0f)
-        theta += 2.0f * M_PI;
-    return theta;
-}
-
 LowPassFilter_t Speed_Filter = {.a = 0.9685841f, .y_last = 0.0f};
 
 // SECTION - Theta Process
@@ -497,7 +555,7 @@ static inline void Theta_Process(void)
 
     theta_mech = pos_delta * theta_factor;
 
-    theta_elec = wrap_theta_2pi(theta_mech * Motor.Pn);
+    theta_elec = MathUtils_WrapAngle2Pi(theta_mech * Motor.Pn);
     FOC.Theta = theta_elec;
 
     static float last_theta = 0.0f;

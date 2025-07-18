@@ -3,6 +3,7 @@
 
 #include "filter.h"
 #include "main.h"
+#include "math_utils.h"
 
 /* 前向声明 */
 typedef struct FOC_t FOC_t;
@@ -138,24 +139,43 @@ typedef struct
     uint8_t enabled; /* 算法使能 */
 } PLL_t;
 
+/* 十二脉冲状态 */
+typedef enum
+{
+    TWELVE_PULSE_IDLE,
+    TWELVE_PULSE_APPLYING,
+    TWELVE_PULSE_MEASURING,
+    TWELVE_PULSE_CALCULATING,
+    TWELVE_PULSE_COMPLETED
+} TwelvePulseState_t;
+
 /* 十二脉冲结构 */
 typedef struct
 {
-    float test_voltage;  /* 测试电压 */
-    float test_time;     /* 测试时间 */
-    uint8_t pulse_count; /* 脉冲计数 */
-    float theta_offset;  /* 初始位置偏移 */
+    float test_voltage;      /* 测试电压 */
+    float test_time;         /* 脉冲持续时间 */
+    float settle_time;       /* 稳定时间 */
+    uint8_t current_pulse;   /* 当前脉冲索引 */
+    float pulse_timer;       /* 脉冲计时器 */
+    uint16_t measurement_samples; /* 测量样本数 */
+    float theta_offset;      /* 初始位置偏移 */
+    
+    /* 状态控制 */
+    TwelvePulseState_t state; /* 当前状态 */
+    uint8_t completed;        /* 完成标志 */
+    uint8_t enabled;          /* 使能标志 */
+    float confidence;         /* 估计置信度 */
 
-    /* 电流响应 */
-    float id_response[12]; /* 12个脉冲的d轴电流响应 */
-    float iq_response[12]; /* 12个脉冲的q轴电流响应 */
+    /* 电流响应数据 */
+    float id_response[12];      /* 12个脉冲的d轴电流响应 */
+    float iq_response[12];      /* 12个脉冲的q轴电流响应 */
+    float current_magnitude[12]; /* 电流幅值 */
+    float response_quality[12];  /* 响应质量 */
 
     /* 位置估计 */
-    float theta_est; /* 估计的初始位置 */
-
-    /* 状态 */
-    uint8_t completed; /* 完成标志 */
-    uint8_t enabled;   /* 算法使能 */
+    float theta_est;         /* 估计的初始位置 */
+    float theta_raw;         /* 原始位置估计 */
+    float theta_filtered;    /* 滤波后的位置估计 */
 } TwelvePulse_t;
 
 /* 磁链观测器结构 */
@@ -192,7 +212,7 @@ typedef struct
     HFI_t hfi;                    /* 高频注入 */
     SMO_t smo;                    /* 滑膜观测器 */
     PLL_t pll;                    /* PLL锁相环 */
-    TwelvePulse_t twelve_pulse;   /* 十二脉冲 */
+    TwelvePulse_t pulse;   /* 十二脉冲 */
     FluxObserver_t flux_observer; /* 磁链观测器 */
 
     /* 最终输出 */
@@ -246,8 +266,11 @@ float PLL_GetSpeed(PLL_t *pll);
 void TwelvePulse_Init(TwelvePulse_t *pulse);
 void TwelvePulse_Start(TwelvePulse_t *pulse);
 void TwelvePulse_Update(TwelvePulse_t *pulse, float id, float iq);
+void TwelvePulse_CalculateInitialPosition(TwelvePulse_t *pulse);
 float TwelvePulse_GetTheta(TwelvePulse_t *pulse);
+float TwelvePulse_GetConfidence(TwelvePulse_t *pulse);
 uint8_t TwelvePulse_IsCompleted(TwelvePulse_t *pulse);
+void TwelvePulse_GetVoltageReference(TwelvePulse_t *pulse, float *ud_ref, float *uq_ref);
 
 /* 磁链观测器 */
 void FluxObserver_Init(FluxObserver_t *observer);
@@ -256,7 +279,6 @@ float FluxObserver_GetTheta(FluxObserver_t *observer);
 float FluxObserver_GetSpeed(FluxObserver_t *observer);
 
 /* 辅助函数 */
-float Sensorless_AngleDifference(float angle1, float angle2);
 void Sensorless_StateTransition(MotorState_t new_state);
 
 #endif /* _SENSORLESS_H_ */

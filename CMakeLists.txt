@@ -108,20 +108,21 @@ target_include_directories(${PROJECT_NAME} PRIVATE
 # 这些是项目的主要功能模块
 target_sources(${PROJECT_NAME} PRIVATE
     # 外设驱动模块
-    Core/Src/usart.c         # UART 串口通信
-    Core/Src/gpio.c          # GPIO 引脚控制
-    Core/Src/can.c           # CAN 总线通信
-    Core/Src/tim.c           # 定时器配置与控制
-    Core/Src/adc.c           # ADC 模数转换
-    Core/Src/dma.c           # DMA 直接内存访问
+    Core/Src/usart.c                # UART 串口通信
+    Core/Src/gpio.c                 # GPIO 引脚控制
+    Core/Src/can.c                  # CAN 总线通信
+    Core/Src/tim.c                  # 定时器配置与控制
+    Core/Src/adc.c                  # ADC 模数转换
+    Core/Src/dma.c                  # DMA 直接内存访问
     
     # 应用功能模块
-    Core/Src/foc.c           # FOC 电机控制算法
-    Core/Src/filter.c        # 滤波器算法库
-    Core/Src/sensorless.c    # 无位置传感器算法
+    Core/Src/foc.c                  # FOC 电机控制算法
+    Core/Src/filter.c               # 滤波器算法库
+    Core/Src/math_utils.c           # 数学工具函数库
+    Core/Src/sensorless.c           # 无位置传感器算法
     Core/Src/sensorless_interface.c # 无位置传感器接口
-    Core/Src/position_sensor.c # 位置传感器处理
-    Core/Src/temp_table.c    # 温度查找表
+    Core/Src/position_sensor.c      # 位置传感器处理
+    Core/Src/temp_table.c           # 温度查找表
 )
 
 # ==============================================================================
