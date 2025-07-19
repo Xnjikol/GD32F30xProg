@@ -73,7 +73,7 @@ typedef enum
     Low_Voltage = 1 << 3,          // 0b1000
     Hardware_Fault = 1 << 4,       // 0b10000
     Over_Heat = 1 << 5             // 0b100000
-} Protect_Flags;
+} Protect_Flags_t;
 
 typedef struct
 {

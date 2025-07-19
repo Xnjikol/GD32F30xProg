@@ -5,7 +5,7 @@
 
 uint16_t STOP = 1;
 
-volatile Protect_Flags Protect_Flag;
+volatile Protect_Flags_t Protect_Flag;
 Motor_Parameter_t Motor;
 FOC_Parameter_t FOC;
 VF_Parameter_t VF;

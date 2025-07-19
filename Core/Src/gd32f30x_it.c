@@ -183,7 +183,7 @@ void EXTI4_IRQHandler(void)
     }
 }
 
-extern Protect_Flags Protect_Flag;
+extern Protect_Flags_t Protect_Flag;
 extern ControlStatus Software_BRK;
 
 void TIMER0_BRK_IRQHandler(void)
