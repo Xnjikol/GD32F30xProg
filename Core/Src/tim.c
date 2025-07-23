@@ -20,10 +20,10 @@ void TIM0_PWM_Init(void) {
     timer_deinit(TIMER0);
     timer_parameter_struct timer_initpara;
     timer_struct_para_init(&timer_initpara);
-    timer_initpara.prescaler = 0;
+    timer_initpara.prescaler = MAIN_INT_TIMER_PRESCALER;  // 0
     timer_initpara.alignedmode = TIMER_COUNTER_CENTER_BOTH;
     timer_initpara.counterdirection = TIMER_COUNTER_UP;  // no sense
-    timer_initpara.period = 6000 - 1;
+    timer_initpara.period = MAIN_INT_TIMER_PERIOD - 1;
     timer_initpara.clockdivision = TIMER_CKDIV_DIV1;
     timer_initpara.repetitioncounter = 1;  // every 2 update events calls 1 interrupt
     timer_init(TIMER0, &timer_initpara);
@@ -53,7 +53,7 @@ void TIM0_PWM_Init(void) {
     timer_break_parameter_struct brk_param;
     brk_param.runoffstate = TIMER_ROS_STATE_ENABLE;
     brk_param.ideloffstate = TIMER_IOS_STATE_ENABLE;
-    brk_param.deadtime = calculate_deadtime_value(2000, SystemCoreClock);  // 2us
+    brk_param.deadtime = calculate_deadtime_value(MAIN_INT_TIMER_DEADTIME_PERIOD, SystemCoreClock);  // 2us
     brk_param.breakstate = TIMER_BREAK_ENABLE;
     brk_param.breakpolarity = TIMER_BREAK_POLARITY_LOW;
     brk_param.protectmode = TIMER_CCHP_PROT_OFF;
@@ -117,10 +117,7 @@ static inline uint8_t calculate_deadtime_value(uint32_t deadtime_ns, uint32_t ti
 
 void cal_fmain(float *f, float *Ts, float *PWM_ARR)
 {
-    float prescaler = TIMER_PSC(TIMER0) + 1.0F;
-    float timer_clk = (float)SystemCoreClock / prescaler;
-    float counter_mode = ((TIMER_CTL0(TIMER0) & TIMER_CTL0_CAM) >> 5) == 0 ? 1.0F : 2.0F;
-    *f = (timer_clk / (TIMER_CAR(TIMER0) + 1.0F) / counter_mode);
-    *PWM_ARR = (uint16_t)(TIMER_CAR(TIMER0) + 1);
-    *Ts = 1.0F / *f;  // Main loop time
+    *f = MAIN_LOOP_FREQ;  // 10kHz
+    *Ts = MAIN_LOOP_TIME;  // 0.0001s
+    *PWM_ARR = MAIN_INT_TIMER_PERIOD;  // 6000
 }
