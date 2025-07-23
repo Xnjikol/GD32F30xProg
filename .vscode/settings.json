@@ -3,6 +3,12 @@
     "C_Cpp.default.intelliSenseMode": "gcc-arm",
     "C_Cpp.default.cStandard": "c11",
     "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
+    "C_Cpp.codeAnalysis.clangTidy.enabled": true,
+    "C_Cpp.codeAnalysis.clangTidy.useBuildPath": true,
+    "C_Cpp.codeAnalysis.clangTidy.path": "clang-tidy",
+    "C_Cpp.codeAnalysis.clangTidy.config": "file",
+    "C_Cpp.clang_format_path": "clang-format",
+    "C_Cpp.clang_format_style": "file",
     "cortex-debug.variableUseNaturalFormat": true,
     "cmake.generator": "Ninja",
     "files.associations": {

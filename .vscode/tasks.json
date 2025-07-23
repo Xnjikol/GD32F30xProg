@@ -46,7 +46,7 @@
 			},
 			"command": "",
 			"args": [
-				"${workspaceFolder}/utils/a2ltool.exe",
+				"${workspaceFolder}/Tools/a2ltool.exe",
 				"--create",
 				"--elffile",
 				"build/${workspaceFolderBasename}.elf",
@@ -58,7 +58,7 @@
 				"build/${workspaceFolderBasename}.a2l",
 				"&&",
 				"python",
-				"utils/A2LFilter.py",
+				"Tools/A2LFilter.py",
 				"--input",
 				"build/${workspaceFolderBasename}.a2l",
 				"--output",
@@ -119,7 +119,7 @@
 				},
 				"cwd": "${workspaceFolder}"
 			},
-			"command": "JLink.exe -CommanderScript Utils/flash.jlink",
+			"command": "JLink.exe -CommanderScript Tools/flash.jlink",
 			"group": {
 				"kind": "build",
 				"isDefault": false

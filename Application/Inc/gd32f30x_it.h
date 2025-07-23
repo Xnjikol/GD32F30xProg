@@ -1,12 +1,12 @@
 /*!
-    \file    systick.h
-    \brief   the header file of systick
+    \file    gd32f30x_it.h
+    \brief   the header file of the ISR
 
     \version 2024-12-20, V3.0.1, demo for GD32F30x
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2024, GigaDevice Semiconductor Inc
 
     Redistribution and use in source and binary forms, with or without modification, 
 are permitted provided that the following conditions are met:
@@ -32,22 +32,35 @@ ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSI
 OF SUCH DAMAGE.
 */
 
-#ifndef SYSTICK_H
-#define SYSTICK_H
+#ifndef GD32F30X_IT_H
+#define GD32F30X_IT_H
 
-#include <stdint.h>
+#include "gd32f30x.h"
+#include "main.h"
 
-extern volatile uint32_t systick_ms;  /*!< systick counter in milliseconds */
+/* function declarations */
+/* this function handles NMI exception */
+void NMI_Handler(void);
+/* this function handles HardFault exception */
+void HardFault_Handler(void);
+/* this function handles MemManage exception */
+void MemManage_Handler(void);
+/* this function handles BusFault exception */
+void BusFault_Handler(void);
+/* this function handles UsageFault exception */
+void UsageFault_Handler(void);
+/* this function handles SVC exception */
+void SVC_Handler(void);
+/* this function handles DebugMon exception */
+void DebugMon_Handler(void);
+/* this function handles PendSV exception */
+void PendSV_Handler(void);
+/* this function handles SysTick exception */
+void SysTick_Handler(void);
 
-extern uint32_t AHB_CLK;
-extern uint32_t APB1_CLK;
-extern uint32_t APB2_CLK;
+void USBD_LP_CAN0_RX0_IRQHandler(void);
 
-/* configure systick */
-void systick_config(void);
-/* delay a time in milliseconds */
-void delay_ms(uint32_t count);
-/* delay decrement */
-void delay_decrement(void);
+void ADC0_1_IRQHandler(void);
 
-#endif /* SYSTICK_H */
+void TIMER3_IRQHandler(void);
+#endif /* GD32F30X_IT_H */
