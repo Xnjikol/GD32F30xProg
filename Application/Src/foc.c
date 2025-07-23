@@ -16,22 +16,22 @@ RampGenerator_t Speed_Ramp;
 InvPark_t Inv_Park;
 Clarke_t Clarke;
 
-float theta_mech = 0.0F;
-float theta_elec = 0.0F;
-float theta_factor = 0.0F;  // Sensor data to mechanic angle conversion factor
+float_t theta_mech = 0.0F;
+float_t theta_elec = 0.0F;
+float_t theta_factor = 0.0F;  // Sensor data to mechanic angle conversion factor
 
-float Speed_Ref = 0.0F;
+float_t Speed_Ref = 0.0F;
 
-static inline float Get_Theta(float, float);
+static inline float_t Get_Theta(float_t, float_t);
 static inline void Parameter_Init(void);
-static inline void Theta_Process(float, float, float*, float*);
-static inline float wrap_theta_2pi(float);
-static inline float RampGenerator(RampGenerator_t*);
-static inline void PID_Controller(float, float, PID_Controller_t*);
+static inline void Theta_Process(float_t, float_t, float_t*, float_t*);
+static inline float_t wrap_theta_2pi(float_t);
+static inline float_t RampGenerator(RampGenerator_t*);
+static inline void PID_Controller(float_t, float_t, PID_Controller_t*);
 static inline void ClarkeTransform(float_t, float_t, float_t, Clarke_t*);
 static inline void ParkTransform(float_t, float_t, float_t, FOC_Parameter_t*);
 static inline void InvParkTransform(float_t, float_t, float_t, InvPark_t*);
-static inline void SVPWM_Generate(float, float, float, FOC_Parameter_t*);
+static inline void SVPWM_Generate(float_t, float_t, float_t, FOC_Parameter_t*);
 
 // SECTION - FOC Main
 void FOC_Main(void)
@@ -146,7 +146,7 @@ void FOC_Main(void)
 }
 // !SECTION
 
-void FOC_UpdateMainFrequency(float f, float Ts, float PWM_ARR)
+void FOC_UpdateMainFrequency(float_t f, float_t Ts, float_t PWM_ARR)
 {
     FOC.f = f;
     FOC.Ts = Ts;
@@ -180,7 +180,7 @@ void Parameter_Init(void)
     theta_factor = M_2PI / ((Motor.Position_Scale + 1) * Motor.Resolver_Pn);
 #endif
 #ifdef Encoder_Position
-    theta_factor = M_2PI / (float) (Motor.Position_Scale + 1);
+    theta_factor = M_2PI / (float_t) (Motor.Position_Scale + 1);
 #endif
     Speed_PID.Kp = 0.0F;
     Speed_PID.Ki = 0.0F;
@@ -235,11 +235,11 @@ void Parameter_Init(void)
 }
 // !SECTION
 // SECTION - PID Controller
-static inline void PID_Controller(float Ref, float Feedback, PID_Controller_t* PID_Controller)
+static inline void PID_Controller(float_t Ref, float_t Feedback, PID_Controller_t* PID_Controller)
 {
-    float difference = Ref - Feedback;
-    float integral = PID_Controller->integral;
-    float derivative = difference - PID_Controller->previous_error;
+    float_t difference = Ref - Feedback;
+    float_t integral = PID_Controller->integral;
+    float_t derivative = difference - PID_Controller->previous_error;
 
     if (STOP == 1)
     {
@@ -248,13 +248,13 @@ static inline void PID_Controller(float Ref, float Feedback, PID_Controller_t* P
         derivative = 0.0F;
     }
     // Proportional term
-    float P = PID_Controller->Kp * difference;
+    float_t P = PID_Controller->Kp * difference;
     // Integral term
     integral += PID_Controller->Ki * difference * PID_Controller->Ts;
     // Derivative term
-    float D = PID_Controller->Kd * derivative;
+    float_t D = PID_Controller->Kd * derivative;
     // Calculate output
-    float output_value = P + integral + D;
+    float_t output_value = P + integral + D;
     // Clamp output to limits
     if (output_value > PID_Controller->MaxOutput)
     {
@@ -280,7 +280,7 @@ static inline void PID_Controller(float Ref, float Feedback, PID_Controller_t* P
 }
 // !SECTION
 
-static inline float wrap_theta_2pi(float theta)
+static inline float_t wrap_theta_2pi(float_t theta)
 {
     theta = fmodf(theta, M_2PI);
     if (theta < 0.0F)
@@ -292,48 +292,48 @@ static inline float wrap_theta_2pi(float theta)
 
 typedef struct
 {
-    float a;       // 反馈系数（= 极点位置）
-    float y_last;  // 上一次输出值
+    float_t a;       // 反馈系数（= 极点位置）
+    float_t y_last;  // 上一次输出值
 } LowPassFilter_t;
 
 LowPassFilter_t Speed_Filter = {.a = 0.9685841F, .y_last = 0.0F};
 
-static inline float LowPassFilter_Update(LowPassFilter_t* filter, float x)
+static inline float_t LowPassFilter_Update(LowPassFilter_t* filter, float_t x)
 {
-    float y = filter->a * filter->y_last + (1.0F - filter->a) * x;
+    float_t y = filter->a * filter->y_last + (1.0F - filter->a) * x;
     filter->y_last = y;
     return y;
 }
 
 // SECTION - Theta Process
-static inline void Theta_Process(float pos, float offset, float* theta, float* speed)
+static inline void Theta_Process(float_t pos, float_t offset, float_t* theta, float_t* speed)
 {
     // 位置传感器数据处理
-    float delta = pos - offset;
+    float_t delta = pos - offset;
     if (delta < 0)
     {
-        delta += (float) (Motor.Position_Scale + 1);
+        delta += (float_t) (Motor.Position_Scale + 1);
     }
 
-    float theta_mech = delta * theta_factor;
+    float_t theta_mech = delta * theta_factor;
 
-    float theta_elec = theta_mech * Motor.Pn;
+    float_t theta_elec = theta_mech * Motor.Pn;
     *theta = wrap_theta_2pi(theta_elec);
 
-    static float last_theta = 0.0F;
-    float delta_theta = theta_mech - last_theta;
+    static float_t last_theta = 0.0F;
+    float_t delta_theta = theta_mech - last_theta;
 
     delta_theta = wrap_theta_2pi(delta_theta);
 
     last_theta = theta_mech;
 
-    float temp_speed = delta_theta * FOC.Ts * 60.0F / M_2PI;
+    float_t temp_speed = delta_theta * FOC.Ts * 60.0F / M_2PI;
     *speed = LowPassFilter_Update(&Speed_Filter, temp_speed);
 }
 // !SECTION
 
 // SECTION - Ramp Generator
-static inline float RampGenerator(RampGenerator_t* ramp)
+static inline float_t RampGenerator(RampGenerator_t* ramp)
 {
     if (STOP == 1)
     {
@@ -341,8 +341,8 @@ static inline float RampGenerator(RampGenerator_t* ramp)
         ramp->target = 0.0F;
     }
 
-    float delta = ramp->target - ramp->value;
-    float step = ramp->slope * ramp->Ts;
+    float_t delta = ramp->target - ramp->value;
+    float_t step = ramp->slope * ramp->Ts;
 
     if (delta > step)
     {
@@ -383,21 +383,21 @@ static inline void ClarkeTransform(float_t Ia, float_t Ib, float_t Ic, Clarke_t*
 
 static inline void ParkTransform(float_t Ialpha, float_t Ibeta, float_t theta, FOC_Parameter_t* out)
 {
-    float cos_theta = COS(theta);
-    float sin_theta = SIN(theta);
+    float_t cos_theta = COS(theta);
+    float_t sin_theta = SIN(theta);
     out->Id = Ialpha * cos_theta + Ibeta * sin_theta;
     out->Iq = -Ialpha * sin_theta + Ibeta * cos_theta;
 }
 
 static inline void InvParkTransform(float_t Ud, float_t Uq, float_t theta, InvPark_t* out)
 {
-    float cos_theta = COS(theta);
-    float sin_theta = SIN(theta);
+    float_t cos_theta = COS(theta);
+    float_t sin_theta = SIN(theta);
     out->Ualpha = Ud * cos_theta - Uq * sin_theta;
     out->Ubeta = Ud * sin_theta + Uq * cos_theta;
 }
 
-static inline float Get_Theta(float Freq, float Theta)
+static inline float_t Get_Theta(float_t Freq, float_t Theta)
 {
     // 电角度递推：θ += ω·Ts，ω = 2π·f
     Theta += M_2PI * Freq * FOC.Ts;
@@ -412,12 +412,12 @@ static inline float Get_Theta(float Freq, float Theta)
     return Theta;
 }
 
-static inline void SVPWM_Generate(float Ualpha, float Ubeta, float inv_Vdc, FOC_Parameter_t* foc)
+static inline void SVPWM_Generate(float_t Ualpha, float_t Ubeta, float_t inv_Vdc, FOC_Parameter_t* foc)
 {
     uint8_t sector = 0;
-    float Vref1 = Ubeta;
-    float Vref2 = (+SQRT3 * Ualpha - Ubeta) * 0.5F;
-    float Vref3 = (-SQRT3 * Ualpha - Ubeta) * 0.5F;
+    float_t Vref1 = Ubeta;
+    float_t Vref2 = (+SQRT3 * Ualpha - Ubeta) * 0.5F;
+    float_t Vref3 = (-SQRT3 * Ualpha - Ubeta) * 0.5F;
 
     // 判断扇区（1~6）
     if (Vref1 > 0)
@@ -428,11 +428,11 @@ static inline void SVPWM_Generate(float Ualpha, float Ubeta, float inv_Vdc, FOC_
         sector += 4;
 
     // Clarke to T1/T2 projection
-    float X = SQRT3 * Ubeta * inv_Vdc;
-    float Y = (+1.5F * Ualpha + SQRT3_2 * Ubeta) * inv_Vdc;
-    float Z = (-1.5F * Ualpha + SQRT3_2 * Ubeta) * inv_Vdc;
+    float_t X = SQRT3 * Ubeta * inv_Vdc;
+    float_t Y = (+1.5F * Ualpha + SQRT3_2 * Ubeta) * inv_Vdc;
+    float_t Z = (-1.5F * Ualpha + SQRT3_2 * Ubeta) * inv_Vdc;
 
-    float T1 = 0.0F, T2 = 0.0F;
+    float_t T1 = 0.0F, T2 = 0.0F;
 
     switch (sector)
     {
@@ -467,7 +467,7 @@ static inline void SVPWM_Generate(float Ualpha, float Ubeta, float inv_Vdc, FOC_
     }
 
     // 过调制处理
-    float T_sum = T1 + T2;
+    float_t T_sum = T1 + T2;
     if (T_sum > 1.0F)
     {
         T1 /= T_sum;
@@ -475,14 +475,14 @@ static inline void SVPWM_Generate(float Ualpha, float Ubeta, float inv_Vdc, FOC_
     }
 
     // 中心对称调制时间计算
-    float T0 = (1.0F - T1 - T2) * 0.5F;
-    float Ta = T0;
-    float Tb = T0 + T1;
-    float Tc = Tb + T2;
+    float_t T0 = (1.0F - T1 - T2) * 0.5F;
+    float_t Ta = T0;
+    float_t Tb = T0 + T1;
+    float_t Tc = Tb + T2;
 
-    float Tcm1 = 0.0F;
-    float Tcm2 = 0.0F;
-    float Tcm3 = 0.0F;
+    float_t Tcm1 = 0.0F;
+    float_t Tcm2 = 0.0F;
+    float_t Tcm3 = 0.0F;
 
     // 扇区映射到ABC换相点
     switch (sector)

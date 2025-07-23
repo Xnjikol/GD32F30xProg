@@ -19,14 +19,13 @@
 		{
 			"label": "Build Hex File",
 			"type": "shell",
-			"command": "cmake",
+			"command": "pwsh.exe",
 			"args": [
-				"--build",
-				"build",
-				"--target",
-				"all",
-				"--",
-				"-j12"
+				"-Command",
+				"$start = Get-Date;",
+				"cmake --build build;",
+				"$end = Get-Date;",
+				"Write-Host \"Build took: $([math]::Round(($end - $start).TotalSeconds, 2)) seconds\""
 			],
 			"group": {
 				"kind": "build",
@@ -91,6 +90,34 @@
 				"/f",
 				"build/${workspaceFolderBasename}.elf"
 			],
+			"problemMatcher": []
+		},
+		{
+			"label": "Clean Build Folder",
+			"type": "shell",
+			"options": {
+				"shell": {
+					"executable": "cmd.exe",
+					"args": [
+						"/c"
+					]
+				}
+			},
+			"command": "cmd",
+			"args": [
+				"/c",
+				"if",
+				"exist",
+				"build",
+				"rmdir",
+				"/s",
+				"/q",
+				"build"
+			],
+			"group": {
+				"kind": "build",
+				"isDefault": false
+			},
 			"problemMatcher": []
 		},
 		{

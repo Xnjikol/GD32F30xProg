@@ -212,7 +212,7 @@ void EXTI5_9_IRQHandler(void)
   }
 }
 
-extern Protect_Flags Protect_Flag;
+extern Protect_Flags_t Protect_Flag;
 extern bool Software_BRK;
 
 void TIMER0_BRK_IRQHandler(void)
