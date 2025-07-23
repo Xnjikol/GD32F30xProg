@@ -340,3 +340,196 @@ void KalmanFilter_Reset(KalmanFilter_t *filter, float initial_value)
     filter->P = 1.0f;  // Reset to default uncertainty
     filter->K = 0.0f;
 }
+
+// ================== HIGH PASS FILTER IMPLEMENTATION ==================
+
+/**
+ * @brief Initialize high pass filter
+ * @param filter: pointer to HighPassFilter_t structure
+ * @param cutoff_freq: cutoff frequency in Hz
+ * @param sample_freq: sampling frequency in Hz
+ */
+void HighPassFilter_Init(HighPassFilter_t *filter, float cutoff_freq, float sample_freq)
+{
+    if (filter == NULL || cutoff_freq <= 0.0f || sample_freq <= 0.0f) return;
+    
+    // Calculate RC time constant and sampling period
+    float rc = 1.0f / (2.0f * M_PI * cutoff_freq);
+    float dt = 1.0f / sample_freq;
+    
+    // Calculate alpha coefficient for high pass filter
+    filter->alpha = rc / (rc + dt);
+    
+    // Clamp alpha to valid range [0, 1] for stability
+    if (filter->alpha > 1.0f) filter->alpha = 1.0f;
+    if (filter->alpha < 0.0f) filter->alpha = 0.0f;
+    
+    filter->prev_input = 0.0f;
+    filter->prev_output = 0.0f;
+    filter->initialized = false;
+}
+
+/**
+ * @brief Update high pass filter
+ * @param filter: pointer to HighPassFilter_t structure
+ * @param input: input value
+ * @return filtered output value
+ */
+float HighPassFilter_Update(HighPassFilter_t *filter, float input)
+{
+    if (filter == NULL) return input;
+    
+    // Initialize with first input value
+    if (!filter->initialized) {
+        filter->prev_input = input;
+        filter->prev_output = 0.0f;
+        filter->initialized = true;
+        return 0.0f;
+    }
+    
+    // High pass filter equation: y[n] = α * (y[n-1] + x[n] - x[n-1])
+    filter->prev_output = filter->alpha * (filter->prev_output + input - filter->prev_input);
+    filter->prev_input = input;
+    
+    return filter->prev_output;
+}
+
+/**
+ * @brief Reset high pass filter state
+ * @param filter: pointer to HighPassFilter_t structure
+ */
+void HighPassFilter_Reset(HighPassFilter_t *filter)
+{
+    if (filter == NULL) return;
+    
+    filter->prev_input = 0.0f;
+    filter->prev_output = 0.0f;
+    filter->initialized = false;
+}
+
+// ================== BAND PASS FILTER IMPLEMENTATION ==================
+
+/**
+ * @brief Initialize band pass filter (cascaded high-pass and low-pass)
+ * @param filter: pointer to BandPassFilter_t structure
+ * @param low_cutoff: lower cutoff frequency in Hz
+ * @param high_cutoff: upper cutoff frequency in Hz
+ * @param sample_freq: sampling frequency in Hz
+ */
+void BandPassFilter_Init(BandPassFilter_t *filter, float low_cutoff, float high_cutoff, float sample_freq)
+{
+    if (filter == NULL || low_cutoff <= 0.0f || high_cutoff <= low_cutoff || sample_freq <= 0.0f) return;
+    
+    // Initialize low pass filter with high cutoff frequency
+    LowPassFilter_Init(&filter->low_pass, high_cutoff, sample_freq);
+    
+    // Calculate high pass coefficient for low cutoff frequency
+    float rc = 1.0f / (2.0f * M_PI * low_cutoff);
+    float dt = 1.0f / sample_freq;
+    filter->high_pass_alpha = rc / (rc + dt);
+    
+    // Clamp alpha to valid range
+    if (filter->high_pass_alpha > 1.0f) filter->high_pass_alpha = 1.0f;
+    if (filter->high_pass_alpha < 0.0f) filter->high_pass_alpha = 0.0f;
+    
+    filter->high_pass_prev_input = 0.0f;
+    filter->high_pass_prev_output = 0.0f;
+    filter->initialized = false;
+}
+
+/**
+ * @brief Update band pass filter
+ * @param filter: pointer to BandPassFilter_t structure
+ * @param input: input value
+ * @return filtered output value
+ */
+float BandPassFilter_Update(BandPassFilter_t *filter, float input)
+{
+    if (filter == NULL) return input;
+    
+    // First apply low pass filter
+    float low_pass_output = LowPassFilter_Update(&filter->low_pass, input);
+    
+    // Initialize high pass stage with first value
+    if (!filter->initialized) {
+        filter->high_pass_prev_input = low_pass_output;
+        filter->high_pass_prev_output = 0.0f;
+        filter->initialized = true;
+        return 0.0f;
+    }
+    
+    // Then apply high pass filter
+    filter->high_pass_prev_output = filter->high_pass_alpha * 
+        (filter->high_pass_prev_output + low_pass_output - filter->high_pass_prev_input);
+    filter->high_pass_prev_input = low_pass_output;
+    
+    return filter->high_pass_prev_output;
+}
+
+/**
+ * @brief Reset band pass filter state
+ * @param filter: pointer to BandPassFilter_t structure
+ */
+void BandPassFilter_Reset(BandPassFilter_t *filter)
+{
+    if (filter == NULL) return;
+    
+    LowPassFilter_Reset(&filter->low_pass);
+    filter->high_pass_prev_input = 0.0f;
+    filter->high_pass_prev_output = 0.0f;
+    filter->initialized = false;
+}
+
+// ================== BAND STOP FILTER IMPLEMENTATION ==================
+
+/**
+ * @brief Initialize band stop (notch) filter
+ * @param filter: pointer to BandStopFilter_t structure
+ * @param low_cutoff: lower cutoff frequency in Hz (start of stop band)
+ * @param high_cutoff: upper cutoff frequency in Hz (end of stop band)
+ * @param sample_freq: sampling frequency in Hz
+ */
+void BandStopFilter_Init(BandStopFilter_t *filter, float low_cutoff, float high_cutoff, float sample_freq)
+{
+    if (filter == NULL || low_cutoff <= 0.0f || high_cutoff <= low_cutoff || sample_freq <= 0.0f) return;
+    
+    // Initialize low pass filter with low cutoff (passes low frequencies)
+    LowPassFilter_Init(&filter->low_pass, low_cutoff, sample_freq);
+    
+    // Initialize high pass filter with high cutoff (passes high frequencies)
+    HighPassFilter_Init(&filter->high_pass, high_cutoff, sample_freq);
+    
+    // Set equal gains for both paths
+    filter->low_gain = 0.5f;
+    filter->high_gain = 0.5f;
+}
+
+/**
+ * @brief Update band stop filter (parallel low-pass and high-pass combination)
+ * @param filter: pointer to BandStopFilter_t structure
+ * @param input: input value
+ * @return filtered output value
+ */
+float BandStopFilter_Update(BandStopFilter_t *filter, float input)
+{
+    if (filter == NULL) return input;
+    
+    // Process input through both parallel paths
+    float low_pass_output = LowPassFilter_Update(&filter->low_pass, input);
+    float high_pass_output = HighPassFilter_Update(&filter->high_pass, input);
+    
+    // Combine outputs with weighted sum
+    return filter->low_gain * low_pass_output + filter->high_gain * high_pass_output;
+}
+
+/**
+ * @brief Reset band stop filter state
+ * @param filter: pointer to BandStopFilter_t structure
+ */
+void BandStopFilter_Reset(BandStopFilter_t *filter)
+{
+    if (filter == NULL) return;
+    
+    LowPassFilter_Reset(&filter->low_pass);
+    HighPassFilter_Reset(&filter->high_pass);
+}
