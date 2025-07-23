@@ -11,8 +11,7 @@
 #endif
 
 #if !defined(GATE_POLARITY_HIGH_ACTIVE) && !defined(GATE_POLARITY_LOW_ACTIVE)
-#error
-"Please define GATE_POLARITY_HIGH_ACTIVE or GATE_POLARITY_LOW_ACTIVE in foc.h"
+#error "Please define GATE_POLARITY_HIGH_ACTIVE or GATE_POLARITY_LOW_ACTIVE in foc.h"
 #endif
 
 /* Current sensing phase setting */
@@ -49,17 +48,23 @@
 #define SQRT3 1.73205080757F
 #define SQRT3_2 0.86602540378F        /* √3/2 */
 #define M_2PI 6.28318530717958647692F /* 2π */
-#define TIME_2KHZ 0.0005F             /* T 2kHz */
-#define FREQ_2KHZ 2000.0F             /* f 2kHz */
-#define TIME_1KHZ 0.0001F             /* T 1kHz */
-#define TIME_200HZ 0.005F             /* T 200Hz */
-#define TIME_10KHZ 0.0001F            /* 10kHz sampling time */
+#define T_2kHz 0.0005F                /* T 2kHz */
+#define f_2kHz 2000.0F                /* f 2kHz */
+#define T_1kHz 0.0001F                /* T 1kHz */
+#define T_200Hz 0.005F                /* T 200Hz */
+#define T_10kHz 0.0001F               /* 10kHz sampling time */
+
+#define TIME_2KHZ 0.0005F  /* T 2kHz */
+#define FREQ_2KHZ 2000.0F  /* f 2kHz */
+#define TIME_1KHZ 0.0001F  /* T 1kHz */
+#define TIME_200HZ 0.005F  /* T 200Hz */
+#define TIME_10KHZ 0.0001F /* 10kHz sampling time */
 
 /* FOC parameters */
-#define SPEED_LOOP_PRESCALER 10U /* Speed loop frequency division factor */
+#define SPEED_LOOP_PRESCALER 10 /* Speed loop frequency division factor */
 
-    /* Since CCP demanded struct FOC is Global Variable, make it visible to main ISR */
-    extern FOC_Parameter_t FOC;
+// Since CCP demanded struct FOC is Global Variable, make it visible to main ISR //
+extern FOC_Parameter_t FOC;
 
 void FOC_Main(void);
 
