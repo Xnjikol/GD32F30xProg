@@ -4,6 +4,7 @@
 
 #include <stdbool.h>
 #include <stdint.h>
+#include <stddef.h>
 
 #include "gd32f30x.h"
 
@@ -90,7 +91,28 @@ typedef struct
 
 // Low pass filter functions
 void LowPassFilter_Init(LowPassFilter_t* filter, float cutoff_freq, float sample_freq);
-float LowPassFilter_Update(LowPassFilter_t* filter, float input);
+/**
+ * @brief Update low pass filter with improved initialization
+ * @param filter: pointer to LowPassFilter_t structure
+ * @param input: input value
+ * @return filtered output value
+ */
+static inline float LowPassFilter_Update(LowPassFilter_t *filter, float input)
+{
+    if (filter == NULL) return input;
+    
+    // Initialize with first input value for better transient response
+    if (!filter->initialized) {
+        filter->prev_output = input;
+        filter->initialized = true;
+        return input;
+    }
+    
+    // Apply low pass filter equation: y[n] = α * x[n] + (1-α) * y[n-1]
+    filter->prev_output = filter->alpha * input + (1.0f - filter->alpha) * filter->prev_output;
+    
+    return filter->prev_output;
+}
 void LowPassFilter_Reset(LowPassFilter_t* filter);
 
 // Moving average filter functions

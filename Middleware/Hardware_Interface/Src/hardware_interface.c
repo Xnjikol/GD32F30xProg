@@ -1,15 +1,18 @@
 #include "hardware_interface.h"
+
 #include <stddef.h>
+
 #include "adc.h"
 #include "can.h"
-#include "foc.h"
 #include "gpio.h"
+#include "main_int.h"
 #include "position_sensor.h"
 #include "stdbool.h"
 #include "tim.h"
 #include "usart.h"
 
 volatile uint16_t STOP = 1;
+
 bool Software_BRK = false;
 Protect_Parameter_t Protect = {.Udc_rate = Voltage_Rate,
                                .Udc_fluctuation = Voltage_Fluctuation,
@@ -26,7 +29,8 @@ static inline bool can_receive_to_frame(const can_receive_message_struct* hw_msg
 
 bool Peripheral_CANSend(const can_frame_t* frame)
 {
-  if (!frame || frame->dlc > 8) return false;
+  if (!frame || frame->dlc > 8)
+    return false;
 
   can_transmit_message_struct tx_msg;
   tx_msg.tx_dlen = frame->dlc;
@@ -159,7 +163,7 @@ void Peripheral_UpdatePosition(void)
 {
   uint16_t position_data = 0;
   ReadPositionSensor(&position_data);
-  FOC_UpdatePosition(position_data);
+  Sensor_UpdatePosition(position_data);
 }
 
 void Peripheral_CalibrateADC(void)
@@ -228,7 +232,8 @@ static inline void VoltageProtect(float Udc, float Udc_rate, float Udc_fluctuati
 static inline bool can_receive_to_frame(const can_receive_message_struct* hw_msg,
                                         can_frame_t* frame)
 {
-  if (!hw_msg || !frame) return false;
+  if (!hw_msg || !frame)
+    return false;
 
   // 判断标准帧还是扩展帧
   if (hw_msg->rx_ff == CAN_FF_STANDARD)
@@ -248,4 +253,3 @@ static inline bool can_receive_to_frame(const can_receive_message_struct* hw_msg
 
   return true;
 }
-

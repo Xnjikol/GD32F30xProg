@@ -33,13 +33,14 @@ OF SUCH DAMAGE.
 */
 
 #include "gd32f30x_it.h"
+
 #include "can.h"
 #include "foc.h"
-#include "hardware_interface.h"
 #include "gd32f30x.h"
-#include "injection.h"
-#include "systick.h"
+#include "hardware_interface.h"
 #include "justfloat.h"
+#include "main_int.h"
+#include "systick.h"
 
 extern volatile uint16_t STOP;
 
@@ -131,11 +132,11 @@ void SysTick_Handler(void)
 
 void DMA0_Channel3_IRQHandler(void)
 {
-    if (dma_interrupt_flag_get(DMA0, DMA_CH3, DMA_INT_FLAG_FTF))
-    {
-        dma_interrupt_flag_clear(DMA0, DMA_CH3, DMA_INT_FLAG_FTF);
-        Peripheral_SCISendCallback();
-    }
+  if (dma_interrupt_flag_get(DMA0, DMA_CH3, DMA_INT_FLAG_FTF))
+  {
+    dma_interrupt_flag_clear(DMA0, DMA_CH3, DMA_INT_FLAG_FTF);
+    Peripheral_SCISendCallback();
+  }
 }
 
 void USBD_LP_CAN0_RX0_IRQHandler(void)
@@ -147,59 +148,7 @@ void USBD_LP_CAN0_RX0_IRQHandler(void)
 
 void ADC0_1_IRQHandler(void)
 {
-  if (adc_interrupt_flag_get(ADC0, ADC_INT_FLAG_EOIC))
-  {
-    adc_interrupt_flag_clear(ADC0, ADC_INT_FLAG_EOIC);
-
-    Peripheral_UpdateCurrent();
-    Peripheral_GateState();
-    Peripheral_UpdateUdc();
-    Peripheral_UpdatePosition();
-
-    FOC_Main();
-
-    switch (FOC.Mode)
-    {
-      case INIT:
-      {
-        Peripheral_InitProtectParameter();
-        Peripheral_GetSystemFrequency();
-        Peripheral_CalibrateADC();
-        if (FOC.Udc > 200.0F)
-        {
-          Peripheral_EnableHardwareProtect();
-        }
-        Protect.Flag = No_Protect;
-        FOC.Mode = IDLE;
-        break;
-      }
-      case IDLE:
-      case VF_MODE:
-      case IF_MODE:
-      case Speed:
-      {
-        break;
-      }
-      case Identify:
-      {
-        float DMA_Buffer[3];
-        DMA_Buffer[0] = VoltageInjector.Vq;
-        DMA_Buffer[1] = FOC.Iq;
-        DMA_Buffer[2] = (float)VoltageInjector.Count;
-        justfloat(DMA_Buffer, 3);
-        break;
-      }
-      case EXIT:
-      {
-        Peripheral_DisableHardwareProtect();
-        break;
-      }
-      default:
-        break;
-    }
-
-    Peripheral_SetPWMChangePoint();
-  }
+  Main_Int_Handler();
 }
 
 void EXTI5_9_IRQHandler(void)

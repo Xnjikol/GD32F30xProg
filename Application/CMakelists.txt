@@ -1,8 +1,8 @@
 #
 set ( User_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/main.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Src/main_int.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/gd32f30x_it.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Src/injection.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/foc.c
 )
 
@@ -25,4 +25,5 @@ target_link_libraries ( User PUBLIC
     Middleware
     Communication
     Drivers
+    Utils
 )
