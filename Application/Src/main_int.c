@@ -8,7 +8,6 @@ float Speed_Ref = 0.0F;
 float Speed_Fdbk = 0.0F;
 
 Motor_Parameter_t Motor;
-Sensor_Parameter_t Sensor;
 FOC_Parameter_t FOC;
 VF_Parameter_t VF;
 IF_Parameter_t IF;
@@ -29,6 +28,7 @@ static inline void Main_Int_Parameter_Init(void);
 static inline void Theta_Process(float, float, float*, float*);
 static inline void Write_Variables();
 static inline void Read_Variables();
+static inline void UpdateThetaAndSpeed(FOC_Parameter_t* foc, Motor_Parameter_t* motor);
 
 /*!
     \brief      主中断函数
@@ -47,9 +47,9 @@ void Main_Int_Handler(void)
     Peripheral_UpdateUdc();
     Peripheral_UpdatePosition();
 
-    Theta_Process(Sensor.Position, Motor.Position_Offset, &Sensor.Elec_Theta, &Sensor.Speed);
-
     Write_Variables();
+
+    UpdateThetaAndSpeed(&FOC, &Motor);
 
     FOC_Main(&FOC, &VF, &IF, &Clarke);
 
@@ -231,7 +231,7 @@ static inline void Theta_Process(float pos, float offset, float* theta, float* s
   if (!hLPF_speed.initialized)
   {
     hLPF_speed.prev_output = temp_speed;
-    LowPassFilter_Init(&hLPF_speed, 10.0F, 1.0F / FOC.Ts);
+    LowPassFilter_Init(&hLPF_speed, 10.0F, 1.0F / FOC.speed->handler->Ts);
     hLPF_speed.initialized = true;
   }
   *speed = LowPassFilter_Update(&hLPF_speed, temp_speed);
@@ -241,11 +241,18 @@ static inline void Write_Variables()
 {
   FOC.Stop = STOP;
   FOC.speed->ref = Speed_Ref;
-  FOC.Theta = Sensor.Elec_Theta;
-  FOC.speed->fdbk = Sensor.Speed;
+  // FOC.Theta = Sensor.Elec_Theta;
+  // FOC.speed->fdbk = Sensor.Speed;
 }
 
 static inline void Read_Variables()
 {
   STOP = FOC.Stop;
+}
+
+static inline void UpdateThetaAndSpeed(FOC_Parameter_t* foc, Motor_Parameter_t* motor)
+{
+  Theta_Process(motor->Position, motor->Position_Offset, &motor->Elec_Theta, &motor->Speed);
+  foc->Theta = motor->Elec_Theta;
+  foc->speed->fdbk = motor->Speed;
 }

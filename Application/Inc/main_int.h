@@ -34,12 +34,10 @@
 // Since CCP demanded struct FOC is Global Variable, make it visible to main ISR //
 extern FOC_Parameter_t FOC;
 
-extern Sensor_Parameter_t Sensor;
-
-static inline void Sensor_UpdatePosition(uint16_t Position)
+static inline void Sensor_UpdatePosition(float Position)
 {
-  Sensor.Position_Scale = Position;   // Update position scale
-  Sensor.Position_Offset = Position;  // Update zero position
+  Motor.Position_Scale = Position;   // Update position scale
+  Motor.Position_Offset = Position;  // Update zero position
 }
 
 static inline void FOC_UpdateCurrent(float Ia, float Ib, float Ic)

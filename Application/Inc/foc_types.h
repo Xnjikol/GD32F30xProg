@@ -33,10 +33,14 @@ typedef struct
   float Lq;
   float Flux;
   float Pn;
-  uint16_t Position_Scale;
   float Resolver_Pn;
   float inv_MotorPn;
+  float Position;  // position sensor usually up to 16bits resolution
+  float Position_Scale;
   float Position_Offset;  // Zero Position
+  float Mech_Theta;       // Mechanical angle (rad)
+  float Elec_Theta;       // Electrical angle (rad)
+  float Speed;            // Speed (rpm)
 } Motor_Parameter_t;
 
 typedef struct
@@ -66,17 +70,6 @@ typedef struct
   float Theta;
   EnableStatus Sensor_State;
 } IF_Parameter_t;
-
-typedef struct
-{
-  uint16_t Position;         // position sensor usually up to 16bits resolution
-  uint16_t Position_Scale;   // Scale of position sensor
-  uint16_t Position_Offset;  // Zero Position
-  uint16_t Pn;               // Motor Poles
-  float Mech_Theta;          // Mechanical angle (rad)
-  float Elec_Theta;          // Electrical angle (rad)
-  float Speed;               // Speed (rpm)
-} Sensor_Parameter_t;
 
 typedef struct
 {
