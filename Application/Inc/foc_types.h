@@ -5,7 +5,6 @@
 #include "stdint.h"
 #include "transformation.h"
 
-
 typedef enum
 {
   Disable = 0,
@@ -25,6 +24,20 @@ typedef enum
   Identify,
   space
 } FOC_Mode_t;
+
+typedef enum
+{
+  DEVICE_STATE_INIT,
+  DEVICE_STATE_READY,
+  DEVICE_STATE_FAULT,
+  DEVICE_STATE_RUNNING,
+  DEVICE_STATE_SHUTDOWN
+} DeviceStateEnum_t;
+
+typedef struct
+{
+  DeviceStateEnum_t Mode;
+} DeviceState_t;
 
 typedef struct
 {
@@ -89,6 +102,7 @@ typedef struct
 
 typedef struct
 {
+  bool initialized;
   float I_Max;
   float Udc;
   float inv_Udc;

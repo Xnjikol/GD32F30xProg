@@ -7,6 +7,7 @@ float theta_factor = 0.0F;  // Sensor data to mechanic angle conversion factor
 float Speed_Ref = 0.0F;
 float Speed_Fdbk = 0.0F;
 
+DeviceState_t Device = {DEVICE_STATE_INIT};
 Motor_Parameter_t Motor;
 FOC_Parameter_t FOC;
 VF_Parameter_t VF;
@@ -48,21 +49,15 @@ void Main_Int_Handler(void)
     Peripheral_UpdatePosition();
 
     Write_Variables();
-
-    UpdateThetaAndSpeed(&FOC, &Motor);
-
-    FOC_Main(&FOC, &VF, &IF, &Clarke);
-
-    Read_Variables();
-
-    switch (FOC.Mode)
+    if (Device.Mode != DEVICE_STATE_INIT)
     {
-      case INIT:
-      {
-        Peripheral_InitProtectParameter();
-        Peripheral_GetSystemFrequency();
-        Peripheral_CalibrateADC();
+    }
 
+
+    switch (Device.Mode)
+    {
+      case DEVICE_STATE_INIT:
+      {
         Main_Int_Parameter_Init();
 
         if (FOC.Udc > 200.0F)
@@ -71,39 +66,46 @@ void Main_Int_Handler(void)
         }
         Protect.Flag = No_Protect;
         FOC.Mode = IDLE;
+        Device.Mode = DEVICE_STATE_READY;
         break;
       }
-      case IDLE:
-      case VF_MODE:
-      case IF_MODE:
-      case Speed:
+      case DEVICE_STATE_READY:
       {
+        FOC.Mode = IDLE;
+        Device.Mode = DEVICE_STATE_RUNNING;
         break;
       }
-      // case Identify:
-      // {
-      //   float DMA_Buffer[3];
-      //   DMA_Buffer[0] = VoltageInjector.Vq;
-      //   DMA_Buffer[1] = FOC.Idq_fdbk->q;
-      //   DMA_Buffer[2] = (float) VoltageInjector.Count;
-      //   justfloat(DMA_Buffer, 3);
-      //   break;
-      // }
-      case EXIT:
+      case DEVICE_STATE_RUNNING:
       {
-        Peripheral_DisableHardwareProtect();
+        UpdateThetaAndSpeed(&FOC, &Motor);
+        FOC_Main(&FOC, &VF, &IF, &Clarke);
+        switch (FOC.Mode)
+        {
+          case EXIT:
+          {
+            Peripheral_DisableHardwareProtect();
+            break;
+          }
+          default:
+            break;
+        }
         break;
       }
       default:
         break;
     }
 
+    Read_Variables();
     Peripheral_SetPWMChangePoint();
   }
 }
 
 void Main_Int_Parameter_Init(void)
 {
+  // 声明局部变量
+  static Current_Loop_t Current_Loop;
+  static Speed_Loop_t Speed_Loop;
+
   memset(&VF, 0, sizeof(VF_Parameter_t));
   memset(&FOC, 0, sizeof(FOC_Parameter_t));
   memset(&Id_PID, 0, sizeof(PID_Handler_t));
@@ -111,18 +113,26 @@ void Main_Int_Parameter_Init(void)
   memset(&Speed_PID, 0, sizeof(PID_Handler_t));
   memset(&Inv_Park, 0, sizeof(Clarke_Data_t));
   memset(&Speed_Ramp, 0, sizeof(RampGenerator_t));
+  memset(&Current_Loop, 0, sizeof(Current_Loop_t));
+  memset(&Speed_Loop, 0, sizeof(Speed_Loop_t));
   memset(&Motor, 0, sizeof(Motor_Parameter_t));
   memset(&Phase_Current, 0, sizeof(Phase_Data_t));
   memset(&DQ_Current, 0, sizeof(Park_Data_t));
   memset(&DQ_Current_ref, 0, sizeof(Park_Data_t));
   memset(&DQ_Voltage_ref, 0, sizeof(Park_Data_t));
 
+  Peripheral_InitProtectParameter();
+  Peripheral_GetSystemFrequency();
+  Peripheral_CalibrateADC();
+
   FOC.Iabc_fdbk = &Phase_Current;
+  FOC.current = &Current_Loop;
   FOC.current->fdbk = &DQ_Current;
   FOC.current->ref = &DQ_Current_ref;
   FOC.current->handler_d = &Id_PID;
   FOC.current->handler_q = &Iq_PID;
 
+  FOC.speed = &Speed_Loop;
   FOC.speed->handler = &Speed_PID;
   FOC.speed->ramp = &Speed_Ramp;
 
@@ -154,14 +164,14 @@ void Main_Int_Parameter_Init(void)
   Speed_PID.previous_error = 0.0F;
   Speed_PID.integral = 0.0F;
   Speed_PID.output = 0.0F;
-  Speed_PID.Ts = FOC.Ts / SPEED_LOOP_PRESCALER;  // Speed loop time;
+  Speed_PID.Ts = FOC.Ts * SPEED_LOOP_PRESCALER;  // Speed loop time;
 
   Speed_Ramp.slope = 50.0F;  // limit to 50 rpm/s
   Speed_Ramp.limit_min = -1800.0F;
   Speed_Ramp.limit_max = 1800.0F;
   Speed_Ramp.value = 0.0F;
   Speed_Ramp.target = 0.0F;
-  Speed_Ramp.Ts = FOC.Ts / SPEED_LOOP_PRESCALER;  // Speed loop time;
+  Speed_Ramp.Ts = FOC.Ts * SPEED_LOOP_PRESCALER;  // Speed loop time;
 
   Id_PID.Kp = 73.8274273F;
   Id_PID.Ki = 408.40704496F;
@@ -247,7 +257,7 @@ static inline void Write_Variables()
 
 static inline void Read_Variables()
 {
-  STOP = FOC.Stop;
+  // STOP = FOC.Stop;
 }
 
 static inline void UpdateThetaAndSpeed(FOC_Parameter_t* foc, Motor_Parameter_t* motor)

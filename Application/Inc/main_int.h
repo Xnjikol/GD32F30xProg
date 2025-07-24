@@ -29,10 +29,11 @@
 #endif
 
 /* FOC parameters */
-#define SPEED_LOOP_PRESCALER 10 /* Speed loop frequency division factor */
+#define SPEED_LOOP_PRESCALER 10.0F /* Speed loop frequency division factor */
 
 // Since CCP demanded struct FOC is Global Variable, make it visible to main ISR //
 extern FOC_Parameter_t FOC;
+extern Motor_Parameter_t Motor;
 
 static inline void Sensor_UpdatePosition(float Position)
 {
