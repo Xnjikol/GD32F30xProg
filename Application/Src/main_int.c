@@ -257,7 +257,8 @@ static inline void Write_Variables()
 
 static inline void Read_Variables()
 {
-  // STOP = FOC.Stop;
+  // 读取反馈到全局变量
+  Speed_Fdbk = FOC.speed->fdbk;
 }
 
 static inline void UpdateThetaAndSpeed(FOC_Parameter_t* foc, Motor_Parameter_t* motor)
