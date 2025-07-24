@@ -21,7 +21,7 @@ typedef struct
   float IntegralLimit;  /* Integral limit to prevent windup */
   float Ts;             /* Sample time */
   bool Reset;           /* Flag to check if the PID controller is reset */
-} PID_Controller_t;
+} PID_Handler_t;
 
 /**
  * @brief 初始化PID控制器。
@@ -33,7 +33,7 @@ typedef struct
  * @param handler  指向PID_Controller_t结构体的指针，包含控制器参数和状态。
  * @param Reset    如果为true，则重置PID控制器的内部状态。
  */
-void PID_SetIntegral(PID_Controller_t* handler, bool Reset, float value);
+void PID_SetIntegral(PID_Handler_t* handler, bool Reset, float value);
 
 /**
  * @brief 更新PID控制器的输出。
@@ -46,7 +46,7 @@ void PID_SetIntegral(PID_Controller_t* handler, bool Reset, float value);
  * @param Reset    如果为true，则重置PID控制器的内部状态。
  * @param handler  指向PID_Controller_t结构体的指针，包含控制器参数和状态。
  */
-static inline void Pid_Update(float error, bool Reset, PID_Controller_t* handler)
+static inline void Pid_Update(float error, bool Reset, PID_Handler_t* handler)
 {
   if (Reset)
   {

@@ -12,10 +12,20 @@ static inline void SVPWM_Generate(float, float, float, FOC_Parameter_t*);
 
 // SECTION - FOC Main
 void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
-              PID_Controller_t* hPid_id, PID_Controller_t* hPid_iq, PID_Controller_t* hPid_speed,
-              RampGenerator_t* speed_ramp, Clarke_t* inv_park, Clarke_t* I_clarke, float* speed_ref)
+              Clarke_Data_t* I_clarke)
 {
   ClarkeTransform(foc->Iabc_fdbk->a, foc->Iabc_fdbk->b, foc->Iabc_fdbk->c, I_clarke);
+  Current_Loop_t* hCurrent = foc->current;
+  Park_Data_t* idq_ref = hCurrent->ref;
+  Park_Data_t* idq_fdbk = hCurrent->fdbk;
+  PID_Handler_t* hPid_id = hCurrent->handler_d;
+  PID_Handler_t* hPid_iq = hCurrent->handler_q;
+
+  Speed_Loop_t* hSpeed = foc->speed;
+  PID_Handler_t* hPid_speed = hSpeed->handler;
+  RampGenerator_t* speed_ramp = hSpeed->ramp;
+
+  Clarke_Data_t* inv_park = foc->Uclark_ref;
 
   switch (foc->Mode)
   {
@@ -49,22 +59,22 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
       }
       foc->Theta = if_p->Theta;
 
-      ParkTransform(I_clarke->a, I_clarke->b, foc->Theta, foc->Idq_fdbk);
+      ParkTransform(I_clarke->a, I_clarke->b, foc->Theta, hCurrent->fdbk);
 
-      foc->Idq_ref->d = if_p->Id_ref;
-      foc->Idq_ref->q = if_p->Iq_ref;
+      idq_ref->d = if_p->Id_ref;
+      idq_ref->q = if_p->Iq_ref;
 
       if (hPid_id->Reset)
       {
         PID_SetIntegral(hPid_id, foc->Stop, 0.0F);
       }
-      Pid_Update(foc->Idq_ref->d - foc->Idq_fdbk->d, foc->Stop, hPid_id);
+      Pid_Update(idq_ref->d - idq_fdbk->d, foc->Stop, hPid_id);
 
       if (hPid_iq->Reset)
       {
         PID_SetIntegral(hPid_iq, foc->Stop, 0.0F);
       }
-      Pid_Update(foc->Idq_ref->q - foc->Idq_fdbk->q, foc->Stop, hPid_iq);
+      Pid_Update(idq_ref->q - idq_fdbk->q, foc->Stop, hPid_iq);
 
       foc->Udq_ref->d = hPid_id->output;
       foc->Udq_ref->q = hPid_iq->output;
@@ -75,23 +85,23 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
     // SECTION - Speed Mode
     case Speed:
     {
-      ParkTransform(I_clarke->a, I_clarke->b, foc->Theta, foc->Idq_fdbk);
+      ParkTransform(I_clarke->a, I_clarke->b, foc->Theta, idq_fdbk);
 
-      static uint16_t Speed_Count = 0;
-      Speed_Count++;
-      if (Speed_Count > 9)
+      static uint16_t Cnt_speed = 0;
+      Cnt_speed++;
+      if (Cnt_speed > 9)
       {
-        Speed_Count = 0;
-        speed_ramp->target = *speed_ref;  // Update target speed
+        Cnt_speed = 0;
+        speed_ramp->target = hSpeed->ref;  // Update target speed
 
-        Pid_Update(RampGenerator(speed_ramp) - foc->Speed, foc->Stop, hPid_speed);
+        Pid_Update(RampGenerator(speed_ramp) - hSpeed->fdbk, foc->Stop, hPid_speed);
       }
 
-      foc->Idq_ref->q = hPid_speed->output;             // Iq_ref = Speed_PID.output
-      foc->Idq_ref->d = 0.37446808F * foc->Idq_ref->q;  // Id_ref = 0
+      idq_ref->q = hPid_speed->output;        // Iq_ref = Speed_PID.output
+      idq_ref->d = 0.37446808F * idq_ref->q;  // Id_ref = 0
 
-      Pid_Update(foc->Idq_ref->d - foc->Idq_fdbk->d, foc->Stop, hPid_id);
-      Pid_Update(foc->Idq_ref->q - foc->Idq_fdbk->q, foc->Stop, hPid_iq);
+      Pid_Update(idq_ref->d - idq_fdbk->d, foc->Stop, hPid_id);
+      Pid_Update(idq_ref->q - idq_fdbk->q, foc->Stop, hPid_iq);
 
       foc->Udq_ref->d = hPid_id->output;
       foc->Udq_ref->q = hPid_iq->output;
@@ -102,8 +112,8 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
     case EXIT:
     {
       foc->Stop = 1;
-      foc->Idq_fdbk->d = 0.0F;  // Id_ref = 0
-      foc->Idq_fdbk->q = 0.0F;  // Iq_ref = Speed_PID.output
+      idq_fdbk->d = 0.0F;  // Id_ref = 0
+      idq_fdbk->q = 0.0F;  // Iq_ref = Speed_PID.output
       foc->Udq_ref->d = 0.0F;
       foc->Udq_ref->q = 0.0F;
       break;

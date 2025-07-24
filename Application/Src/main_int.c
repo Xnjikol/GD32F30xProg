@@ -5,6 +5,7 @@ float theta_elec = 0.0F;
 float theta_factor = 0.0F;  // Sensor data to mechanic angle conversion factor
 
 float Speed_Ref = 0.0F;
+float Speed_Fdbk = 0.0F;
 
 LowPassFilter_t hLPF_speed = {.alpha = 0.9685841F, .prev_output = 0.0F, .initialized = false};
 
@@ -30,12 +31,11 @@ void Main_Int_Handler(void)
     Peripheral_UpdateUdc();
     Peripheral_UpdatePosition();
 
-    Write_Variables();
-
     Theta_Process(Sensor.Position, Motor.Position_Offset, &Sensor.Elec_Theta, &Sensor.Speed);
 
-    FOC_Main(&FOC, &VF, &IF, &Id_PID, &Iq_PID, &Speed_PID, &Speed_Ramp, &Inv_Park, &Clarke,
-             &Speed_Ref);
+    Write_Variables();
+
+    FOC_Main(&FOC, &VF, &IF, &Clarke);
 
     Read_Variables();
 
@@ -46,7 +46,9 @@ void Main_Int_Handler(void)
         Peripheral_InitProtectParameter();
         Peripheral_GetSystemFrequency();
         Peripheral_CalibrateADC();
+
         Main_Int_Parameter_Init();
+
         if (FOC.Udc > 200.0F)
         {
           Peripheral_EnableHardwareProtect();
@@ -88,10 +90,10 @@ void Main_Int_Parameter_Init(void)
 {
   memset(&VF, 0, sizeof(VF_Parameter_t));
   memset(&FOC, 0, sizeof(FOC_Parameter_t));
-  memset(&Id_PID, 0, sizeof(PID_Controller_t));
-  memset(&Iq_PID, 0, sizeof(PID_Controller_t));
-  memset(&Speed_PID, 0, sizeof(PID_Controller_t));
-  memset(&Inv_Park, 0, sizeof(Clarke_t));
+  memset(&Id_PID, 0, sizeof(PID_Handler_t));
+  memset(&Iq_PID, 0, sizeof(PID_Handler_t));
+  memset(&Speed_PID, 0, sizeof(PID_Handler_t));
+  memset(&Inv_Park, 0, sizeof(Clarke_Data_t));
   memset(&Speed_Ramp, 0, sizeof(RampGenerator_t));
   memset(&Motor, 0, sizeof(Motor_Parameter_t));
   memset(&Phase_Current, 0, sizeof(Phase_Data_t));
@@ -100,11 +102,16 @@ void Main_Int_Parameter_Init(void)
   memset(&DQ_Voltage_ref, 0, sizeof(Park_Data_t));
 
   FOC.Iabc_fdbk = &Phase_Current;
-  FOC.Idq_fdbk = &DQ_Current;
-  FOC.Udq_ref = &DQ_Voltage_ref;
-  FOC.Idq_ref = &DQ_Current_ref;
+  FOC.current->fdbk = &DQ_Current;
+  FOC.current->ref = &DQ_Current_ref;
+  FOC.current->handler_d = &Id_PID;
+  FOC.current->handler_q = &Iq_PID;
 
-  STOP = 1;
+  FOC.speed->handler = &Speed_PID;
+  FOC.speed->ramp = &Speed_Ramp;
+
+  FOC.Udq_ref = &DQ_Voltage_ref;
+  FOC.Uclark_ref = &Inv_Park;
 
   Motor.Rs = 0.65F;
   Motor.Ld = 0.001F;
@@ -150,6 +157,7 @@ void Main_Int_Parameter_Init(void)
   Id_PID.integral = 0.0F;
   Id_PID.output = 0.0F;
   Id_PID.Ts = FOC.Ts;  // Current loop time
+  Id_PID.Reset = true;
 
   Iq_PID.Kp = 27.646015F;
   Iq_PID.Ki = 408.40704496F;
@@ -161,6 +169,7 @@ void Main_Int_Parameter_Init(void)
   Iq_PID.integral = 0.0F;
   Iq_PID.output = 0.0F;
   Iq_PID.Ts = FOC.Ts;  // Current loop time
+  Iq_PID.Reset = true;
 
   VF.Vref_Ud = 0.0F;
   VF.Vref_Uq = 0.0F;
@@ -215,6 +224,9 @@ static inline void Theta_Process(float pos, float offset, float* theta, float* s
 static inline void Write_Variables()
 {
   FOC.Stop = STOP;
+  FOC.speed->ref = Speed_Ref;
+  FOC.Theta = Sensor.Elec_Theta;
+  FOC.speed->fdbk = Sensor.Speed;
 }
 
 static inline void Read_Variables()

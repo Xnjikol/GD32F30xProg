@@ -1,6 +1,6 @@
 #include "pid.h"
 
-void PID_SetIntegral(PID_Controller_t* handler, bool Reset, float value)
+void PID_SetIntegral(PID_Handler_t* handler, bool Reset, float value)
 {
   if (Reset)
   {

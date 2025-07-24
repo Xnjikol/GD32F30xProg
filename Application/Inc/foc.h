@@ -23,8 +23,6 @@
 #define TIME_10KHZ 0.0001F /* 10kHz sampling time */
 
 void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
-              PID_Controller_t* id_pid, PID_Controller_t* iq_pid, PID_Controller_t* speed_pid,
-              RampGenerator_t* speed_ramp, Clarke_t* inv_park, Clarke_t* I_clarke,
-              float* speed_ref);
+              Clarke_Data_t* I_clarke);
 
 #endif /* _FOC_H_ */
