@@ -7,6 +7,22 @@ float theta_factor = 0.0F;  // Sensor data to mechanic angle conversion factor
 float Speed_Ref = 0.0F;
 float Speed_Fdbk = 0.0F;
 
+Motor_Parameter_t Motor;
+Sensor_Parameter_t Sensor;
+FOC_Parameter_t FOC;
+VF_Parameter_t VF;
+IF_Parameter_t IF;
+PID_Handler_t Id_PID;
+PID_Handler_t Iq_PID;
+PID_Handler_t Speed_PID;
+RampGenerator_t Speed_Ramp;
+Clarke_Data_t Inv_Park;
+Clarke_Data_t Clarke;
+Phase_Data_t Phase_Current;
+Park_Data_t DQ_Current;
+Park_Data_t DQ_Current_ref;
+Park_Data_t DQ_Voltage_ref;
+
 LowPassFilter_t hLPF_speed = {.alpha = 0.9685841F, .prev_output = 0.0F, .initialized = false};
 
 static inline void Main_Int_Parameter_Init(void);

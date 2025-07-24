@@ -11,22 +11,6 @@
 #include "pid.h"
 #include "systick.h"
 
-Motor_Parameter_t Motor;
-Sensor_Parameter_t Sensor;
-FOC_Parameter_t FOC;
-VF_Parameter_t VF;
-IF_Parameter_t IF;
-PID_Handler_t Id_PID;
-PID_Handler_t Iq_PID;
-PID_Handler_t Speed_PID;
-RampGenerator_t Speed_Ramp;
-Clarke_Data_t Inv_Park;
-Clarke_Data_t Clarke;
-Phase_Data_t Phase_Current;
-Park_Data_t DQ_Current;
-Park_Data_t DQ_Current_ref;
-Park_Data_t DQ_Voltage_ref;
-
 /*  Gate polarity definition */
 #ifndef GATE_POLARITY_HIGH_ACTIVE
 #ifndef GATE_POLARITY_LOW_ACTIVE
@@ -46,6 +30,9 @@ Park_Data_t DQ_Voltage_ref;
 
 /* FOC parameters */
 #define SPEED_LOOP_PRESCALER 10 /* Speed loop frequency division factor */
+
+// Since CCP demanded struct FOC is Global Variable, make it visible to main ISR //
+extern FOC_Parameter_t FOC;
 
 extern Sensor_Parameter_t Sensor;
 
