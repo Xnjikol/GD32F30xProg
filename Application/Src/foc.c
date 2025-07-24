@@ -6,7 +6,6 @@
 
 static inline float Get_Theta(float, float);
 
-static inline float wrap_theta_2pi(float);
 static inline float RampGenerator(RampGenerator_t*);
 static inline void SVPWM_Generate(float, float, float, FOC_Parameter_t*);
 

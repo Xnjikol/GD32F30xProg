@@ -136,7 +136,7 @@ void Main_Int_Parameter_Init(void)
   Motor.Ld = 0.001F;
   Motor.Lq = 0.001F;
   Motor.Flux = 0.1F;
-  Motor.Pn = 2.0F;
+  Motor.Pn = 5.0F;
   Motor.Position_Scale = 65536 - 1;
   Motor.Resolver_Pn = 1.0F;
   Motor.inv_MotorPn = 1.0F / 2.0F;  // Pn
@@ -248,11 +248,7 @@ static inline void Write_Variables()
   // FOC.speed->fdbk = Sensor.Speed;
 }
 
-static inline void Read_Variables()
-{
-  // 读取反馈到全局变量
-  Speed_Fdbk = FOC.speed->fdbk;
-}
+static inline void Read_Variables() {}
 
 static inline void UpdateThetaAndSpeed(FOC_Parameter_t* foc, Motor_Parameter_t* motor)
 {
