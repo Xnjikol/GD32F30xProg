@@ -53,28 +53,47 @@ static inline void Pid_Update(float error, bool Reset, PID_Handler_t* handler)
     handler->previous_error = 0.0F;
     handler->output = 0.0F;
     handler->Reset = true;
+    return;
   }
 
-  handler->integral += error * handler->Ts;
+  // 计算比例项
+  const float proportional = handler->Kp * error;
 
-  // Anti-windup
-  if (handler->integral > handler->IntegralLimit)
-    handler->integral = handler->IntegralLimit;
-  else if (handler->integral < -handler->IntegralLimit)
-    handler->integral = -handler->IntegralLimit;
+  // 计算未限幅输出（用于条件积分判断）
+  const float output_unclamped = proportional + handler->Ki * handler->integral;
+  const bool is_output_limited =
+      (output_unclamped > handler->MaxOutput) || (output_unclamped < handler->MinOutput);
 
-  float derivative = error - handler->previous_error;
-  handler->previous_error = error;
+  // 条件积分抗饱和：仅当输出未限幅且Ki有效时才累加积分
+  if (!is_output_limited && handler->Ki != 0.0F && handler->Ts > 0.0F)
+  {
+    handler->integral += error * handler->Ts;
 
-  // PID output calculation
-  handler->output =
-      handler->Kp * error + handler->Ki * handler->integral + handler->Kd * derivative;
+    // 积分限幅保护
+    if (handler->integral > handler->IntegralLimit)
+      handler->integral = handler->IntegralLimit;
+    else if (handler->integral < -handler->IntegralLimit)
+      handler->integral = -handler->IntegralLimit;
+  }
 
-  // Clamp output to limits
-  if (handler->output > handler->MaxOutput)
+  // 计算微分项（考虑采样时间，避免除零）
+  float derivative = 0.0F;
+  if (handler->Kd != 0.0F && handler->Ts > 0.0F)
+  {
+    derivative = handler->Kd * (error - handler->previous_error) / handler->Ts;
+    handler->previous_error = error;
+  }
+
+  // 计算完整输出
+  const float total_output = proportional + handler->Ki * handler->integral + derivative;
+
+  // 输出限幅
+  if (total_output > handler->MaxOutput)
     handler->output = handler->MaxOutput;
-  else if (handler->output < handler->MinOutput)
+  else if (total_output < handler->MinOutput)
     handler->output = handler->MinOutput;
+  else
+    handler->output = total_output;
 }
 
 #endif /* _PID_H_ */

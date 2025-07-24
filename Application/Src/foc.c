@@ -55,7 +55,7 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
       }
       foc->Theta = if_p->Theta;
 
-      ParkTransform(I_clarke->a, I_clarke->b, foc->Theta, hCurrent->fdbk);
+      ParkTransform(I_clarke->a, I_clarke->b, foc->Theta, idq_fdbk);
 
       idq_ref->d = if_p->Id_ref;
       idq_ref->q = if_p->Iq_ref;

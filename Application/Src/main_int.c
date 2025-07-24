@@ -140,7 +140,7 @@ void Main_Int_Parameter_Init(void)
   Motor.Position_Scale = 65536 - 1;
   Motor.Resolver_Pn = 1.0F;
   Motor.inv_MotorPn = 1.0F / 2.0F;  // Pn
-  Motor.Position_Offset = 107.0F;
+  Motor.Position_Offset = 39833.000000F;
 
 #ifdef Resolver_Position
   theta_factor = M_2PI / ((Motor.Position_Scale + 1) * Motor.Resolver_Pn);
