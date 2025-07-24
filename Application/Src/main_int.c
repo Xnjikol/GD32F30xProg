@@ -1,5 +1,8 @@
 #include "main_int.h"
 
+#include <stdlib.h>
+
+
 float theta_mech = 0.0F;
 float theta_elec = 0.0F;
 float theta_factor = 0.0F;  // Sensor data to mechanic angle conversion factor
@@ -7,7 +10,7 @@ float theta_factor = 0.0F;  // Sensor data to mechanic angle conversion factor
 float Speed_Ref = 0.0F;
 float Speed_Fdbk = 0.0F;
 
-DeviceState_t Device = {DEVICE_STATE_INIT};
+DeviceState_t Device = {INIT};
 Motor_Parameter_t Motor;
 FOC_Parameter_t FOC;
 VF_Parameter_t VF;
@@ -49,14 +52,10 @@ void Main_Int_Handler(void)
     Peripheral_UpdatePosition();
 
     Write_Variables();
-    if (Device.Mode != DEVICE_STATE_INIT)
-    {
-    }
-
 
     switch (Device.Mode)
     {
-      case DEVICE_STATE_INIT:
+      case INIT:
       {
         Main_Int_Parameter_Init();
 
@@ -66,16 +65,16 @@ void Main_Int_Handler(void)
         }
         Protect.Flag = No_Protect;
         FOC.Mode = IDLE;
-        Device.Mode = DEVICE_STATE_READY;
+        Device.Mode = READY;
         break;
       }
-      case DEVICE_STATE_READY:
+      case READY:
       {
         FOC.Mode = IDLE;
-        Device.Mode = DEVICE_STATE_RUNNING;
+        Device.Mode = RUNNING;
         break;
       }
-      case DEVICE_STATE_RUNNING:
+      case RUNNING:
       {
         UpdateThetaAndSpeed(&FOC, &Motor);
         FOC_Main(&FOC, &VF, &IF, &Clarke);
@@ -102,10 +101,6 @@ void Main_Int_Handler(void)
 
 void Main_Int_Parameter_Init(void)
 {
-  // 声明局部变量
-  static Current_Loop_t Current_Loop;
-  static Speed_Loop_t Speed_Loop;
-
   memset(&VF, 0, sizeof(VF_Parameter_t));
   memset(&FOC, 0, sizeof(FOC_Parameter_t));
   memset(&Id_PID, 0, sizeof(PID_Handler_t));
@@ -113,8 +108,6 @@ void Main_Int_Parameter_Init(void)
   memset(&Speed_PID, 0, sizeof(PID_Handler_t));
   memset(&Inv_Park, 0, sizeof(Clarke_Data_t));
   memset(&Speed_Ramp, 0, sizeof(RampGenerator_t));
-  memset(&Current_Loop, 0, sizeof(Current_Loop_t));
-  memset(&Speed_Loop, 0, sizeof(Speed_Loop_t));
   memset(&Motor, 0, sizeof(Motor_Parameter_t));
   memset(&Phase_Current, 0, sizeof(Phase_Data_t));
   memset(&DQ_Current, 0, sizeof(Park_Data_t));
@@ -126,13 +119,13 @@ void Main_Int_Parameter_Init(void)
   Peripheral_CalibrateADC();
 
   FOC.Iabc_fdbk = &Phase_Current;
-  FOC.current = &Current_Loop;
+  FOC.current = (Current_Loop_t*) calloc(1, sizeof(Current_Loop_t));
   FOC.current->fdbk = &DQ_Current;
   FOC.current->ref = &DQ_Current_ref;
   FOC.current->handler_d = &Id_PID;
   FOC.current->handler_q = &Iq_PID;
 
-  FOC.speed = &Speed_Loop;
+  FOC.speed = (Speed_Loop_t*) calloc(1, sizeof(Speed_Loop_t));
   FOC.speed->handler = &Speed_PID;
   FOC.speed->ramp = &Speed_Ramp;
 
@@ -237,7 +230,7 @@ static inline void Theta_Process(float pos, float offset, float* theta, float* s
 
   last_theta = theta_mech;
 
-  float temp_speed = delta_theta * FOC.Ts * 60.0F / M_2PI;
+  float temp_speed = radps2rpm(delta_theta * FOC.Ts);
   if (!hLPF_speed.initialized)
   {
     hLPF_speed.prev_output = temp_speed;

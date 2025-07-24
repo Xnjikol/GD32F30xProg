@@ -16,6 +16,10 @@
         "format": "c",
         "algorithm": "c",
         "xiosbase": "c",
-        "xutility": "c"
+        "xutility": "c",
+        "cstdlib": "c",
+        "memory_resource": "c",
+        "memory": "c",
+        "xlocinfo": "c"
     }
 }

@@ -29,10 +29,6 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
 
   switch (foc->Mode)
   {
-    case INIT:
-    {
-      break;
-    }
     case IDLE:
     {
       foc->Stop = 1;

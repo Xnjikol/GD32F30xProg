@@ -15,7 +15,6 @@ typedef enum
 /*    Type Definitions   */
 typedef enum
 {
-  INIT,
   IDLE,
   VF_MODE,
   IF_MODE,
@@ -27,11 +26,11 @@ typedef enum
 
 typedef enum
 {
-  DEVICE_STATE_INIT,
-  DEVICE_STATE_READY,
-  DEVICE_STATE_FAULT,
-  DEVICE_STATE_RUNNING,
-  DEVICE_STATE_SHUTDOWN
+  INIT,
+  READY,
+  FAULT,
+  RUNNING,
+  SHUTDOWN
 } DeviceStateEnum_t;
 
 typedef struct
