@@ -37,8 +37,7 @@ extern Motor_Parameter_t Motor;
 
 static inline void Sensor_UpdatePosition(float Position)
 {
-  Motor.Position_Scale = Position;   // Update position scale
-  Motor.Position_Offset = Position;  // Update zero position
+  Motor.Position = Position;  // Update zero position
 }
 
 static inline void FOC_UpdateCurrent(float Ia, float Ib, float Ic)

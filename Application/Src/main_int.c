@@ -137,7 +137,7 @@ void Main_Int_Parameter_Init(void)
   Motor.Lq = 0.001F;
   Motor.Flux = 0.1F;
   Motor.Pn = 2.0F;
-  Motor.Position_Scale = 10000 - 1;
+  Motor.Position_Scale = 65536 - 1;
   Motor.Resolver_Pn = 1.0F;
   Motor.inv_MotorPn = 1.0F / 2.0F;  // Pn
   Motor.Position_Offset = 107.0F;
