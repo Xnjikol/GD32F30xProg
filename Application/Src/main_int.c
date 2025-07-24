@@ -130,9 +130,9 @@ void Main_Int_Parameter_Init(void)
   FOC.Udq_ref = &DQ_Voltage_ref;
   FOC.Uclark_ref = &Inv_Park;
 
-  Motor.Rs = 0.65F;
-  Motor.Ld = 0.001F;
-  Motor.Lq = 0.001F;
+  Motor.Rs = 1.25F;
+  Motor.Ld = 0.006F;
+  Motor.Lq = 0.009F;
   Motor.Flux = 0.1F;
   Motor.Pn = 5.0F;
   Motor.Position_Scale = 65536 - 1;
