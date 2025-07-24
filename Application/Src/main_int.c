@@ -220,7 +220,7 @@ static inline void Theta_Process(Motor_Parameter_t* motor, float freq)
   motor->Mech_Theta = delta * theta_factor;
 
   motor->Elec_Theta = motor->Mech_Theta * motor->Pn;
-  motor->Elec_Theta = wrap_theta_2pi(motor->Elec_Theta);
+  motor->Elec_Theta = wrap_theta_pi(motor->Elec_Theta);
 
   static uint16_t cnt_speed = 0;
   cnt_speed++;
