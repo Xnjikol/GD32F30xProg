@@ -2,7 +2,7 @@
 #define _PHERIPHERAL_INTERFACE_H_
 
 #include "com_frame.h"
-#include "foc.h"  // IWYU pragma: export, use foc as a package
+#include "main_int.h"  // IWYU pragma: export, use foc as a package
 #include "stdbool.h"
 #include "stdint.h"
 

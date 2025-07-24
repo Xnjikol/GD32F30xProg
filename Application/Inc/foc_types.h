@@ -78,22 +78,23 @@ typedef struct
 
 typedef struct
 {
-  PhaseABC_t* Iphase;  // ABC Phase current
-  Park_t* Ipark;       // DQ Axis current
   float I_Max;
   float Udc;
   float inv_Udc;
-  float Theta;       /* Electrical angle (rad) */
-  float Speed;       /* Speed (rpm) */
-  Park_t* Upark_ref;  // DQ Axis voltage reference
-  Park_t* Ipark_ref;  // DQ Axis current reference
-  float PWM_ARR;     /* PWM period */
+  float Theta;   /* Electrical angle (rad) */
+  float Speed;   /* Speed (rpm) */
+  float PWM_ARR; /* PWM period */
   float Tcm1;
   float Tcm2;
   float Tcm3;
   float Ts;
-  float f;
-  FOC_Mode_t Mode;  // 当前控制模式
+  float freq;
+  uint16_t Stop;            // Stop flag
+  Park_Data_t* Idq_fdbk;    // DQ轴电流反馈
+  Park_Data_t* Udq_ref;     // DQ轴电压参考
+  Park_Data_t* Idq_ref;     // DQ轴电流参考
+  Phase_Data_t* Iabc_fdbk;  // ABC相电流反馈
+  FOC_Mode_t Mode;          // 当前控制模式
 } FOC_Parameter_t;
 typedef struct
 {

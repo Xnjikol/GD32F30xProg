@@ -11,12 +11,11 @@ static inline float RampGenerator(RampGenerator_t*);
 static inline void SVPWM_Generate(float, float, float, FOC_Parameter_t*);
 
 // SECTION - FOC Main
-void FOC_Main(FOC_Parameter_t* foc, Motor_Parameter_t* motor, VF_Parameter_t* vf,
-              IF_Parameter_t* if_p, PID_Controller_t* id_pid, PID_Controller_t* iq_pid,
-              PID_Controller_t* speed_pid, RampGenerator_t* speed_ramp, Clarke_t* inv_park,
-              Clarke_t* I_clarke, float* speed_ref)
+void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
+              PID_Controller_t* hPid_id, PID_Controller_t* hPid_iq, PID_Controller_t* hPid_speed,
+              RampGenerator_t* speed_ramp, Clarke_t* inv_park, Clarke_t* I_clarke, float* speed_ref)
 {
-  ClarkeTransform(foc->Iphase->a, foc->Iphase->b, foc->Iphase->c, I_clarke);
+  ClarkeTransform(foc->Iabc_fdbk->a, foc->Iabc_fdbk->b, foc->Iabc_fdbk->c, I_clarke);
 
   switch (foc->Mode)
   {
@@ -26,15 +25,15 @@ void FOC_Main(FOC_Parameter_t* foc, Motor_Parameter_t* motor, VF_Parameter_t* vf
     }
     case IDLE:
     {
-      STOP = 1;
+      foc->Stop = 1;
       break;
     }
     case VF_MODE:
     {
       vf->Theta = Get_Theta(vf->Freq, vf->Theta);
       foc->Theta = vf->Theta;
-      foc->Upark_ref->d = vf->Vref_Ud;
-      foc->Upark_ref->q = vf->Vref_Uq;
+      foc->Udq_ref->d = vf->Vref_Ud;
+      foc->Udq_ref->q = vf->Vref_Uq;
       break;
     }
     // SECTION - IF Mode
@@ -50,16 +49,25 @@ void FOC_Main(FOC_Parameter_t* foc, Motor_Parameter_t* motor, VF_Parameter_t* vf
       }
       foc->Theta = if_p->Theta;
 
-      ParkTransform(I_clarke->a, I_clarke->b, foc->Theta, foc->Ipark);
+      ParkTransform(I_clarke->a, I_clarke->b, foc->Theta, foc->Idq_fdbk);
 
-      foc->Ipark_ref->d = if_p->Id_ref;
-      foc->Ipark_ref->q = if_p->Iq_ref;
+      foc->Idq_ref->d = if_p->Id_ref;
+      foc->Idq_ref->q = if_p->Iq_ref;
 
-      PID_Compute(foc->Ipark_ref->d, foc->Ipark->d, STOP, id_pid);
-      PID_Compute(foc->Ipark_ref->q, foc->Ipark->q, STOP, iq_pid);
+      if (hPid_id->Reset)
+      {
+        PID_SetIntegral(hPid_id, foc->Stop, 0.0F);
+      }
+      Pid_Update(foc->Idq_ref->d - foc->Idq_fdbk->d, foc->Stop, hPid_id);
 
-      foc->Upark_ref->d = id_pid->output;
-      foc->Upark_ref->q = iq_pid->output;
+      if (hPid_iq->Reset)
+      {
+        PID_SetIntegral(hPid_iq, foc->Stop, 0.0F);
+      }
+      Pid_Update(foc->Idq_ref->q - foc->Idq_fdbk->q, foc->Stop, hPid_iq);
+
+      foc->Udq_ref->d = hPid_id->output;
+      foc->Udq_ref->q = hPid_iq->output;
 
       break;
     }
@@ -67,7 +75,7 @@ void FOC_Main(FOC_Parameter_t* foc, Motor_Parameter_t* motor, VF_Parameter_t* vf
     // SECTION - Speed Mode
     case Speed:
     {
-      ParkTransform(I_clarke->a, I_clarke->b, foc->Theta, foc->Ipark);
+      ParkTransform(I_clarke->a, I_clarke->b, foc->Theta, foc->Idq_fdbk);
 
       static uint16_t Speed_Count = 0;
       Speed_Count++;
@@ -76,28 +84,28 @@ void FOC_Main(FOC_Parameter_t* foc, Motor_Parameter_t* motor, VF_Parameter_t* vf
         Speed_Count = 0;
         speed_ramp->target = *speed_ref;  // Update target speed
 
-        PID_Compute(RampGenerator(speed_ramp), FOC.Speed, STOP, speed_pid);
+        Pid_Update(RampGenerator(speed_ramp) - foc->Speed, foc->Stop, hPid_speed);
       }
 
-      FOC.Ipark->q = speed_pid->output;           // Iq_ref = Speed_PID.output
-      FOC.Ipark->d = 0.37446808F * FOC.Ipark->q;  // Id_ref = 0
+      foc->Idq_ref->q = hPid_speed->output;             // Iq_ref = Speed_PID.output
+      foc->Idq_ref->d = 0.37446808F * foc->Idq_ref->q;  // Id_ref = 0
 
-      PID_Compute(FOC.Ipark->d, FOC.Ipark->d, STOP, id_pid);
-      PID_Compute(FOC.Ipark->q, FOC.Ipark->q, STOP, iq_pid);
+      Pid_Update(foc->Idq_ref->d - foc->Idq_fdbk->d, foc->Stop, hPid_id);
+      Pid_Update(foc->Idq_ref->q - foc->Idq_fdbk->q, foc->Stop, hPid_iq);
 
-      FOC.Upark_ref->d = id_pid->output;
-      FOC.Upark_ref->q = iq_pid->output;
+      foc->Udq_ref->d = hPid_id->output;
+      foc->Udq_ref->q = hPid_iq->output;
 
       break;
     }
     // !SECTION
     case EXIT:
     {
-      STOP = 1;
-      FOC.Ipark->d = 0.0F;  // Id_ref = 0
-      FOC.Ipark->q = 0.0F;  // Iq_ref = Speed_PID.output
-      FOC.Upark_ref->d = 0.0F;
-      FOC.Upark_ref->q = 0.0F;
+      foc->Stop = 1;
+      foc->Idq_fdbk->d = 0.0F;  // Id_ref = 0
+      foc->Idq_fdbk->q = 0.0F;  // Iq_ref = Speed_PID.output
+      foc->Udq_ref->d = 0.0F;
+      foc->Udq_ref->q = 0.0F;
       break;
     }
     // SECTION - Identify Mode
@@ -106,20 +114,20 @@ void FOC_Main(FOC_Parameter_t* foc, Motor_Parameter_t* motor, VF_Parameter_t* vf
     //   ParkTransform(I_clarke.a, I_clarke.b, foc->Theta, &foc);
 
     //   SquareWaveGenerater(&VoltageInjector, &foc);
-    //   foc->Upark_ref->d = VoltageInjector.Vd;
-    //   foc->Upark_ref->q = VoltageInjector.Vq;
+    //   foc->Udq_ref->d = VoltageInjector.Vd;
+    //   foc->Udq_ref->q = VoltageInjector.Vq;
     //   break;
     // }
     // !SECTION
     default:
     {
-      STOP = 1;
+      foc->Stop = 1;
       foc->Mode = IDLE;
       break;
     }
   }
 
-  InvParkTransform(foc->Upark_ref->d, foc->Upark_ref->q, foc->Theta, inv_park);
+  InvParkTransform(foc->Udq_ref->d, foc->Udq_ref->q, foc->Theta, inv_park);
   SVPWM_Generate(inv_park->a, inv_park->b, foc->inv_Udc, foc);
 }
 

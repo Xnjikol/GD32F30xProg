@@ -41,7 +41,7 @@ typedef struct
   float a;
   float b;
   float c;
-} PhaseABC_t;
+} Phase_Data_t;
 
 typedef struct
 {
@@ -49,12 +49,12 @@ typedef struct
   float b;
 } Clarke_t;
 
-// struct Park_t is commented out as struct FOC_Parameter_t takes care of Id and Iq
+// struct Park_Data_t is commented out as struct FOC_Parameter_t takes care of Id and Iq
 typedef struct
 {
   float d;
   float q;
-} Park_t;
+} Park_Data_t;
 
 static inline void ClarkeTransform(float Ia, float Ib, float Ic, Clarke_t* out)
 {
@@ -66,7 +66,7 @@ static inline void ClarkeTransform(float Ia, float Ib, float Ic, Clarke_t* out)
   out->b = 0.57735026919F * (Ib - Ic);  // 0.57735026919F 1/√3
 #endif
 }
-static inline void ParkTransform(float alpha, float beta, float theta, Park_t* out)
+static inline void ParkTransform(float alpha, float beta, float theta, Park_Data_t* out)
 {
   float_t cos_theta = COS(theta);
   float_t sin_theta = SIN(theta);
@@ -80,7 +80,7 @@ static inline void InvParkTransform(float d, float q, float theta, Clarke_t* out
   out->a = d * cos_theta - q * sin_theta;
   out->b = d * sin_theta + q * cos_theta;
 }
-static inline void InvClarkeTransform(float alpha, float beta, PhaseABC_t* out)
+static inline void InvClarkeTransform(float alpha, float beta, Phase_Data_t* out)
 {
 #if (defined(TWO_PHASE_CURRENT_SENSING))
   // For two-phase current sensing, Ic is calculated as -(Ia + Ib)

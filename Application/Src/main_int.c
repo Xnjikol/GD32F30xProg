@@ -1,34 +1,20 @@
 #include "main_int.h"
 
-Motor_Parameter_t Motor;
-Sensor_Parameter_t Sensor;
-FOC_Parameter_t FOC;
-VF_Parameter_t VF;
-IF_Parameter_t IF;
-PID_Controller_t Id_PID;
-PID_Controller_t Iq_PID;
-PID_Controller_t Speed_PID;
-RampGenerator_t Speed_Ramp;
-Clarke_t Inv_Park;
-Clarke_t Clarke;
-PhaseABC_t Phase_Current;
-Park_t DQ_Current;
-Park_t DQ_Current_ref;
-Park_t DQ_Voltage_ref;
-
 float theta_mech = 0.0F;
 float theta_elec = 0.0F;
 float theta_factor = 0.0F;  // Sensor data to mechanic angle conversion factor
 
 float Speed_Ref = 0.0F;
 
-LowPassFilter_t Speed_Filter = {.alpha = 0.9685841F, .prev_output = 0.0F, .initialized = false};
+LowPassFilter_t hLPF_speed = {.alpha = 0.9685841F, .prev_output = 0.0F, .initialized = false};
 
 static inline void Main_Int_Parameter_Init(void);
 static inline void Theta_Process(float, float, float*, float*);
+static inline void Write_Variables();
+static inline void Read_Variables();
 
 /*!
-    \brief      Main interrupt handler function.
+    \brief      主中断函数
     \param[in]  none
     \param[out] none
     \retval     none
@@ -44,10 +30,14 @@ void Main_Int_Handler(void)
     Peripheral_UpdateUdc();
     Peripheral_UpdatePosition();
 
+    Write_Variables();
+
     Theta_Process(Sensor.Position, Motor.Position_Offset, &Sensor.Elec_Theta, &Sensor.Speed);
 
-    FOC_Main(&FOC, &Motor, &VF, &IF, &Id_PID, &Iq_PID, &Speed_PID, &Speed_Ramp, &Inv_Park, &Clarke,
+    FOC_Main(&FOC, &VF, &IF, &Id_PID, &Iq_PID, &Speed_PID, &Speed_Ramp, &Inv_Park, &Clarke,
              &Speed_Ref);
+
+    Read_Variables();
 
     switch (FOC.Mode)
     {
@@ -76,7 +66,7 @@ void Main_Int_Handler(void)
       // {
       //   float DMA_Buffer[3];
       //   DMA_Buffer[0] = VoltageInjector.Vq;
-      //   DMA_Buffer[1] = FOC.Ipark->q;
+      //   DMA_Buffer[1] = FOC.Idq_fdbk->q;
       //   DMA_Buffer[2] = (float) VoltageInjector.Count;
       //   justfloat(DMA_Buffer, 3);
       //   break;
@@ -104,15 +94,15 @@ void Main_Int_Parameter_Init(void)
   memset(&Inv_Park, 0, sizeof(Clarke_t));
   memset(&Speed_Ramp, 0, sizeof(RampGenerator_t));
   memset(&Motor, 0, sizeof(Motor_Parameter_t));
-  memset(&Phase_Current, 0, sizeof(PhaseABC_t));
-  memset(&DQ_Current, 0, sizeof(Park_t));
-  memset(&DQ_Current_ref, 0, sizeof(Park_t));
-  memset(&DQ_Voltage_ref, 0, sizeof(Park_t));
+  memset(&Phase_Current, 0, sizeof(Phase_Data_t));
+  memset(&DQ_Current, 0, sizeof(Park_Data_t));
+  memset(&DQ_Current_ref, 0, sizeof(Park_Data_t));
+  memset(&DQ_Voltage_ref, 0, sizeof(Park_Data_t));
 
-  FOC.Iphase = &Phase_Current;
-  FOC.Ipark = &DQ_Current;
-  FOC.Upark_ref = &DQ_Voltage_ref;
-  FOC.Ipark_ref = &DQ_Current_ref;
+  FOC.Iabc_fdbk = &Phase_Current;
+  FOC.Idq_fdbk = &DQ_Current;
+  FOC.Udq_ref = &DQ_Voltage_ref;
+  FOC.Idq_ref = &DQ_Current_ref;
 
   STOP = 1;
 
@@ -184,9 +174,9 @@ void Main_Int_Parameter_Init(void)
   IF.Sensor_State = Disable;
 }
 
-void FOC_UpdateMainFrequency(float f, float Ts, float PWM_ARR)
+void FOC_UpdateMainFrequency(float freq, float Ts, float PWM_ARR)
 {
-  FOC.f = f;
+  FOC.freq = freq;
   FOC.Ts = Ts;
   FOC.PWM_ARR = PWM_ARR;
 }
@@ -213,11 +203,21 @@ static inline void Theta_Process(float pos, float offset, float* theta, float* s
   last_theta = theta_mech;
 
   float temp_speed = delta_theta * FOC.Ts * 60.0F / M_2PI;
-  if (!Speed_Filter.initialized)
+  if (!hLPF_speed.initialized)
   {
-    Speed_Filter.prev_output = temp_speed;
-    LowPassFilter_Init(&Speed_Filter, 10.0F, 1.0F / FOC.Ts);
-    Speed_Filter.initialized = true;
+    hLPF_speed.prev_output = temp_speed;
+    LowPassFilter_Init(&hLPF_speed, 10.0F, 1.0F / FOC.Ts);
+    hLPF_speed.initialized = true;
   }
-  *speed = LowPassFilter_Update(&Speed_Filter, temp_speed);
+  *speed = LowPassFilter_Update(&hLPF_speed, temp_speed);
+}
+
+static inline void Write_Variables()
+{
+  FOC.Stop = STOP;
+}
+
+static inline void Read_Variables()
+{
+  STOP = FOC.Stop;
 }
