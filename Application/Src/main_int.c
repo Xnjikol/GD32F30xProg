@@ -26,10 +26,8 @@ Park_Data_t DQ_Current;
 Park_Data_t DQ_Current_ref;
 Park_Data_t DQ_Voltage_ref;
 
-LowPassFilter_t hLPF_speed = {.alpha = 0.9685841F, .prev_output = 0.0F, .initialized = false};
-
 static inline void Main_Int_Parameter_Init(void);
-static inline void Theta_Process(float, float, float*, float*);
+static inline void Theta_Process(Motor_Parameter_t*, float);
 static inline void Write_Variables();
 static inline void Read_Variables();
 static inline void UpdateThetaAndSpeed(FOC_Parameter_t* foc, Motor_Parameter_t* motor);
@@ -148,8 +146,8 @@ void Main_Int_Parameter_Init(void)
 #ifdef Encoder_Position
   theta_factor = M_2PI / (float) (Motor.Position_Scale + 1);
 #endif
-  Speed_PID.Kp = 0.0F;
-  Speed_PID.Ki = 0.0F;
+  Speed_PID.Kp = 0.005F;
+  Speed_PID.Ki = 0.03F;
   Speed_PID.Kd = 0.0F;
   Speed_PID.MaxOutput = 0.7F * FOC.I_Max;  // Maximum Iq
   Speed_PID.MinOutput = -0.7F * FOC.I_Max;
@@ -209,35 +207,44 @@ void FOC_UpdateMainFrequency(float freq, float Ts, float PWM_ARR)
   FOC.PWM_ARR = PWM_ARR;
 }
 
-static inline void Theta_Process(float pos, float offset, float* theta, float* speed)
+static inline void Theta_Process(Motor_Parameter_t* motor, float freq)
 {
+  freq = freq / SPEED_LOOP_PRESCALER;
   // 位置传感器数据处理
-  float delta = pos - offset;
+  float delta = motor->Position - motor->Position_Offset;
   if (delta < 0)
   {
-    delta += (float) (Motor.Position_Scale + 1);
+    delta += (float) (motor->Position_Scale + 1);
   }
 
-  float theta_mech = delta * theta_factor;
+  motor->Mech_Theta = delta * theta_factor;
 
-  float theta_elec = theta_mech * Motor.Pn;
-  *theta = wrap_theta_2pi(theta_elec);
+  motor->Elec_Theta = motor->Mech_Theta * motor->Pn;
+  motor->Elec_Theta = wrap_theta_2pi(motor->Elec_Theta);
 
-  static float last_theta = 0.0F;
-  float delta_theta = theta_mech - last_theta;
-
-  delta_theta = wrap_theta_2pi(delta_theta);
-
-  last_theta = theta_mech;
-
-  float temp_speed = radps2rpm(delta_theta * FOC.Ts);
-  if (!hLPF_speed.initialized)
+  static uint16_t cnt_speed = 0;
+  cnt_speed++;
+  if (cnt_speed >= SPEED_LOOP_PRESCALER)
   {
-    hLPF_speed.prev_output = temp_speed;
-    LowPassFilter_Init(&hLPF_speed, 10.0F, 1.0F / FOC.speed->handler->Ts);
-    hLPF_speed.initialized = true;
+    cnt_speed = 0;
+
+    static float last_theta = 0.0F;
+    float delta_theta = motor->Mech_Theta - last_theta;
+
+    delta_theta = wrap_theta_pi(delta_theta);
+
+    last_theta = motor->Mech_Theta;
+
+    motor->Speed = radps2rpm(delta_theta * freq);
+
+    static LowPassFilter_t hLPF_speed = {.initialized = false};
+    if (!hLPF_speed.initialized)
+    {  // 初始化低通滤波器
+      LowPassFilter_Init(&hLPF_speed, 10.0F, freq);
+      hLPF_speed.initialized = true;
+    }
+    motor->Speed = LowPassFilter_Update(&hLPF_speed, motor->Speed);
   }
-  *speed = LowPassFilter_Update(&hLPF_speed, temp_speed);
 }
 
 static inline void Write_Variables()
@@ -252,7 +259,7 @@ static inline void Read_Variables() {}
 
 static inline void UpdateThetaAndSpeed(FOC_Parameter_t* foc, Motor_Parameter_t* motor)
 {
-  Theta_Process(motor->Position, motor->Position_Offset, &motor->Elec_Theta, &motor->Speed);
+  Theta_Process(motor, foc->freq);
   foc->Theta = motor->Elec_Theta;
   foc->speed->fdbk = motor->Speed;
 }

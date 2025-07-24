@@ -28,9 +28,7 @@ typedef enum
 {
   INIT,
   READY,
-  FAULT,
-  RUNNING,
-  SHUTDOWN
+  RUNNING
 } DeviceStateEnum_t;
 
 typedef struct

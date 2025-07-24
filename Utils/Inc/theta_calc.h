@@ -31,6 +31,30 @@
 #endif
 
 /**
+ * @brief 将角度限制在 [-π, π) 区间
+ * @param theta 输入角度（弧度）
+ * @return 限幅后的角度（弧度）
+ */
+static inline float_t wrap_theta_pi(float_t theta)
+{
+  // 先将角度归一化到 [-2π, 2π) 范围
+  theta = fmodf(theta, M_2PI);
+
+  // 如果角度大于π，则减去2π使其落入[-π, π)
+  if (theta >= M_PI)
+  {
+    theta -= M_2PI;
+  }
+  // 如果角度小于-π，则加上2π使其落入[-π, π)
+  else if (theta < -M_PI)
+  {
+    theta += M_2PI;
+  }
+
+  return theta;
+}
+
+/**
  * @brief 将角度限制在 [0, 2π) 区间
  * @param theta 输入角度（弧度）
  * @return 限幅后的角度（弧度）

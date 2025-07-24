@@ -3,10 +3,11 @@
 #define __FILTER_H__
 
 #include <stdbool.h>
-#include <stdint.h>
 #include <stddef.h>
+#include <stdint.h>
 
 #include "gd32f30x.h"
+
 
 #define MAX_FILTER_SIZE 32
 
@@ -15,9 +16,9 @@
  */
 typedef struct
 {
-    float alpha;        // Filter coefficient
-    float prev_output;  // Previous output value
-    bool initialized;   // Initialization flag
+  float alpha;        // Filter coefficient
+  float prev_output;  // Previous output value
+  bool initialized;   // Initialization flag
 } LowPassFilter_t;
 
 /**
@@ -25,11 +26,11 @@ typedef struct
  */
 typedef struct
 {
-    float buffer[MAX_FILTER_SIZE];  // Circular buffer
-    float sum;                      // Sum of values in buffer
-    uint16_t window_size;           // Size of moving window
-    uint16_t index;                 // Current index in buffer
-    uint16_t count;                 // Number of valid samples
+  float buffer[MAX_FILTER_SIZE];  // Circular buffer
+  float sum;                      // Sum of values in buffer
+  uint16_t window_size;           // Size of moving window
+  uint16_t index;                 // Current index in buffer
+  uint16_t count;                 // Number of valid samples
 } MovingAverageFilter_t;
 
 /**
@@ -37,10 +38,10 @@ typedef struct
  */
 typedef struct
 {
-    float buffer[MAX_FILTER_SIZE];  // Circular buffer
-    uint16_t window_size;           // Size of filter window
-    uint16_t index;                 // Current index in buffer
-    uint16_t count;                 // Number of valid samples
+  float buffer[MAX_FILTER_SIZE];  // Circular buffer
+  uint16_t window_size;           // Size of filter window
+  uint16_t index;                 // Current index in buffer
+  uint16_t count;                 // Number of valid samples
 } MedianFilter_t;
 
 /**
@@ -48,11 +49,11 @@ typedef struct
  */
 typedef struct
 {
-    float x;  // State estimate
-    float P;  // Estimate uncertainty
-    float Q;  // Process noise variance
-    float R;  // Measurement noise variance
-    float K;  // Kalman gain
+  float x;  // State estimate
+  float P;  // Estimate uncertainty
+  float Q;  // Process noise variance
+  float R;  // Measurement noise variance
+  float K;  // Kalman gain
 } KalmanFilter_t;
 
 /**
@@ -60,11 +61,11 @@ typedef struct
  */
 typedef struct
 {
-    LowPassFilter_t low_pass;   // Low pass stage
-    float high_pass_alpha;      // High pass coefficient
-    float high_pass_prev_input; // Previous input for high pass
-    float high_pass_prev_output;// Previous output for high pass
-    bool initialized;           // Initialization flag
+  LowPassFilter_t low_pass;     // Low pass stage
+  float high_pass_alpha;        // High pass coefficient
+  float high_pass_prev_input;   // Previous input for high pass
+  float high_pass_prev_output;  // Previous output for high pass
+  bool initialized;             // Initialization flag
 } BandPassFilter_t;
 
 /**
@@ -72,10 +73,10 @@ typedef struct
  */
 typedef struct
 {
-    float alpha;        // Filter coefficient
-    float prev_input;   // Previous input value
-    float prev_output;  // Previous output value
-    bool initialized;   // Initialization flag
+  float alpha;        // Filter coefficient
+  float prev_input;   // Previous input value
+  float prev_output;  // Previous output value
+  bool initialized;   // Initialization flag
 } HighPassFilter_t;
 
 /**
@@ -83,10 +84,10 @@ typedef struct
  */
 typedef struct
 {
-    LowPassFilter_t low_pass;   // Low pass path
-    HighPassFilter_t high_pass; // High pass path
-    float low_gain;             // Low frequency gain
-    float high_gain;            // High frequency gain
+  LowPassFilter_t low_pass;    // Low pass path
+  HighPassFilter_t high_pass;  // High pass path
+  float low_gain;              // Low frequency gain
+  float high_gain;             // High frequency gain
 } BandStopFilter_t;
 
 // Low pass filter functions
@@ -97,22 +98,28 @@ void LowPassFilter_Init(LowPassFilter_t* filter, float cutoff_freq, float sample
  * @param input: input value
  * @return filtered output value
  */
-static inline float LowPassFilter_Update(LowPassFilter_t *filter, float input)
+static inline float LowPassFilter_Update(LowPassFilter_t* filter, float x)
 {
-    if (filter == NULL) return input;
-    
-    // Initialize with first input value for better transient response
-    if (!filter->initialized) {
-        filter->prev_output = input;
-        filter->initialized = true;
-        return input;
-    }
-    
-    // Apply low pass filter equation: y[n] = α * x[n] + (1-α) * y[n-1]
-    filter->prev_output = filter->alpha * input + (1.0f - filter->alpha) * filter->prev_output;
-    
-    return filter->prev_output;
+  float y = filter->alpha * filter->prev_output + (1.0F - filter->alpha) * x;
+  filter->prev_output = y;
+  return y;
 }
+// static inline float LowPassFilter_Update(LowPassFilter_t *filter, float input)
+// {
+//     if (filter == NULL) return input;
+
+//     // Initialize with first input value for better transient response
+//     if (!filter->initialized) {
+//         filter->prev_output = input;
+//         filter->initialized = true;
+//         return input;
+//     }
+
+//     // Apply low pass filter equation: y[n] = α * x[n] + (1-α) * y[n-1]
+//     filter->prev_output = filter->alpha * input + (1.0f - filter->alpha) * filter->prev_output;
+
+//     return filter->prev_output;
+// }
 void LowPassFilter_Reset(LowPassFilter_t* filter);
 
 // Moving average filter functions
@@ -140,12 +147,14 @@ float HighPassFilter_Update(HighPassFilter_t* filter, float input);
 void HighPassFilter_Reset(HighPassFilter_t* filter);
 
 // Band pass filter functions
-void BandPassFilter_Init(BandPassFilter_t* filter, float low_cutoff, float high_cutoff, float sample_freq);
+void BandPassFilter_Init(BandPassFilter_t* filter, float low_cutoff, float high_cutoff,
+                         float sample_freq);
 float BandPassFilter_Update(BandPassFilter_t* filter, float input);
 void BandPassFilter_Reset(BandPassFilter_t* filter);
 
 // Band stop (notch) filter functions
-void BandStopFilter_Init(BandStopFilter_t* filter, float low_cutoff, float high_cutoff, float sample_freq);
+void BandStopFilter_Init(BandStopFilter_t* filter, float low_cutoff, float high_cutoff,
+                         float sample_freq);
 float BandStopFilter_Update(BandStopFilter_t* filter, float input);
 void BandStopFilter_Reset(BandStopFilter_t* filter);
 

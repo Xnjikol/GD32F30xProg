@@ -92,8 +92,8 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
         Pid_Update(RampGenerator(speed_ramp) - hSpeed->fdbk, foc->Stop, hPid_speed);
       }
 
-      idq_ref->q = hPid_speed->output;        // Iq_ref = Speed_PID.output
-      idq_ref->d = 0.37446808F * idq_ref->q;  // Id_ref = 0
+      idq_ref->q = hPid_speed->output;  // Iq_ref = Speed_PID.output
+      idq_ref->d = 0.0F;                // Id_ref = 0
 
       Pid_Update(idq_ref->d - idq_fdbk->d, foc->Stop, hPid_id);
       Pid_Update(idq_ref->q - idq_fdbk->q, foc->Stop, hPid_iq);
