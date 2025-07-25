@@ -31,7 +31,7 @@ typedef struct
   Protect_Flags_t Flag;
 } Protect_Parameter_t;
 
-extern volatile uint16_t STOP;
+extern volatile uint16_t Device_Stop;
 extern bool Software_BRK;
 extern Protect_Parameter_t Protect;
 

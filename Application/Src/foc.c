@@ -6,17 +6,13 @@
 
 static inline float Get_Theta(float, float);
 static inline void SVPWM_Generate(Clark_t*, float, Phase_t*);
-static inline void Speed_Loop_Control(Speed_Loop_t* speed_loop, Park_t* idq_ref);
-static inline void Current_Loop_Control(Current_Loop_t* hnd, Park_t* out);
+static inline void Speed_Loop_Control(SpdLoop_t* speed_loop, Park_t* idq_ref);
+static inline void Current_Loop_Control(CurLoop_t* hnd, Park_t* out);
 
 // SECTION - FOC Main
 void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p)
 {
   ClarkeTransform(foc->Iabc_fdbk, foc->Iclark_fdbk);
-  Current_Loop_t* hCurrent = foc->current;
-  Park_t* idq_ref = hCurrent->ref;
-  Park_t* idq_fdbk = hCurrent->fdbk;
-  Clark_t* inv_park = foc->Uclark_ref;
 
   switch (foc->Mode)
   {
@@ -29,6 +25,7 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p)
     {
       vf->Theta = Get_Theta(vf->Freq, vf->Theta);
       foc->Theta = vf->Theta;
+      ParkTransform(foc->Iclark_fdbk, foc->Theta, foc->Idq_ref);
       foc->Udq_ref->d = vf->Vref_Ud;
       foc->Udq_ref->q = vf->Vref_Uq;
       break;
@@ -46,32 +43,35 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p)
       }
       foc->Theta = if_p->Theta;
 
-      ParkTransform(foc->Iclark_fdbk, foc->Theta, idq_fdbk);
+      ParkTransform(foc->Iclark_fdbk, foc->Theta, foc->Idq_ref);
 
-      idq_ref->d = if_p->Id_ref;
-      idq_ref->q = if_p->Iq_ref;
+      foc->Idq_ref->d = if_p->Id_ref;
+      foc->Idq_ref->q = if_p->Iq_ref;
 
-      // 更新电流环的停止标志
-      hCurrent->reset = foc->Stop;
+      // 更新电流环参数
+      CurLoop_t* hCurrent = foc->Hnd_curloop;
+      memcpy(hCurrent->ref, foc->Idq_ref, sizeof(*(foc->Idq_ref)));
+      memcpy(hCurrent->fdbk, foc->Idq_fdbk, sizeof(*(foc->Idq_fdbk)));
+      hCurrent->reset = foc->Stop;  // 更新电流环的停止标志
 
       Current_Loop_Control(hCurrent, foc->Udq_ref);
 
       break;
     }
-    // !SECTION
-    // SECTION - Speed Mode
     case Speed:
     {
-      ParkTransform(foc->Iclark_fdbk, foc->Theta, idq_fdbk);
+      ParkTransform(foc->Iclark_fdbk, foc->Theta, foc->Idq_fdbk);
 
-      Speed_Loop_t* hSpeed = foc->speed;
-      // 更新转速环的停止标志
-      hSpeed->reset = foc->Stop;
+      SpdLoop_t* hSpeed = foc->Hnd_spdloop;
+      hSpeed->reset = foc->Stop;  // 更新转速环的停止标志
 
-      Speed_Loop_Control(hSpeed, idq_ref);
+      Speed_Loop_Control(hSpeed, foc->Idq_ref);
 
-      // 更新电流环的停止标志
-      hCurrent->reset = foc->Stop;
+      // 更新电流环参数
+      CurLoop_t* hCurrent = foc->Hnd_curloop;
+      memcpy(hCurrent->ref, foc->Idq_ref, sizeof(*(foc->Idq_ref)));
+      memcpy(hCurrent->fdbk, foc->Idq_fdbk, sizeof(*(foc->Idq_fdbk)));
+      hCurrent->reset = foc->Stop;  // 更新电流环的停止标志
 
       Current_Loop_Control(hCurrent, foc->Udq_ref);
 
@@ -81,8 +81,8 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p)
     case EXIT:
     {
       foc->Stop = 1;
-      idq_fdbk->d = 0.0F;  // Id_ref = 0
-      idq_fdbk->q = 0.0F;  // Iq_ref = Speed_PID.output
+      foc->Idq_fdbk->d = 0.0F;  // Id_ref = 0
+      foc->Idq_fdbk->q = 0.0F;  // Iq_ref = Pid_SpdLoop.output
       foc->Udq_ref->d = 0.0F;
       foc->Udq_ref->q = 0.0F;
       break;
@@ -95,31 +95,31 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p)
     }
   }
 
-  InvParkTransform(foc->Udq_ref, foc->Theta, inv_park);
-  SVPWM_Generate(inv_park, foc->inv_Udc, foc->Tcm);
+  InvParkTransform(foc->Udq_ref, foc->Theta, foc->Uclark_ref);
+  SVPWM_Generate(foc->Uclark_ref, foc->inv_Udc, foc->Tcm);
 }
 
 // SECTION - Speed Loop Control
-static inline void Speed_Loop_Control(Speed_Loop_t* hnd, Park_t* out)
+static inline void Speed_Loop_Control(SpdLoop_t* hnd, Park_t* out)
 {
   hnd->counter++;
   if (hnd->counter >= hnd->prescaler)
   {
     hnd->counter = 0;
-    hnd->ramp->target = hnd->ref;  // Update target speed
+    hnd->hnd_ramp->target = hnd->ref;  // Update target speed
 
-    float speed_ramp = RampGenerator(hnd->ramp, hnd->reset);
-    Pid_Update(speed_ramp - hnd->fdbk, hnd->reset, hnd->handler);
-    // PID输出在这里被更新到 hnd->handler->output
+    float speed_ramp = RampGenerator(hnd->hnd_ramp, hnd->reset);
+    Pid_Update(speed_ramp - hnd->fdbk, hnd->reset, hnd->hnd_speed);
+    // PID输出在这里被更新到 hnd->hnd_speed->output
   }
 
   // 每次调用都读取当前PID输出值（保持控制连续性）
-  out->q = hnd->handler->output;  // Iq_ref = Speed_PID.output
-  out->d = 0.0F;                  // Id_ref = 0 (按要求暂时设为0)
+  out->q = hnd->hnd_speed->output;  // Iq_ref = Pid_SpdLoop.output
+  out->d = 0.0F;                    // Id_ref = 0 (按要求暂时设为0)
 }
 
 // SECTION - Current Loop Control
-static inline void Current_Loop_Control(Current_Loop_t* hnd, Park_t* out)
+static inline void Current_Loop_Control(CurLoop_t* hnd, Park_t* out)
 {
   // D轴电流控制
   if (hnd->handler_d->Reset)

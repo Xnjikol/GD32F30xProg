@@ -42,7 +42,7 @@ OF SUCH DAMAGE.
 #include "main_int.h"
 #include "systick.h"
 
-extern volatile uint16_t STOP;
+extern volatile uint16_t Device_Stop;
 
 /*!
     \brief      this function handles NMI exception
@@ -156,7 +156,7 @@ void EXTI5_9_IRQHandler(void)
   if (RESET != exti_interrupt_flag_get(EXTI_7))
   {
     TIMER_SWEVG(TIMER0) |= TIMER_SWEVG_BRKG;
-    STOP = 1;
+    Device_Stop = 1;
     exti_interrupt_flag_clear(EXTI_7);
   }
 }
@@ -170,7 +170,7 @@ void TIMER0_BRK_IRQHandler(void)
   {
     // 清除 Break 中断标志
     timer_interrupt_flag_clear(TIMER0, TIMER_INT_FLAG_BRK);
-    STOP = 1;
+    Device_Stop = 1;
     if (Software_BRK == false)
     {
       Protect.Flag |= Hardware_Fault;

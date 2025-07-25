@@ -11,7 +11,7 @@
 #include "tim.h"
 #include "usart.h"
 
-volatile uint16_t STOP = 1;
+volatile uint16_t Device_Stop = 1;
 
 bool Software_BRK = false;
 Protect_Parameter_t Protect = {.Udc_rate = Voltage_Rate,
@@ -86,9 +86,9 @@ void Peripheral_GateState(void)
 {
   if (Protect.Flag != No_Protect)
   {
-    STOP = 1;
+    Device_Stop = 1;
   }
-  if (STOP)
+  if (Device_Stop)
   {
     // 软件触发 BRK
     Software_BRK = true;
@@ -96,16 +96,16 @@ void Peripheral_GateState(void)
   }
   else
   {
-    // STOP = 0，尝试恢复
+    // Device_Stop = 0，尝试恢复
     if (gpio_input_bit_get(GPIOE, GPIO_PIN_15) == SET)
     {
       Software_BRK = false;
       timer_primary_output_config(TIMER0, ENABLE);  // 恢复 MOE
-      STOP = 0;
+      Device_Stop = 0;
     }
     else
     {
-      STOP = 1;
+      Device_Stop = 1;
     }
   }
 }
@@ -188,7 +188,7 @@ void Peripheral_TemperatureProtect(void)
   }
   if (Temperature > Protect.Temperature)
   {
-    STOP = 1;
+    Device_Stop = 1;
     Protect.Flag |= Over_Heat;
   }
 }
@@ -202,7 +202,7 @@ static inline void CurrentProtect(float Ia, float Ib, float Ic, float I_Max)
     Current_Count++;
     if (Current_Count > 10)
     {
-      STOP = 1;
+      Device_Stop = 1;
       Protect.Flag |= Over_Current;
       Current_Count = 0;
     }
@@ -210,7 +210,7 @@ static inline void CurrentProtect(float Ia, float Ib, float Ic, float I_Max)
   if ((Ia > I_Max || Ia < -1 * I_Max) || (Ib > I_Max || Ib < -1 * I_Max) ||
       (Ic > I_Max || Ic < -1 * I_Max))
   {
-    STOP = 1;
+    Device_Stop = 1;
     Protect.Flag |= Over_Maximum_Current;
   }
 }
@@ -219,12 +219,12 @@ static inline void VoltageProtect(float Udc, float Udc_rate, float Udc_fluctuati
 {
   if ((Udc > Udc_rate + Udc_fluctuation))
   {
-    STOP = 1;
+    Device_Stop = 1;
     Protect.Flag |= Over_Voltage;
   }
   if ((Udc < Udc_rate - Udc_fluctuation))
   {
-    STOP = 1;
+    Device_Stop = 1;
     Protect.Flag |= Low_Voltage;
   }
 }
