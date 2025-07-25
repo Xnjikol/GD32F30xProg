@@ -46,7 +46,7 @@
     <hardware_channel>CAN1</hardware_channel>
     <calibration_area include_gaps="true" />
     <file path="E:\Doc\Work\FRECON\Prj\GD32F30xProg\build\GD32F30xProg.a2l" relative="build\GD32F30xProg.a2l" symbols="true" prompt_before_overwrite="true" enabled="true" load="false" download="false" flash="false" upload="false" save="false" percent_complete="0" operation_in_progress="false">
-      <properties load_memory_type="file_data" time_operation_started="2013-05-02T02:12:49.6010000+08:00" last_time_loaded="2013-05-02T02:12:49.6010000+08:00" disk_properties_error="" exists_on_disk="true" time_disk_modified="2025-07-25T17:53:22.8698566+08:00" size_bytes_on_disk="30894" last_time_downloaded="0001-01-01T00:00:00.0000000" last_time_flashed="0001-01-01T00:00:00.0000000" last_time_saved="0001-01-01T00:00:00.0000000">
+      <properties load_memory_type="file_data" time_operation_started="2013-05-02T07:06:19.7390000+08:00" last_time_loaded="2013-05-02T07:06:19.7390000+08:00" disk_properties_error="" exists_on_disk="true" time_disk_modified="2025-07-25T22:47:18.9099458+08:00" size_bytes_on_disk="31780" last_time_downloaded="0001-01-01T00:00:00.0000000" last_time_flashed="0001-01-01T00:00:00.0000000" last_time_saved="0001-01-01T00:00:00.0000000">
         <upload_area type="manually_defined" manual_regions_contiguous="true" const_regions_contiguous="false">
           <upload_region start_address="Calibration" byte_length="" />
           <upload_region start_address=".cal_sec" byte_length="" />
@@ -84,7 +84,7 @@
       <row displayed_name="adc_value" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Device.Mode" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="FOC.Mode" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="STOP" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Device_Stop" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="VF.Freq" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="VF.Theta" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="VF.Vref_Ud" nesting_depth="0" ecu="ECU1" scope_on="false" />
@@ -101,26 +101,24 @@
       <row displayed_name="IF.Iq_ref" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="IF.Sensor_State" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="IF.Theta" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Speed_PID.Ki" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Speed_PID.Kp" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Speed_PID.Ts" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Pid_SpdLoop.Ki" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Pid_SpdLoop.Kp" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Pid_SpdLoop.Ts" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Speed_Ref" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Protect.Flag" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Phase_Current.a" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Phase_Current.b" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Phase_Current.c" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Temperature" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
       <row displayed_name="Motor.Position_Scale" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="FOC.PWM_ARR" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="FOC.Udc" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="DQ_Current.d" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-65281" />
-      <row displayed_name="DQ_Current.q" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-7722014" />
-      <row displayed_name="DQ_Current_ref.d" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-16711936" />
-      <row displayed_name="DQ_Current_ref.q" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10185235" />
-      <row displayed_name="DQ_Voltage_ref.d" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
-      <row displayed_name="DQ_Voltage_ref.q" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10496" />
-      <row displayed_name="Clarke.a" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10496" />
-      <row displayed_name="Clarke.b" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-16711936" />
+      <row displayed_name="CurrentClark.a" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="CurrentClark.b" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="CurrentPhase.a" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
+      <row displayed_name="CurrentPhase.b" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10496" />
+      <row displayed_name="CurrentPhase.c" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
+      <row displayed_name="CurrentPark_Ref.d" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-16711936" />
+      <row displayed_name="CurrentPark_Fdbk.d" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10185235" />
+      <row displayed_name="CurrentPark_Ref.q" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-7722014" />
+      <row displayed_name="CurrentPark_Fdbk.q" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-65281" />
     </rows>
   </snoop_watch>
 </snoop_workspace>
