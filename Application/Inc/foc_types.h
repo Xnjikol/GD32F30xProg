@@ -2,8 +2,10 @@
 #define _FOC_TYPES_H_
 
 #include "pid.h"
+#include "signal.h"
 #include "stdint.h"
 #include "transformation.h"
+
 
 typedef enum
 {
@@ -60,17 +62,6 @@ typedef struct
   float Freq;
   float Theta;
 } VF_Parameter_t;
-
-
-typedef struct
-{
-  float value;  // output value
-  float slope;  // Δvalue/s
-  float limit_min;
-  float limit_max;
-  float target;
-  float Ts;
-} RampGenerator_t;
 
 typedef struct
 {

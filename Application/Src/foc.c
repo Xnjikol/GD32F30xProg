@@ -5,8 +5,6 @@
 
 
 static inline float Get_Theta(float, float);
-
-static inline float RampGenerator(RampGenerator_t*);
 static inline void SVPWM_Generate(float, float, float, FOC_Parameter_t*);
 
 // SECTION - FOC Main
@@ -22,7 +20,7 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
 
   Speed_Loop_t* hSpeed = foc->speed;
   PID_Handler_t* hPid_speed = hSpeed->handler;
-  RampGenerator_t* speed_ramp = hSpeed->ramp;
+  RampGenerator_t* hRamp_gen = hSpeed->ramp;
 
   Clarke_Data_t* inv_park = foc->Uclark_ref;
 
@@ -87,9 +85,10 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
       if (Cnt_speed > 9)
       {
         Cnt_speed = 0;
-        speed_ramp->target = hSpeed->ref;  // Update target speed
+        hRamp_gen->target = hSpeed->ref;  // Update target speed
 
-        Pid_Update(RampGenerator(speed_ramp) - hSpeed->fdbk, foc->Stop, hPid_speed);
+        float speed_ramp = RampGenerator(hRamp_gen, foc->Stop);
+        Pid_Update(speed_ramp - hSpeed->fdbk, foc->Stop, hPid_speed);
       }
 
       idq_ref->q = hPid_speed->output;  // Iq_ref = Speed_PID.output
@@ -137,41 +136,6 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
 }
 
 // SECTION - Ramp Generator
-static inline float RampGenerator(RampGenerator_t* ramp)
-{
-  if (STOP == 1)
-  {
-    ramp->value = 0.0F;
-    ramp->target = 0.0F;
-  }
-
-  float delta = ramp->target - ramp->value;
-  float step = ramp->slope * ramp->Ts;
-
-  if (delta > step)
-  {
-    ramp->value += step;
-  }
-  else if (delta < -step)
-  {
-    ramp->value -= step;
-  }
-  else
-  {
-    ramp->value = ramp->target;
-  }
-
-  if (ramp->value > ramp->limit_max)
-  {
-    ramp->value = ramp->limit_max;
-  }
-  if (ramp->value < ramp->limit_min)
-  {
-    ramp->value = ramp->limit_min;
-  }
-
-  return ramp->value;
-}
 
 static inline float Get_Theta(float Freq, float Theta)
 {
