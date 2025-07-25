@@ -6,6 +6,7 @@
 
 static inline float Get_Theta(float, float);
 static inline void SVPWM_Generate(float, float, float, FOC_Parameter_t*);
+static inline void Speed_Loop_Control(Speed_Loop_t* speed_loop, Park_Data_t* idq_ref);
 
 // SECTION - FOC Main
 void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
@@ -19,8 +20,6 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
   PID_Handler_t* hPid_iq = hCurrent->handler_q;
 
   Speed_Loop_t* hSpeed = foc->speed;
-  PID_Handler_t* hPid_speed = hSpeed->handler;
-  RampGenerator_t* hRamp_gen = hSpeed->ramp;
 
   Clarke_Data_t* inv_park = foc->Uclark_ref;
 
@@ -80,19 +79,10 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
     {
       ParkTransform(I_clarke->a, I_clarke->b, foc->Theta, idq_fdbk);
 
-      static uint16_t Cnt_speed = 0;
-      Cnt_speed++;
-      if (Cnt_speed > 9)
-      {
-        Cnt_speed = 0;
-        hRamp_gen->target = hSpeed->ref;  // Update target speed
+      // 更新转速环的停止标志
+      hSpeed->reset = foc->Stop;
 
-        float speed_ramp = RampGenerator(hRamp_gen, foc->Stop);
-        Pid_Update(speed_ramp - hSpeed->fdbk, foc->Stop, hPid_speed);
-      }
-
-      idq_ref->q = hPid_speed->output;  // Iq_ref = Speed_PID.output
-      idq_ref->d = 0.0F;                // Id_ref = 0
+      Speed_Loop_Control(hSpeed, idq_ref);
 
       Pid_Update(idq_ref->d - idq_fdbk->d, foc->Stop, hPid_id);
       Pid_Update(idq_ref->q - idq_fdbk->q, foc->Stop, hPid_iq);
@@ -133,6 +123,25 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
 
   InvParkTransform(foc->Udq_ref->d, foc->Udq_ref->q, foc->Theta, inv_park);
   SVPWM_Generate(inv_park->a, inv_park->b, foc->inv_Udc, foc);
+}
+
+// SECTION - Speed Loop Control
+static inline void Speed_Loop_Control(Speed_Loop_t* hnd, Park_Data_t* out)
+{
+  hnd->counter++;
+  if (hnd->counter >= hnd->prescaler)
+  {
+    hnd->counter = 0;
+    hnd->ramp->target = hnd->ref;  // Update target speed
+
+    float speed_ramp = RampGenerator(hnd->ramp, hnd->reset);
+    Pid_Update(speed_ramp - hnd->fdbk, hnd->reset, hnd->handler);
+    // PID输出在这里被更新到 hnd->handler->output
+  }
+
+  // 每次调用都读取当前PID输出值（保持控制连续性）
+  out->q = hnd->handler->output;  // Iq_ref = Speed_PID.output
+  out->d = 0.0F;                  // Id_ref = 0 (按要求暂时设为0)
 }
 
 // SECTION - Ramp Generator

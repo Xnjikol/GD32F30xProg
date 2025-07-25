@@ -74,10 +74,13 @@ typedef struct
 
 typedef struct
 {
-  float ref;               // 目标速度（参考值）
-  float fdbk;              // 实际速度反馈
-  RampGenerator_t* ramp;   // 斜坡输出（用于平滑目标速度变化）
-  PID_Handler_t* handler;  // PID控制器句柄
+  float ref;                // 目标速度（参考值）
+  float fdbk;               // 实际速度反馈
+  bool reset;               // 停止标志
+  uint16_t prescaler;       // 分频数（等于SPEED_LOOP_PRESCALER）
+  uint16_t counter;         // 分频计数器
+  RampGenerator_t* ramp;    // 斜坡输出（用于平滑目标速度变化）
+  PID_Handler_t* handler;   // PID控制器句柄
 } Speed_Loop_t;
 
 typedef struct
