@@ -5,9 +5,9 @@
 
 
 static inline float Get_Theta(float, float);
-
-static inline float RampGenerator(RampGenerator_t*);
 static inline void SVPWM_Generate(float, float, float, FOC_Parameter_t*);
+static inline void Speed_Loop_Control(Speed_Loop_t* speed_loop, Park_Data_t* idq_ref);
+static inline void Current_Loop_Control(Current_Loop_t* hnd, Park_Data_t* out);
 
 // SECTION - FOC Main
 void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p)
@@ -16,13 +16,6 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p)
   Current_Loop_t* hCurrent = foc->current;
   Park_Data_t* idq_ref = hCurrent->ref;
   Park_Data_t* idq_fdbk = hCurrent->fdbk;
-  PID_Handler_t* hPid_id = hCurrent->handler_d;
-  PID_Handler_t* hPid_iq = hCurrent->handler_q;
-
-  Speed_Loop_t* hSpeed = foc->speed;
-  PID_Handler_t* hPid_speed = hSpeed->handler;
-  RampGenerator_t* speed_ramp = hSpeed->ramp;
-
   Clarke_Data_t* inv_park = foc->Uclark_ref;
 
   switch (foc->Mode)
@@ -58,20 +51,10 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p)
       idq_ref->d = if_p->Id_ref;
       idq_ref->q = if_p->Iq_ref;
 
-      if (hPid_id->Reset)
-      {
-        PID_SetIntegral(hPid_id, foc->Stop, 0.0F);
-      }
-      Pid_Update(idq_ref->d - idq_fdbk->d, foc->Stop, hPid_id);
+      // 更新电流环的停止标志
+      hCurrent->reset = foc->Stop;
 
-      if (hPid_iq->Reset)
-      {
-        PID_SetIntegral(hPid_iq, foc->Stop, 0.0F);
-      }
-      Pid_Update(idq_ref->q - idq_fdbk->q, foc->Stop, hPid_iq);
-
-      foc->Udq_ref->d = hPid_id->output;
-      foc->Udq_ref->q = hPid_iq->output;
+      Current_Loop_Control(hCurrent, foc->Udq_ref);
 
       break;
     }
@@ -81,24 +64,16 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p)
     {
       ParkTransform(foc->IClark_fdbk, foc->Theta, idq_fdbk);
 
-      static uint16_t Cnt_speed = 0;
-      Cnt_speed++;
-      if (Cnt_speed > 9)
-      {
-        Cnt_speed = 0;
-        speed_ramp->target = hSpeed->ref;  // Update target speed
+      Speed_Loop_t* hSpeed = foc->speed;
+      // 更新转速环的停止标志
+      hSpeed->reset = foc->Stop;
 
-        Pid_Update(RampGenerator(speed_ramp) - hSpeed->fdbk, foc->Stop, hPid_speed);
-      }
+      Speed_Loop_Control(hSpeed, idq_ref);
 
-      idq_ref->q = hPid_speed->output;  // Iq_ref = Speed_PID.output
-      idq_ref->d = 0.0F;                // Id_ref = 0
+      // 更新电流环的停止标志
+      hCurrent->reset = foc->Stop;
 
-      Pid_Update(idq_ref->d - idq_fdbk->d, foc->Stop, hPid_id);
-      Pid_Update(idq_ref->q - idq_fdbk->q, foc->Stop, hPid_iq);
-
-      foc->Udq_ref->d = hPid_id->output;
-      foc->Udq_ref->q = hPid_iq->output;
+      Current_Loop_Control(hCurrent, foc->Udq_ref);
 
       break;
     }
@@ -135,42 +110,48 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p)
   SVPWM_Generate(inv_park->a, inv_park->b, foc->inv_Udc, foc);
 }
 
-// SECTION - Ramp Generator
-static inline float RampGenerator(RampGenerator_t* ramp)
+// SECTION - Speed Loop Control
+static inline void Speed_Loop_Control(Speed_Loop_t* hnd, Park_Data_t* out)
 {
-  if (STOP == 1)
+  hnd->counter++;
+  if (hnd->counter >= hnd->prescaler)
   {
-    ramp->value = 0.0F;
-    ramp->target = 0.0F;
+    hnd->counter = 0;
+    hnd->ramp->target = hnd->ref;  // Update target speed
+
+    float speed_ramp = RampGenerator(hnd->ramp, hnd->reset);
+    Pid_Update(speed_ramp - hnd->fdbk, hnd->reset, hnd->handler);
+    // PID输出在这里被更新到 hnd->handler->output
   }
 
-  float delta = ramp->target - ramp->value;
-  float step = ramp->slope * ramp->Ts;
-
-  if (delta > step)
-  {
-    ramp->value += step;
-  }
-  else if (delta < -step)
-  {
-    ramp->value -= step;
-  }
-  else
-  {
-    ramp->value = ramp->target;
-  }
-
-  if (ramp->value > ramp->limit_max)
-  {
-    ramp->value = ramp->limit_max;
-  }
-  if (ramp->value < ramp->limit_min)
-  {
-    ramp->value = ramp->limit_min;
-  }
-
-  return ramp->value;
+  // 每次调用都读取当前PID输出值（保持控制连续性）
+  out->q = hnd->handler->output;  // Iq_ref = Speed_PID.output
+  out->d = 0.0F;                  // Id_ref = 0 (按要求暂时设为0)
 }
+
+// SECTION - Current Loop Control
+static inline void Current_Loop_Control(Current_Loop_t* hnd, Park_Data_t* out)
+{
+  // D轴电流控制
+  if (hnd->handler_d->Reset)
+  {
+    PID_SetIntegral(hnd->handler_d, hnd->reset, 0.0F);
+  }
+  Pid_Update(hnd->ref->d - hnd->fdbk->d, hnd->reset, hnd->handler_d);
+
+  // Q轴电流控制
+  if (hnd->handler_q->Reset)
+  {
+    PID_SetIntegral(hnd->handler_q, hnd->reset, 0.0F);
+  }
+  Pid_Update(hnd->ref->q - hnd->fdbk->q, hnd->reset, hnd->handler_q);
+
+  // 输出DQ轴电压指令
+  out->d = hnd->handler_d->output;
+  out->q = hnd->handler_q->output;
+}
+
+// SECTION - Ramp Generator
 
 static inline float Get_Theta(float Freq, float Theta)
 {

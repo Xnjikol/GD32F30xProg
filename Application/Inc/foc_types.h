@@ -2,8 +2,10 @@
 #define _FOC_TYPES_H_
 
 #include "pid.h"
+#include "signal.h"
 #include "stdint.h"
 #include "transformation.h"
+
 
 typedef enum
 {
@@ -61,17 +63,6 @@ typedef struct
   float Theta;
 } VF_Parameter_t;
 
-
-typedef struct
-{
-  float value;  // output value
-  float slope;  // Δvalue/s
-  float limit_min;
-  float limit_max;
-  float target;
-  float Ts;
-} RampGenerator_t;
-
 typedef struct
 {
   float Id_ref;
@@ -83,16 +74,20 @@ typedef struct
 
 typedef struct
 {
-  float ref;               // 目标速度（参考值）
-  float fdbk;              // 实际速度反馈
-  RampGenerator_t* ramp;   // 斜坡输出（用于平滑目标速度变化）
-  PID_Handler_t* handler;  // PID控制器句柄
+  float ref;                // 目标速度（参考值）
+  float fdbk;               // 实际速度反馈
+  bool reset;               // 停止标志
+  uint16_t prescaler;       // 分频数（等于SPEED_LOOP_PRESCALER）
+  uint16_t counter;         // 分频计数器
+  RampGenerator_t* ramp;    // 斜坡输出（用于平滑目标速度变化）
+  PID_Handler_t* handler;   // PID控制器句柄
 } Speed_Loop_t;
 
 typedef struct
 {
   Park_Data_t* ref;          // DQ轴电流参考
   Park_Data_t* fdbk;         // DQ轴电流反馈
+  bool reset;                // 停止标志
   PID_Handler_t* handler_d;  // D轴PID控制器句柄
   PID_Handler_t* handler_q;  // Q轴PID控制器句柄
 } Current_Loop_t;

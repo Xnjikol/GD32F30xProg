@@ -124,10 +124,14 @@ void Main_Int_Parameter_Init(void)
   FOC.current->ref = &DQ_Current_ref;
   FOC.current->handler_d = &Id_PID;
   FOC.current->handler_q = &Iq_PID;
+  FOC.current->reset = 0;                            // 初始化停止标志
 
   FOC.speed = (Speed_Loop_t*) calloc(1, sizeof(Speed_Loop_t));
   FOC.speed->handler = &Speed_PID;
   FOC.speed->ramp = &Speed_Ramp;
+  FOC.speed->reset = 0;                              // 初始化停止标志
+  FOC.speed->prescaler = (uint16_t)SPEED_LOOP_PRESCALER;  // 设置分频数
+  FOC.speed->counter = 0;                            // 初始化分频计数器
 
   FOC.Udq_ref = &DQ_Voltage_ref;
   FOC.Uclark_ref = &Inv_Park;
