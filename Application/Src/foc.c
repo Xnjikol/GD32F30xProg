@@ -6,17 +6,17 @@
 
 static inline float Get_Theta(float, float);
 static inline void SVPWM_Generate(float, float, float, FOC_Parameter_t*);
-static inline void Speed_Loop_Control(Speed_Loop_t* speed_loop, Park_Data_t* idq_ref);
-static inline void Current_Loop_Control(Current_Loop_t* hnd, Park_Data_t* out);
+static inline void Speed_Loop_Control(Speed_Loop_t* speed_loop, Park_t* idq_ref);
+static inline void Current_Loop_Control(Current_Loop_t* hnd, Park_t* out);
 
 // SECTION - FOC Main
 void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p)
 {
   ClarkeTransform(foc->Iabc_fdbk, foc->IClark_fdbk);
   Current_Loop_t* hCurrent = foc->current;
-  Park_Data_t* idq_ref = hCurrent->ref;
-  Park_Data_t* idq_fdbk = hCurrent->fdbk;
-  Clarke_Data_t* inv_park = foc->Uclark_ref;
+  Park_t* idq_ref = hCurrent->ref;
+  Park_t* idq_fdbk = hCurrent->fdbk;
+  Clark_t* inv_park = foc->Uclark_ref;
 
   switch (foc->Mode)
   {
@@ -100,7 +100,7 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p)
 }
 
 // SECTION - Speed Loop Control
-static inline void Speed_Loop_Control(Speed_Loop_t* hnd, Park_Data_t* out)
+static inline void Speed_Loop_Control(Speed_Loop_t* hnd, Park_t* out)
 {
   hnd->counter++;
   if (hnd->counter >= hnd->prescaler)
@@ -119,7 +119,7 @@ static inline void Speed_Loop_Control(Speed_Loop_t* hnd, Park_Data_t* out)
 }
 
 // SECTION - Current Loop Control
-static inline void Current_Loop_Control(Current_Loop_t* hnd, Park_Data_t* out)
+static inline void Current_Loop_Control(Current_Loop_t* hnd, Park_t* out)
 {
   // D轴电流控制
   if (hnd->handler_d->Reset)

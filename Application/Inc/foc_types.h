@@ -74,19 +74,19 @@ typedef struct
 
 typedef struct
 {
-  float ref;                // 目标速度（参考值）
-  float fdbk;               // 实际速度反馈
-  bool reset;               // 停止标志
-  uint16_t prescaler;       // 分频数（等于SPEED_LOOP_PRESCALER）
-  uint16_t counter;         // 分频计数器
-  RampGenerator_t* ramp;    // 斜坡输出（用于平滑目标速度变化）
-  PID_Handler_t* handler;   // PID控制器句柄
+  float ref;               // 目标速度（参考值）
+  float fdbk;              // 实际速度反馈
+  bool reset;              // 停止标志
+  uint16_t prescaler;      // 分频数（等于SPEED_LOOP_PRESCALER）
+  uint16_t counter;        // 分频计数器
+  RampGenerator_t* ramp;   // 斜坡输出（用于平滑目标速度变化）
+  PID_Handler_t* handler;  // PID控制器句柄
 } Speed_Loop_t;
 
 typedef struct
 {
-  Park_Data_t* ref;          // DQ轴电流参考
-  Park_Data_t* fdbk;         // DQ轴电流反馈
+  Park_t* ref;          // DQ轴电流参考
+  Park_t* fdbk;         // DQ轴电流反馈
   bool reset;                // 停止标志
   PID_Handler_t* handler_d;  // D轴PID控制器句柄
   PID_Handler_t* handler_q;  // Q轴PID控制器句柄
@@ -105,14 +105,14 @@ typedef struct
   float Tcm3;
   float Ts;
   float freq;
-  uint16_t Stop;               // Stop flag
-  Speed_Loop_t* speed;         // 转速环相关变量
-  Current_Loop_t* current;     // 电流环相关变量
-  Phase_Data_t* Iabc_fdbk;     // ABC相电流反馈
-  Clarke_Data_t* IClark_fdbk;  // αβ轴电流反馈
-  Park_Data_t* Udq_ref;        // DQ轴电压参考
-  Clarke_Data_t* Uclark_ref;   // αβ轴电压指令
-  FOC_Mode_t Mode;             // 当前控制模式
+  uint16_t Stop;            // Stop flag
+  Speed_Loop_t* speed;      // 转速环相关变量
+  Current_Loop_t* current;  // 电流环相关变量
+  Phase_t* Iabc_fdbk;       // ABC相电流反馈
+  Clark_t* IClark_fdbk;     // αβ轴电流反馈
+  Park_t* Udq_ref;          // DQ轴电压参考
+  Clark_t* Uclark_ref;      // αβ轴电压指令
+  FOC_Mode_t Mode;          // 当前控制模式
 } FOC_Parameter_t;
 
 typedef struct
