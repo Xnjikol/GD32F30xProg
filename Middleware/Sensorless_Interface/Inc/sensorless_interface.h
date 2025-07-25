@@ -20,6 +20,16 @@ extern "C"
 #include "main.h"
 
   /**
+   * @brief 无传感器控制方法枚举
+   */
+  typedef enum
+  {
+    SENSORLESS_METHOD_FLUX_OBSERVER = 0, /*!< 磁链观测器 */
+    SENSORLESS_METHOD_HF_INJECTION,      /*!< 高频注入 */
+    SENSORLESS_METHOD_HYBRID             /*!< 混合方法 */
+  } sensorless_method_t;
+
+  /**
    * @brief 无传感器控制状态枚举
    */
   typedef enum
@@ -35,19 +45,31 @@ extern "C"
    */
   typedef struct
   {
+    /* 控制方法选择 */
+    sensorless_method_t method; /*!< 无传感器控制方法 */
+    
     /* 电机参数 */
     float motor_rs;         /*!< 定子电阻 (Ω) */
     float motor_ls;         /*!< 定子电感 (H) */
+    float motor_ld;         /*!< d轴电感 (H) */
+    float motor_lq;         /*!< q轴电感 (H) */
     float motor_flux_rated; /*!< 额定磁链 (Wb) */
     float motor_pole_pairs; /*!< 极对数 */
 
     /* 控制参数 */
     float control_ts;      /*!< 控制周期 (s) */
     float lpf_cutoff_freq; /*!< 低通滤波器截止频率 (Hz) */
+    
+    /* 高频注入参数 */
+    float hf_injection_freq;    /*!< 高频注入频率 (Hz) */
+    float hf_injection_voltage; /*!< 高频注入电压幅值 (V) */
+    float hf_cutoff_freq_hf;    /*!< 高频滤波器截止频率 (Hz) */
+    float hf_cutoff_freq_lf;    /*!< 低频滤波器截止频率 (Hz) */
 
     /* 阈值参数 */
     float min_speed_threshold; /*!< 最小速度阈值 (rad/s) */
     float min_flux_threshold;  /*!< 最小磁链阈值 (Wb) */
+    float hf_switch_speed;     /*!< 高频注入切换速度阈值 (rad/s) */
   } sensorless_config_t;
 
   /**
@@ -61,7 +83,9 @@ extern "C"
     float flux_magnitude;     /*!< 磁链幅值 (Wb) */
     float flux_angle;         /*!< 磁链角度 (rad) */
     sensorless_state_t state; /*!< 当前状态 */
+    sensorless_method_t active_method; /*!< 当前激活的方法 */
     uint8_t valid;            /*!< 数据有效标志 */
+    uint8_t hf_converged;     /*!< 高频注入收敛标志 */
   } sensorless_output_t;
 
   /**
@@ -78,14 +102,11 @@ extern "C"
 
   /**
    * @brief 无传感器控制主执行函数
-   * @param ua A相电压 (V)
-   * @param ub B相电压 (V)
-   * @param uc C相电压 (V)
-   * @param ia A相电流 (A)
-   * @param ib B相电流 (A)
-   * @param ic C相电流 (A)
+   * @param voltage αβ轴电压指针
+   * @param current αβ轴电流指针
+   * @param injection_voltage 输出高频注入电压指针 (可为NULL)
    */
-  void sensorless_execute(Clarke_Data_t* voltage, Clarke_Data_t* current);
+  void sensorless_execute(Clarke_Data_t* voltage, Clarke_Data_t* current, Clarke_Data_t* injection_voltage);
 
   /**
    * @brief 获取无传感器控制输出
@@ -147,6 +168,45 @@ extern "C"
    * @param config 配置参数输出指针
    */
   void sensorless_get_default_config(sensorless_config_t* config);
+
+  /**
+   * @brief 设置无传感器控制方法
+   * @param method 控制方法
+   * @retval 0: 成功, -1: 失败
+   */
+  int sensorless_set_method(sensorless_method_t method);
+
+  /**
+   * @brief 获取当前使用的控制方法
+   * @retval 当前控制方法
+   */
+  sensorless_method_t sensorless_get_method(void);
+
+  /**
+   * @brief 使能/禁用高频注入
+   * @param enable 1: 使能, 0: 禁用
+   */
+  void sensorless_hf_injection_enable(uint8_t enable);
+
+  /**
+   * @brief 检查高频注入是否收敛
+   * @retval 1: 已收敛, 0: 未收敛
+   */
+  uint8_t sensorless_hf_injection_is_converged(void);
+
+  /**
+   * @brief 设置高频注入初始位置
+   * @param initial_angle 初始角度 (rad)
+   */
+  void sensorless_hf_injection_set_initial_position(float initial_angle);
+
+  /**
+   * @brief 强制切换到指定方法
+   * @param method 目标方法
+   * @param force 1: 强制切换, 0: 按条件切换
+   * @retval 0: 成功, -1: 失败
+   */
+  int sensorless_switch_method(sensorless_method_t method, uint8_t force);
 
 #ifdef __cplusplus
 }

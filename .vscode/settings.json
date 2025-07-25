@@ -12,14 +12,6 @@
     "cortex-debug.variableUseNaturalFormat": true,
     "cmake.generator": "Ninja",
     "files.associations": {
-        "*.h": "c",
-        "format": "c",
-        "algorithm": "c",
-        "xiosbase": "c",
-        "xutility": "c",
-        "cstdlib": "c",
-        "memory_resource": "c",
-        "memory": "c",
-        "xlocinfo": "c"
+        "*.h": "c"
     }
 }

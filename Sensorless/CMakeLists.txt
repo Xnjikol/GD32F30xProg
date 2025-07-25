@@ -4,10 +4,7 @@
 # 添加源文件
 set(Sensorless_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/flux_observer.c
-    # 可以根据需要添加其他核心算法文件
-    # ${CMAKE_CURRENT_SOURCE_DIR}/Src/smc_observer.c
-    # ${CMAKE_CURRENT_SOURCE_DIR}/Src/luenberger_observer.c
-    # ${CMAKE_CURRENT_SOURCE_DIR}/Src/ekf_observer.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Src/hf_injection.c
 )
 
 add_library(Sensorless STATIC
