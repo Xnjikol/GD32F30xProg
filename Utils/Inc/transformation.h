@@ -41,57 +41,57 @@ typedef struct
   float a;
   float b;
   float c;
-} Phase_Data_t;
+} Phase_t;
 
 typedef struct
 {
   float a;
   float b;
-} Clarke_Data_t;
+} Clark_t;
 
-// struct Park_Data_t is commented out as struct FOC_Parameter_t takes care of Id and Iq
+// struct Park_t is commented out as struct FOC_Parameter_t takes care of Id and Iq
 typedef struct
 {
   float d;
   float q;
-} Park_Data_t;
+} Park_t;
 
-static inline void ClarkeTransform(float Ia, float Ib, float Ic, Clarke_Data_t* out)
+static inline void ClarkeTransform(Phase_t* in, Clark_t* out)
 {
 #if (defined(TWO_PHASE_CURRENT_SENSING))
-  out->a = Ia;
-  out->b = 0.57735026919F * (Ia + 2.0F * Ib);  // 0.57735026919F 1/√3
+  out->a = in->a;
+  out->b = 0.57735026919F * (in->a + 2.0F * in->b);  // 0.57735026919F 1/√3
 #elif (defined(THREE_PHASE_CURRENT_SENSING))
-  out->a = 0.66666666667F * Ia - 0.33333333333F * (Ib + Ic);
-  out->b = 0.57735026919F * (Ib - Ic);  // 0.57735026919F 1/√3
+  out->a = 0.66666666667F * in->a - 0.33333333333F * (in->b + in->c);
+  out->b = 0.57735026919F * (in->b - in->c);  // 0.57735026919F 1/√3
 #endif
 }
-static inline void ParkTransform(float alpha, float beta, float theta, Park_Data_t* out)
+static inline void ParkTransform(Clark_t* in, float theta, Park_t* out)
 {
   float_t cos_theta = COS(theta);
   float_t sin_theta = SIN(theta);
-  out->d = alpha * cos_theta + beta * sin_theta;
-  out->q = -alpha * sin_theta + beta * cos_theta;
+  out->d = in->a * cos_theta + in->b * sin_theta;
+  out->q = -in->a * sin_theta + in->b * cos_theta;
 }
-static inline void InvParkTransform(float d, float q, float theta, Clarke_Data_t* out)
+static inline void InvParkTransform(Park_t* in, float theta, Clark_t* out)
 {
   float_t cos_theta = COS(theta);
   float_t sin_theta = SIN(theta);
-  out->a = d * cos_theta - q * sin_theta;
-  out->b = d * sin_theta + q * cos_theta;
+  out->a = in->d * cos_theta - in->q * sin_theta;
+  out->b = in->d * sin_theta + in->q * cos_theta;
 }
-static inline void InvClarkeTransform(float alpha, float beta, Phase_Data_t* out)
+static inline void InvClarkeTransform(Clark_t* in, Phase_t* out)
 {
 #if (defined(TWO_PHASE_CURRENT_SENSING))
   // For two-phase current sensing, Ic is calculated as -(Ia + Ib)
-  out->a = alpha;
-  out->b = (-0.5F) * alpha + 0.86602540378F * beta;  // 0.86602540378F = sqrt(3)/2
-  out->c = (-0.5F) * alpha - 0.86602540378F * beta;
+  out->a = in->a;
+  out->b = (-0.5F) * in->a + 0.86602540378F * in->b;  // 0.86602540378F = sqrt(3)/2
+  out->c = (-0.5F) * in->a - 0.86602540378F * in->b;
 #elif (defined(THREE_PHASE_CURRENT_SENSING))
   // For three-phase current sensing
-  out->a = alpha;
-  out->b = -0.5F * alpha + 0.86602540378F * beta;
-  out->c = -0.5F * alpha - 0.86602540378F * beta;
+  out->a = in->a;
+  out->b = -0.5F * in->a + 0.86602540378F * in->b;
+  out->c = -0.5F * in->a - 0.86602540378F * in->b;
 #endif
 }
 

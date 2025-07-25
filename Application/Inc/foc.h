@@ -8,6 +8,6 @@
 #include "transformation.h"
 
 void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
-              Clarke_Data_t* I_clarke);
+              Clark_t* I_clarke);
 
 #endif /* _FOC_H_ */

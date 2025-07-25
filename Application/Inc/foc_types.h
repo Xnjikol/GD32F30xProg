@@ -85,8 +85,8 @@ typedef struct
 
 typedef struct
 {
-  Park_Data_t* ref;          // DQ轴电流参考
-  Park_Data_t* fdbk;         // DQ轴电流反馈
+  Park_t* ref;          // DQ轴电流参考
+  Park_t* fdbk;         // DQ轴电流反馈
   bool reset;                // 停止标志
   PID_Handler_t* handler_d;  // D轴PID控制器句柄
   PID_Handler_t* handler_q;  // Q轴PID控制器句柄
@@ -108,9 +108,9 @@ typedef struct
   uint16_t Stop;              // Stop flag
   Speed_Loop_t* speed;        // 转速环相关变量
   Current_Loop_t* current;    // 电流环相关变量
-  Phase_Data_t* Iabc_fdbk;    // ABC相电流反馈
-  Park_Data_t* Udq_ref;       // DQ轴电压参考
-  Clarke_Data_t* Uclark_ref;  // αβ轴电压指令
+  Phase_t* Iabc_fdbk;    // ABC相电流反馈
+  Park_t* Udq_ref;       // DQ轴电压参考
+  Clark_t* Uclark_ref;  // αβ轴电压指令
   FOC_Mode_t Mode;            // 当前控制模式
 } FOC_Parameter_t;
 

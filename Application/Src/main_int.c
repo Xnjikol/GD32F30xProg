@@ -19,12 +19,12 @@ PID_Handler_t Id_PID;
 PID_Handler_t Iq_PID;
 PID_Handler_t Speed_PID;
 RampGenerator_t Speed_Ramp;
-Clarke_Data_t Inv_Park;
-Clarke_Data_t Clarke;
-Phase_Data_t Phase_Current;
-Park_Data_t DQ_Current;
-Park_Data_t DQ_Current_ref;
-Park_Data_t DQ_Voltage_ref;
+Clark_t Inv_Park;
+Clark_t Clarke;
+Phase_t Phase_Current;
+Park_t DQ_Current;
+Park_t DQ_Current_ref;
+Park_t DQ_Voltage_ref;
 
 static inline void Main_Int_Parameter_Init(void);
 static inline void Theta_Process(Motor_Parameter_t*, float);
@@ -104,13 +104,13 @@ void Main_Int_Parameter_Init(void)
   memset(&Id_PID, 0, sizeof(PID_Handler_t));
   memset(&Iq_PID, 0, sizeof(PID_Handler_t));
   memset(&Speed_PID, 0, sizeof(PID_Handler_t));
-  memset(&Inv_Park, 0, sizeof(Clarke_Data_t));
+  memset(&Inv_Park, 0, sizeof(Clark_t));
   memset(&Speed_Ramp, 0, sizeof(RampGenerator_t));
   memset(&Motor, 0, sizeof(Motor_Parameter_t));
-  memset(&Phase_Current, 0, sizeof(Phase_Data_t));
-  memset(&DQ_Current, 0, sizeof(Park_Data_t));
-  memset(&DQ_Current_ref, 0, sizeof(Park_Data_t));
-  memset(&DQ_Voltage_ref, 0, sizeof(Park_Data_t));
+  memset(&Phase_Current, 0, sizeof(Phase_t));
+  memset(&DQ_Current, 0, sizeof(Park_t));
+  memset(&DQ_Current_ref, 0, sizeof(Park_t));
+  memset(&DQ_Voltage_ref, 0, sizeof(Park_t));
 
   Peripheral_InitProtectParameter();
   Peripheral_GetSystemFrequency();

@@ -20,6 +20,8 @@
         "cstdlib": "c",
         "memory_resource": "c",
         "memory": "c",
-        "xlocinfo": "c"
+        "xlocinfo": "c",
+        "random": "c",
+        "xlocale": "c"
     }
 }
