@@ -6,9 +6,17 @@
 
 #include "gd32f30x.h"
 
+#ifndef SQRT3
 #define SQRT3 1.73205080757F
+#endif
+
+#ifndef SQRT3_2
 #define SQRT3_2 0.86602540378F        /* √3/2 */
+#endif
+
+#ifndef M_2PI
 #define M_2PI 6.28318530717958647692F /* 2π */
+#endif
 
 /*  DSP math function    */
 #ifndef ARM_DSP

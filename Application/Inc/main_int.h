@@ -61,9 +61,9 @@ static inline void FOC_UpdateTheta(float Theta)
 
 static inline void FOC_OutputCompare(float* Tcm1, float* Tcm2, float* Tcm3)
 {
-  *Tcm1 = FOC.Tcm1;
-  *Tcm2 = FOC.Tcm2;
-  *Tcm3 = FOC.Tcm3;
+  *Tcm1 = FOC.Tcm->a;
+  *Tcm2 = FOC.Tcm->b;
+  *Tcm3 = FOC.Tcm->c;
 }
 static inline void FOC_UpdateMaxCurrent(float I_Max)
 {

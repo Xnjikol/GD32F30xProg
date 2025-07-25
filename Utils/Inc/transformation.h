@@ -17,7 +17,19 @@
 #error "Please define TWO_PHASE_CURRENT_SENSING or THREE_PHASE_CURRENT_SENSING in foc.h"
 #endif
 
-/*  DSP math function    */
+#ifndef SQRT3
+#define SQRT3 1.73205080757F
+#endif
+
+#ifndef SQRT3_2
+#define SQRT3_2 0.86602540378F /* √3/2 */
+#endif
+
+#ifndef M_2PI
+#define M_2PI 6.28318530717958647692F /* 2π */
+#endif
+
+/* DSP math function    */
 #ifndef ARM_DSP
 #define ARM_DSP
 #endif
@@ -90,8 +102,8 @@ static inline void InvClarkeTransform(Clark_t* in, Phase_t* out)
 #elif (defined(THREE_PHASE_CURRENT_SENSING))
   // For three-phase current sensing
   out->a = in->a;
-  out->b = -0.5F * in->a + 0.86602540378F * in->b;
-  out->c = -0.5F * in->a - 0.86602540378F * in->b;
+  out->b = -0.5F * in->a + SQRT3_2 * in->b;
+  out->c = -0.5F * in->a - SQRT3_2 * in->b;
 #endif
 }
 

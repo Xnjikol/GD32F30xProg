@@ -22,7 +22,8 @@ RampGenerator_t Speed_Ramp;
 Clark_t Inv_Park;
 Clark_t Clarke;
 Phase_t Phase_Current;
-Park_t DQ_Current;
+Phase_t Phase_Tcm;
+Park_t DQ_Current_fdbk;
 Park_t DQ_Current_ref;
 Park_t DQ_Voltage_ref;
 
@@ -109,7 +110,8 @@ void Main_Int_Parameter_Init(void)
   memset(&Speed_Ramp, 0, sizeof(RampGenerator_t));
   memset(&Motor, 0, sizeof(Motor_Parameter_t));
   memset(&Phase_Current, 0, sizeof(Phase_t));
-  memset(&DQ_Current, 0, sizeof(Park_t));
+  memset(&Phase_Tcm, 0, sizeof(Phase_t));
+  memset(&DQ_Current_fdbk, 0, sizeof(Park_t));
   memset(&DQ_Current_ref, 0, sizeof(Park_t));
   memset(&DQ_Voltage_ref, 0, sizeof(Park_t));
 
@@ -118,9 +120,10 @@ void Main_Int_Parameter_Init(void)
   Peripheral_CalibrateADC();
 
   FOC.Iabc_fdbk = &Phase_Current;
-  FOC.IClark_fdbk = &Clarke;
+  FOC.Iclark_fdbk = &Clarke;
+  FOC.Tcm = &Phase_Tcm;
   FOC.current = (Current_Loop_t*) calloc(1, sizeof(Current_Loop_t));
-  FOC.current->fdbk = &DQ_Current;
+  FOC.current->fdbk = &DQ_Current_fdbk;
   FOC.current->ref = &DQ_Current_ref;
   FOC.current->handler_d = &Id_PID;
   FOC.current->handler_q = &Iq_PID;

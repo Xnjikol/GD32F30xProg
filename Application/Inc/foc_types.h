@@ -85,8 +85,8 @@ typedef struct
 
 typedef struct
 {
-  Park_t* ref;          // DQ轴电流参考
-  Park_t* fdbk;         // DQ轴电流反馈
+  Park_t* ref;               // DQ轴电流参考
+  Park_t* fdbk;              // DQ轴电流反馈
   bool reset;                // 停止标志
   PID_Handler_t* handler_d;  // D轴PID控制器句柄
   PID_Handler_t* handler_q;  // Q轴PID控制器句柄
@@ -100,16 +100,14 @@ typedef struct
   float inv_Udc;
   float Theta;   /* Electrical angle (rad) */
   float PWM_ARR; /* PWM period */
-  float Tcm1;
-  float Tcm2;
-  float Tcm3;
+  Phase_t* Tcm;
   float Ts;
   float freq;
   uint16_t Stop;            // Stop flag
   Speed_Loop_t* speed;      // 转速环相关变量
   Current_Loop_t* current;  // 电流环相关变量
   Phase_t* Iabc_fdbk;       // ABC相电流反馈
-  Clark_t* IClark_fdbk;     // αβ轴电流反馈
+  Clark_t* Iclark_fdbk;     // αβ轴电流反馈
   Park_t* Udq_ref;          // DQ轴电压参考
   Clark_t* Uclark_ref;      // αβ轴电压指令
   FOC_Mode_t Mode;          // 当前控制模式
