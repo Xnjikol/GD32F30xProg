@@ -106,7 +106,7 @@ extern "C"
    * @param current αβ轴电流指针
    * @param injection_voltage 输出高频注入电压指针 (可为NULL)
    */
-  void sensorless_execute(Clarke_Data_t* voltage, Clarke_Data_t* current, Clarke_Data_t* injection_voltage);
+  void sensorless_execute(Clark_t* voltage, Clark_t* current, Clark_t* injection_voltage);
 
   /**
    * @brief 获取无传感器控制输出

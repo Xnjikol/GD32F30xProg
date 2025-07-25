@@ -76,8 +76,8 @@ void flux_observer_reset(flux_observer_t* observer)
  * @brief 磁链观测器执行
  * 基于电压模型: ψ = ∫(u - Rs*i)dt
  */
-void flux_observer_execute(flux_observer_t* observer, Clarke_Data_t* voltage,
-                           Clarke_Data_t* current)
+void flux_observer_execute(flux_observer_t* observer, Clark_t* voltage,
+                           Clark_t* current)
 {
   if (observer == NULL || !observer->initialized)
   {
@@ -213,7 +213,7 @@ void flux_observer_get_params(const flux_observer_t* observer, flux_observer_par
  */
 static void flux_observer_calc_polar(flux_observer_t* observer)
 {
-  Clarke_Data_t* flux = observer->flux;
+  Clark_t* flux = observer->flux;
   /* 计算磁链幅值 */
   observer->flux_mag = sqrtf(flux->a * flux->a + flux->b * flux->b);
 

@@ -37,11 +37,11 @@ static void sensorless_calculate_speed(void);
 static void sensorless_validate_output(void);
 static void sensorless_method_switching(void);
 static int sensorless_init_hf_injection(void);
-static void sensorless_execute_flux_observer(Clarke_Data_t* voltage, Clarke_Data_t* current);
-static void sensorless_execute_hf_injection(Clarke_Data_t* voltage, Clarke_Data_t* current,
-                                            Clarke_Data_t* injection_voltage);
-static void sensorless_execute_hybrid(Clarke_Data_t* voltage, Clarke_Data_t* current,
-                                      Clarke_Data_t* injection_voltage);
+static void sensorless_execute_flux_observer(Clark_t* voltage, Clark_t* current);
+static void sensorless_execute_hf_injection(Clark_t* voltage, Clark_t* current,
+                                            Clark_t* injection_voltage);
+static void sensorless_execute_hybrid(Clark_t* voltage, Clark_t* current,
+                                      Clark_t* injection_voltage);
 
 /**
  * @brief 无传感器控制系统初始化
@@ -136,8 +136,7 @@ void sensorless_reset(void)
 /**
  * @brief 无传感器控制主执行函数
  */
-void sensorless_execute(Clarke_Data_t* voltage, Clarke_Data_t* current,
-                        Clarke_Data_t* injection_voltage)
+void sensorless_execute(Clark_t* voltage, Clark_t* current, Clark_t* injection_voltage)
 {
   if (!g_initialized || !g_enabled)
   {
@@ -549,7 +548,7 @@ static int sensorless_init_hf_injection(void)
 /**
  * @brief 执行磁链观测器方法
  */
-static void sensorless_execute_flux_observer(Clarke_Data_t* voltage, Clarke_Data_t* current)
+static void sensorless_execute_flux_observer(Clark_t* voltage, Clark_t* current)
 {
   /* 执行磁链观测 */
   flux_observer_execute(&g_flux_observer, voltage, current);
@@ -567,8 +566,8 @@ static void sensorless_execute_flux_observer(Clarke_Data_t* voltage, Clarke_Data
 /**
  * @brief 执行高频注入方法
  */
-static void sensorless_execute_hf_injection(Clarke_Data_t* voltage, Clarke_Data_t* current,
-                                            Clarke_Data_t* injection_voltage)
+static void sensorless_execute_hf_injection(Clark_t* voltage, Clark_t* current,
+                                            Clark_t* injection_voltage)
 {
   if (!g_hf_enabled)
   {
@@ -581,7 +580,7 @@ static void sensorless_execute_hf_injection(Clarke_Data_t* voltage, Clarke_Data_
   }
 
   /* 生成高频注入信号 */
-  Clarke_Data_t v_inj = {0};
+  Clark_t v_inj = {0};
   HF_Injection_GenerateSignal(&g_hf_injection, &v_inj);
 
   if (injection_voltage != NULL)
@@ -615,8 +614,8 @@ static void sensorless_execute_hf_injection(Clarke_Data_t* voltage, Clarke_Data_
 /**
  * @brief 执行混合方法
  */
-static void sensorless_execute_hybrid(Clarke_Data_t* voltage, Clarke_Data_t* current,
-                                      Clarke_Data_t* injection_voltage)
+static void sensorless_execute_hybrid(Clark_t* voltage, Clark_t* current,
+                                      Clark_t* injection_voltage)
 {
   float current_speed = fabsf(g_output.rotor_speed);
 

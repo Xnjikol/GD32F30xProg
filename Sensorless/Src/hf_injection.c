@@ -28,8 +28,7 @@
 /* 私有函数声明 */
 static void HF_Injection_InitFilters(hf_injection_t* hf_inj);
 static void HF_Injection_UpdatePhase(hf_injection_t* hf_inj);
-static void HF_Injection_ExtractHighFreqCurrent(hf_injection_t* hf_inj,
-                                                const Clarke_Data_t* current_ab);
+static void HF_Injection_ExtractHighFreqCurrent(hf_injection_t* hf_inj, const Clark_t* current_ab);
 static void HF_Injection_CalculatePositionError(hf_injection_t* hf_inj);
 static void HF_Injection_PositionTracking(hf_injection_t* hf_inj);
 
@@ -109,7 +108,7 @@ void HF_Injection_DeInit(hf_injection_t* hf_inj)
 /**
  * @brief 生成高频注入信号
  */
-void HF_Injection_GenerateSignal(hf_injection_t* hf_inj, Clarke_Data_t* v_inj_ab)
+void HF_Injection_GenerateSignal(hf_injection_t* hf_inj, Clark_t* v_inj_ab)
 {
   if (hf_inj == NULL || v_inj_ab == NULL || !hf_inj->state.is_enabled)
   {
@@ -130,7 +129,7 @@ void HF_Injection_GenerateSignal(hf_injection_t* hf_inj, Clarke_Data_t* v_inj_ab
   hf_inj->state.v_hf_dq.q = 0.0f;
 
   /* 将dq轴注入电压转换到αβ轴 */
-  Clarke_Data_t clarke_voltage;
+  Clark_t clarke_voltage;
   InvParkTransform(&hf_inj->state.v_hf_dq, hf_inj->state.theta_est, &clarke_voltage);
 
   v_inj_ab->a = clarke_voltage.a;
@@ -144,7 +143,7 @@ void HF_Injection_GenerateSignal(hf_injection_t* hf_inj, Clarke_Data_t* v_inj_ab
 /**
  * @brief 处理高频电流响应并估计位置
  */
-void HF_Injection_ProcessResponse(hf_injection_t* hf_inj, const Clarke_Data_t* current_ab)
+void HF_Injection_ProcessResponse(hf_injection_t* hf_inj, const Clark_t* current_ab)
 {
   if (hf_inj == NULL || current_ab == NULL || !hf_inj->state.is_enabled)
   {
@@ -152,7 +151,7 @@ void HF_Injection_ProcessResponse(hf_injection_t* hf_inj, const Clarke_Data_t* c
   }
 
   /* 保存当前αβ轴电流 */
-  hf_inj->state.current_ab = (Clarke_Data_t*) current_ab;
+  hf_inj->state.current_ab = (Clark_t*) current_ab;
 
   /* 提取高频电流分量 */
   HF_Injection_ExtractHighFreqCurrent(hf_inj, current_ab);
@@ -396,8 +395,7 @@ static void HF_Injection_UpdatePhase(hf_injection_t* hf_inj)
 /**
  * @brief 提取高频电流分量
  */
-static void HF_Injection_ExtractHighFreqCurrent(hf_injection_t* hf_inj,
-                                                const Clarke_Data_t* current_ab)
+static void HF_Injection_ExtractHighFreqCurrent(hf_injection_t* hf_inj, const Clark_t* current_ab)
 {
   if (hf_inj == NULL || current_ab == NULL)
   {
@@ -405,7 +403,7 @@ static void HF_Injection_ExtractHighFreqCurrent(hf_injection_t* hf_inj,
   }
 
   /* 使用带通滤波器提取高频电流分量 */
-  Clarke_Data_t i_hf_filtered;
+  Clark_t i_hf_filtered;
 
   if (hf_inj->state.bpf_current != NULL)
   {

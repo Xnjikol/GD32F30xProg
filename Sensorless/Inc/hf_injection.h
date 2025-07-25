@@ -46,17 +46,17 @@ typedef struct
 typedef struct
 {
     /* 输入量 */
-    Clarke_Data_t* current_ab;    /*!< αβ轴电流 (A) */
+    Clark_t* current_ab;    /*!< αβ轴电流 (A) */
     float theta_est;              /*!< 估计的转子位置 (rad) */
     
     /* 高频注入信号 */
-    Park_Data_t v_hf_dq;          /*!< dq轴高频注入电压 (V) */
-    Clarke_Data_t v_hf_ab;        /*!< αβ轴高频注入电压 (V) */
-    
+    Park_t v_hf_dq;          /*!< dq轴高频注入电压 (V) */
+    Clark_t v_hf_ab;        /*!< αβ轴高频注入电压 (V) */
+
     /* 高频电流响应 */
-    Park_Data_t i_hf_dq;          /*!< dq轴高频电流 (A) */
-    Clarke_Data_t i_hf_ab;        /*!< αβ轴高频电流 (A) */
-    
+    Park_t i_hf_dq;          /*!< dq轴高频电流 (A) */
+    Clark_t i_hf_ab;        /*!< αβ轴高频电流 (A) */
+
     /* 位置误差信号 */
     float epsilon;                /*!< 位置误差信号 */
     float epsilon_filtered;       /*!< 滤波后的位置误差信号 */
@@ -116,14 +116,14 @@ void HF_Injection_DeInit(hf_injection_t* hf_inj);
  * @param hf_inj 高频注入观测器指针
  * @param v_inj_ab 输出的αβ轴注入电压指针
  */
-void HF_Injection_GenerateSignal(hf_injection_t* hf_inj, Clarke_Data_t* v_inj_ab);
+void HF_Injection_GenerateSignal(hf_injection_t* hf_inj, Clark_t* v_inj_ab);
 
 /**
  * @brief 处理高频电流响应并估计位置
  * @param hf_inj 高频注入观测器指针
  * @param current_ab αβ轴电流
  */
-void HF_Injection_ProcessResponse(hf_injection_t* hf_inj, const Clarke_Data_t* current_ab);
+void HF_Injection_ProcessResponse(hf_injection_t* hf_inj, const Clark_t* current_ab);
 
 /**
  * @brief 获取估计的转子位置

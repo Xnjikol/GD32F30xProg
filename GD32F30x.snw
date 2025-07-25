@@ -46,7 +46,7 @@
     <hardware_channel>CAN1</hardware_channel>
     <calibration_area include_gaps="true" />
     <file path="E:\Doc\Work\FRECON\Prj\GD32F30xProg\build\GD32F30xProg.a2l" relative="build\GD32F30xProg.a2l" symbols="true" prompt_before_overwrite="true" enabled="true" load="false" download="false" flash="false" upload="false" save="false" percent_complete="0" operation_in_progress="false">
-      <properties load_memory_type="file_data" time_operation_started="2013-05-02T01:24:54.9130000+08:00" last_time_loaded="2013-05-02T01:24:54.9130000+08:00" disk_properties_error="" exists_on_disk="false" time_disk_modified="0001-01-01T00:00:00.0000000" size_bytes_on_disk="0" last_time_downloaded="0001-01-01T00:00:00.0000000" last_time_flashed="0001-01-01T00:00:00.0000000" last_time_saved="0001-01-01T00:00:00.0000000">
+      <properties load_memory_type="file_data" time_operation_started="2013-05-02T02:12:49.6010000+08:00" last_time_loaded="2013-05-02T02:12:49.6010000+08:00" disk_properties_error="" exists_on_disk="true" time_disk_modified="2025-07-25T17:53:22.8698566+08:00" size_bytes_on_disk="30894" last_time_downloaded="0001-01-01T00:00:00.0000000" last_time_flashed="0001-01-01T00:00:00.0000000" last_time_saved="0001-01-01T00:00:00.0000000">
         <upload_area type="manually_defined" manual_regions_contiguous="true" const_regions_contiguous="false">
           <upload_region start_address="Calibration" byte_length="" />
           <upload_region start_address=".cal_sec" byte_length="" />

@@ -42,12 +42,12 @@ extern "C"
   typedef struct
   {
     /* 输入量 */
-    Clarke_Data_t* voltage; /*!< αβ轴电压 (V) */
-    Clarke_Data_t* current; /*!< αβ轴电流 (A) */
+    Clark_t* voltage; /*!< αβ轴电压 (V) */
+    Clark_t* current; /*!< αβ轴电流 (A) */
 
     /* 观测量 */
-    Clarke_Data_t* flux;      /*!< αβ轴磁链观测值 (Wb) */
-    Clarke_Data_t* flux_prev; /*!< αβ轴磁链积分值 (Wb) */
+    Clark_t* flux;      /*!< αβ轴磁链观测值 (Wb) */
+    Clark_t* flux_prev; /*!< αβ轴磁链积分值 (Wb) */
     float flux_mag;           /*!< 磁链幅值 (Wb) */
     float flux_angle;         /*!< 磁链角度 (rad) */
     float flux_rated;         /*!< 额定幅值 (Wb) */
@@ -87,8 +87,8 @@ extern "C"
    * @param ialpha α轴电流 (A)
    * @param ibeta β轴电流 (A)
    */
-  void flux_observer_execute(flux_observer_t* observer, Clarke_Data_t* voltage,
-                             Clarke_Data_t* current);
+  void flux_observer_execute(flux_observer_t* observer, Clark_t* voltage,
+                             Clark_t* current);
 
   /**
    * @brief 获取磁链观测值
