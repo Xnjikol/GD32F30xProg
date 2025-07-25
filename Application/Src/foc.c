@@ -87,17 +87,6 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p)
       foc->Udq_ref->q = 0.0F;
       break;
     }
-    // SECTION - Identify Mode
-    // case Identify:
-    // {
-    //   ParkTransform(foc->IClark_fdbk.a, foc->IClark_fdbk.b, foc->Theta, &foc);
-
-    //   SquareWaveGenerater(&VoltageInjector, &foc);
-    //   foc->Udq_ref->d = VoltageInjector.Vd;
-    //   foc->Udq_ref->q = VoltageInjector.Vq;
-    //   break;
-    // }
-    // !SECTION
     default:
     {
       foc->Stop = 1;
