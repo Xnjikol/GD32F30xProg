@@ -1,12 +1,13 @@
 # Middleware/CMakeLists.txt
 # 中间件模块的CMake构建配置文件
-# 提供通信接口和硬件接口的抽象层
+# 提供通信接口、硬件接口和无传感器控制接口的抽象层
 
 # 创建中间件接口静态库
-# 包含通信接口和硬件接口的实现源码
+# 包含通信接口、硬件接口和无传感器接口的实现源码
 add_library(Middleware_Interface STATIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Communication_Interface/Src/com_interface.c     # 通信接口实现
     ${CMAKE_CURRENT_SOURCE_DIR}/Hardware_Interface/Src/hardware_interface.c    # 硬件接口实现
+    ${CMAKE_CURRENT_SOURCE_DIR}/Sensorless_Interface/Src/sensorless_interface.c # 无传感器接口实现
 )
 
 # 设置中间件接口库的公共头文件包含目录
@@ -14,6 +15,7 @@ add_library(Middleware_Interface STATIC
 target_include_directories(Middleware_Interface PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Communication_Interface/Inc     # 通信接口头文件目录
     ${CMAKE_CURRENT_SOURCE_DIR}/Hardware_Interface/Inc          # 硬件接口头文件目录
+    ${CMAKE_CURRENT_SOURCE_DIR}/Sensorless_Interface/Inc        # 无传感器接口头文件目录
 )
 
 # 创建中间件接口库（仅包含头文件和接口定义）
@@ -27,8 +29,10 @@ target_link_libraries(Middleware
 )
 
 # 设置中间件接口库的依赖关系
-# 链接到核心模块和应用模块，提供底层功能支持
+# 链接到核心模块、应用模块和无传感器算法模块，提供底层功能支持
 target_link_libraries(Middleware_Interface 
 PUBLIC Core         # 核心功能模块（ADC、CAN、GPIO等）
 PUBLIC Application  # 应用层模块（FOC控制等）
+PUBLIC Utils        # 工具模块（变换、滤波器等）
+PUBLIC Sensorless   # 无传感器算法模块
 )

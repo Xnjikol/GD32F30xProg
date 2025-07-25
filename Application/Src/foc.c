@@ -10,10 +10,9 @@ static inline float RampGenerator(RampGenerator_t*);
 static inline void SVPWM_Generate(float, float, float, FOC_Parameter_t*);
 
 // SECTION - FOC Main
-void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
-              Clarke_Data_t* I_clarke)
+void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p)
 {
-  ClarkeTransform(foc->Iabc_fdbk->a, foc->Iabc_fdbk->b, foc->Iabc_fdbk->c, I_clarke);
+  ClarkeTransform(foc->Iabc_fdbk, foc->IClark_fdbk);
   Current_Loop_t* hCurrent = foc->current;
   Park_Data_t* idq_ref = hCurrent->ref;
   Park_Data_t* idq_fdbk = hCurrent->fdbk;
@@ -54,7 +53,7 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
       }
       foc->Theta = if_p->Theta;
 
-      ParkTransform(I_clarke->a, I_clarke->b, foc->Theta, idq_fdbk);
+      ParkTransform(foc->IClark_fdbk, foc->Theta, idq_fdbk);
 
       idq_ref->d = if_p->Id_ref;
       idq_ref->q = if_p->Iq_ref;
@@ -80,7 +79,7 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
     // SECTION - Speed Mode
     case Speed:
     {
-      ParkTransform(I_clarke->a, I_clarke->b, foc->Theta, idq_fdbk);
+      ParkTransform(foc->IClark_fdbk, foc->Theta, idq_fdbk);
 
       static uint16_t Cnt_speed = 0;
       Cnt_speed++;
@@ -116,7 +115,7 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
     // SECTION - Identify Mode
     // case Identify:
     // {
-    //   ParkTransform(I_clarke.a, I_clarke.b, foc->Theta, &foc);
+    //   ParkTransform(foc->IClark_fdbk.a, foc->IClark_fdbk.b, foc->Theta, &foc);
 
     //   SquareWaveGenerater(&VoltageInjector, &foc);
     //   foc->Udq_ref->d = VoltageInjector.Vd;
@@ -132,7 +131,7 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
     }
   }
 
-  InvParkTransform(foc->Udq_ref->d, foc->Udq_ref->q, foc->Theta, inv_park);
+  InvParkTransform(foc->Udq_ref, foc->Theta, inv_park);
   SVPWM_Generate(inv_park->a, inv_park->b, foc->inv_Udc, foc);
 }
 

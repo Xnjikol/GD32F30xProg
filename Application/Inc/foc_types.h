@@ -110,13 +110,14 @@ typedef struct
   float Tcm3;
   float Ts;
   float freq;
-  uint16_t Stop;              // Stop flag
-  Speed_Loop_t* speed;        // 转速环相关变量
-  Current_Loop_t* current;    // 电流环相关变量
-  Phase_Data_t* Iabc_fdbk;    // ABC相电流反馈
-  Park_Data_t* Udq_ref;       // DQ轴电压参考
-  Clarke_Data_t* Uclark_ref;  // αβ轴电压指令
-  FOC_Mode_t Mode;            // 当前控制模式
+  uint16_t Stop;               // Stop flag
+  Speed_Loop_t* speed;         // 转速环相关变量
+  Current_Loop_t* current;     // 电流环相关变量
+  Phase_Data_t* Iabc_fdbk;     // ABC相电流反馈
+  Clarke_Data_t* IClark_fdbk;  // αβ轴电流反馈
+  Park_Data_t* Udq_ref;        // DQ轴电压参考
+  Clarke_Data_t* Uclark_ref;   // αβ轴电压指令
+  FOC_Mode_t Mode;             // 当前控制模式
 } FOC_Parameter_t;
 
 typedef struct

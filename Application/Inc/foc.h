@@ -22,7 +22,6 @@
 #define TIME_200HZ 0.005F  /* T 200Hz */
 #define TIME_10KHZ 0.0001F /* 10kHz sampling time */
 
-void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p,
-              Clarke_Data_t* I_clarke);
+void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p);
 
 #endif /* _FOC_H_ */

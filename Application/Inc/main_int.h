@@ -9,6 +9,7 @@
 #include "justfloat.h"
 #include "main.h"
 #include "pid.h"
+#include "sensorless_interface.h"
 #include "systick.h"
 
 /*  Gate polarity definition */

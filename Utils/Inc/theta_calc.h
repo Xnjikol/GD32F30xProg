@@ -4,7 +4,6 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-#include "foc_types.h"
 #include "gd32f30x.h"
 
 #define SQRT3 1.73205080757F

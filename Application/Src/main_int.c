@@ -75,7 +75,7 @@ void Main_Int_Handler(void)
       case RUNNING:
       {
         UpdateThetaAndSpeed(&FOC, &Motor);
-        FOC_Main(&FOC, &VF, &IF, &Clarke);
+        FOC_Main(&FOC, &VF, &IF);
         switch (FOC.Mode)
         {
           case EXIT:
@@ -105,6 +105,7 @@ void Main_Int_Parameter_Init(void)
   memset(&Iq_PID, 0, sizeof(PID_Handler_t));
   memset(&Speed_PID, 0, sizeof(PID_Handler_t));
   memset(&Inv_Park, 0, sizeof(Clarke_Data_t));
+  memset(&Clarke, 0, sizeof(Clarke_Data_t));
   memset(&Speed_Ramp, 0, sizeof(RampGenerator_t));
   memset(&Motor, 0, sizeof(Motor_Parameter_t));
   memset(&Phase_Current, 0, sizeof(Phase_Data_t));
@@ -117,6 +118,7 @@ void Main_Int_Parameter_Init(void)
   Peripheral_CalibrateADC();
 
   FOC.Iabc_fdbk = &Phase_Current;
+  FOC.IClark_fdbk = &Clarke;
   FOC.current = (Current_Loop_t*) calloc(1, sizeof(Current_Loop_t));
   FOC.current->fdbk = &DQ_Current;
   FOC.current->ref = &DQ_Current_ref;
