@@ -10,7 +10,7 @@ float theta_factor = 0.0F;  // Sensor data to mechanic angle conversion factor
 float Speed_Ref = 0.0F;
 float Speed_Fdbk = 0.0F;
 
-DeviceState_t Device = {INIT};
+DeviceState_t Device = {BASIC_INIT, false, false, false};
 Motor_Parameter_t Motor;
 FOC_Parameter_t FOC;
 VF_Parameter_t VF;
@@ -28,6 +28,7 @@ Park_t CurrentPark_Ref;
 Park_t VoltagePark;
 
 static inline void Main_Int_Parameter_Init(void);
+static inline void Main_Int_Basic_Init(void);
 static inline void Theta_Process(Motor_Parameter_t*, float);
 static inline void Write_Variables();
 static inline void Read_Variables();
@@ -45,6 +46,7 @@ void Main_Int_Handler(void)
   {
     adc_interrupt_flag_clear(ADC0, ADC_INT_FLAG_EOIC);
 
+    // 基础外设更新（无论初始化状态如何都要执行）
     Peripheral_UpdateCurrent();
     Peripheral_GateState();
     Peripheral_UpdateUdc();
@@ -54,8 +56,38 @@ void Main_Int_Handler(void)
 
     switch (Device.Mode)
     {
-      case INIT:
+      case BASIC_INIT:
       {
+        // 基础初始化：仅获取系统参数，不进行完整的FOC初始化
+        Main_Int_Basic_Init();
+
+        if (Device.system_params_valid)
+        {
+          Device.basic_init_done = true;
+          Device.Mode = BASIC_READY;
+          FOC.Mode = IDLE;
+        }
+        break;
+      }
+
+      case BASIC_READY:
+      {
+        // 基础就绪状态：系统参数已获取，等待完整初始化触发
+        // 继续运行基本逻辑但不进行FOC控制
+        if (FOC.Udc > 200.0F)
+        {
+          Peripheral_EnableHardwareProtect();
+        }
+
+        // 检查是否触发完整初始化（通过CCP协议修改Device.Mode）
+        // 这里不做状态转换，由外部CCP协议触发
+        FOC.Mode = IDLE;
+        break;
+      }
+
+      case FULL_INIT:
+      {
+        // 完整初始化：用户触发的完整参数初始化
         Main_Int_Parameter_Init();
 
         if (FOC.Udc > 200.0F)
@@ -63,18 +95,23 @@ void Main_Int_Handler(void)
           Peripheral_EnableHardwareProtect();
         }
         Protect.Flag = No_Protect;
-        FOC.Mode = IDLE;
+        Device.full_init_done = true;
         Device.Mode = READY;
+        FOC.Mode = IDLE;
         break;
       }
+
       case READY:
       {
+        // 就绪状态：准备进入运行状态
         FOC.Mode = IDLE;
         Device.Mode = RUNNING;
         break;
       }
+
       case RUNNING:
       {
+        // 运行状态：正常FOC控制
         UpdateThetaAndSpeed(&FOC, &Motor);
         FOC_Main(&FOC, &VF, &IF);
         switch (FOC.Mode)
@@ -89,6 +126,7 @@ void Main_Int_Handler(void)
         }
         break;
       }
+
       default:
         break;
     }
@@ -98,8 +136,39 @@ void Main_Int_Handler(void)
   }
 }
 
+/*!
+    \brief      基础初始化函数 - 仅获取系统参数
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+void Main_Int_Basic_Init(void)
+{
+  static bool basic_init_started = false;
+
+  if (!basic_init_started)
+  {
+    // 初始化基础保护参数
+    Peripheral_InitProtectParameter();
+
+    // 获取系统频率 - 这是关键步骤
+    Peripheral_GetSystemFrequency();
+
+    // 标记基础初始化已开始
+    basic_init_started = true;
+  }
+
+  // 检查系统参数是否已获取到有效值
+  if (FOC.Ts > 0.0F && FOC.freq > 0.0F)
+  {
+    Device.system_params_valid = true;
+  }
+}
+
 void Main_Int_Parameter_Init(void)
 {
+  // 注意：基础系统参数（Ts, freq等）已在Main_Int_Basic_Init中获取，这里不再重复
+
   memset(&VF, 0, sizeof(VF_Parameter_t));
   memset(&FOC, 0, sizeof(FOC_Parameter_t));
   memset(&Id_PID, 0, sizeof(PID_Handler_t));
@@ -115,8 +184,9 @@ void Main_Int_Parameter_Init(void)
   memset(&CurrentPark_Ref, 0, sizeof(Park_t));
   memset(&VoltagePark, 0, sizeof(Park_t));
 
-  Peripheral_InitProtectParameter();
-  Peripheral_GetSystemFrequency();
+  // 由于基础初始化已完成，这里只需要校准ADC
+  Peripheral_InitProtectParameter();  // 已在基础初始化中完成
+  Peripheral_GetSystemFrequency();    // 已在基础初始化中完成
   Peripheral_CalibrateADC();
 
   FOC.Iabc_fdbk = &CurrentPhase;

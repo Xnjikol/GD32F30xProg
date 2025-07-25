@@ -35,6 +35,7 @@
 // Since CCP demanded struct FOC is Global Variable, make it visible to main ISR //
 extern FOC_Parameter_t FOC;
 extern Motor_Parameter_t Motor;
+extern DeviceState_t Device;
 
 static inline void Sensor_UpdatePosition(float Position)
 {
@@ -73,5 +74,28 @@ static inline void FOC_UpdateMaxCurrent(float I_Max)
 void FOC_UpdateMainFrequency(float freq, float Ts, float PWM_ARR);
 
 void Main_Int_Handler(void);
+
+// 设备状态管理函数
+static inline void Main_Int_TriggerFullInit(void)
+{
+  extern DeviceState_t Device;
+  if (Device.Mode == BASIC_READY)
+  {
+    Device.Mode = FULL_INIT;
+  }
+}
+
+// 获取设备状态的便利函数
+static inline bool Main_Int_IsBasicReady(void)
+{
+  extern DeviceState_t Device;
+  return Device.Mode == BASIC_READY && Device.basic_init_done;
+}
+
+static inline bool Main_Int_IsFullyReady(void)
+{
+  extern DeviceState_t Device;
+  return Device.Mode >= READY && Device.full_init_done;
+}
 
 #endif /* __MAIN_INT_H__ */

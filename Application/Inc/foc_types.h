@@ -28,14 +28,19 @@ typedef enum
 
 typedef enum
 {
-  INIT,
-  READY,
-  RUNNING
+  BASIC_INIT,      // 基础初始化：仅获取系统参数
+  BASIC_READY,     // 基础就绪：等待完整初始化触发
+  FULL_INIT,       // 完整初始化：用户触发的完整参数初始化
+  READY,           // 就绪：完整初始化完成，准备运行
+  RUNNING          // 运行：正常工作状态
 } DeviceStateEnum_t;
 
 typedef struct
 {
   DeviceStateEnum_t Mode;
+  bool basic_init_done;     // 基础初始化完成标志
+  bool full_init_done;      // 完整初始化完成标志
+  bool system_params_valid; // 系统参数有效标志
 } DeviceState_t;
 
 typedef struct
