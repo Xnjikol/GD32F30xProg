@@ -122,6 +122,7 @@ void Main_Int_Parameter_Init(void)
   FOC.current->ref = &DQ_Current_ref;
   FOC.current->handler_d = &Id_PID;
   FOC.current->handler_q = &Iq_PID;
+  FOC.current->reset = 0;                            // 初始化停止标志
 
   FOC.speed = (Speed_Loop_t*) calloc(1, sizeof(Speed_Loop_t));
   FOC.speed->handler = &Speed_PID;

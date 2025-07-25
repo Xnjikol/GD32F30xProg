@@ -87,6 +87,7 @@ typedef struct
 {
   Park_Data_t* ref;          // DQ轴电流参考
   Park_Data_t* fdbk;         // DQ轴电流反馈
+  bool reset;                // 停止标志
   PID_Handler_t* handler_d;  // D轴PID控制器句柄
   PID_Handler_t* handler_q;  // Q轴PID控制器句柄
 } Current_Loop_t;
