@@ -1,5 +1,5 @@
 #include "com_interface.h"
-#include "hardware_interface.h"
+#include "hw_interface.h"
 #include "string.h"
 
 #define CAN_TX_BUFFER_SIZE 8
@@ -20,7 +20,7 @@ static volatile uint8_t sci_tx_tail = 0;
 
 bool Com_ReadCANFrame(can_frame_t* out_frame)
 {
-  return Peripheral_CANReceive(out_frame);
+  return HW_Interface_CANReceive(out_frame);
 }
 
 bool Com_CANSendEnqueue(uint32_t id, const uint8_t* data, size_t len)
@@ -51,7 +51,7 @@ bool Com_CANSendProcess(void)
     // 取出最新的数据（head指向最新）
     can_frame_t* msg = &can_tx_buffer[can_tx_head];
 
-    if (!Peripheral_CANSend(msg))
+    if (!HW_Interface_CANSend(msg))
     {
       // CAN邮箱繁忙，暂停
       return false;
@@ -90,7 +90,7 @@ bool Com_SCISendProcess(void)
     float* data = sci_tx_buffer[sci_tx_tail];
     uint8_t count = sci_tx_lengths[sci_tx_tail];
 
-    Peripheral_SCISend(data, count);
+    HW_Interface_SCISend(data, count);
     sci_tx_tail = (sci_tx_tail + 1) % SCI_TX_BUFFER_SIZE;
     return true;
 }

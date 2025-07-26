@@ -6,7 +6,17 @@
 */
 
 /*
-    Copyright (c) 2024, GigaDevice Semiconductor Inc.
+    Copyright (c) 2024, GigaD    // 清除 Break 中断标志
+    timer_interrupt_flag_clear(TIMER0, TIMER_INT_FLAG_BRK);
+    HW_Interface_SetDeviceStop(true);
+    // TODO: 检查是否是软件触发的BRK
+    // if (Software_BRK == false)
+    {
+      // 设置硬件故障保护标志
+      HW_Interface_ClearProtectFlags(HW_PROTECT_HARDWARE_FAULT);
+      timer_interrupt_disable(TIMER0, TIMER_INT_BRK);  // 禁用BRK中断
+      timer_primary_output_config(TIMER0, DISABLE);
+    }iconductor Inc.
 
     Redistribution and use in source and binary forms, with or without modification,
 are permitted provided that the following conditions are met:
@@ -37,12 +47,12 @@ OF SUCH DAMAGE.
 #include "can.h"
 #include "foc.h"
 #include "gd32f30x.h"
-#include "hardware_interface.h"
+#include "hw_interface.h"
 #include "justfloat.h"
-#include "main_int.h"
+#include "main_int_simplified.h"
 #include "systick.h"
 
-extern volatile uint16_t Device_Stop;
+/* Device_Stop 现在通过 HW_Interface_GetDeviceStop() 访问 */
 
 /*!
     \brief      this function handles NMI exception
@@ -135,7 +145,7 @@ void DMA0_Channel3_IRQHandler(void)
   if (dma_interrupt_flag_get(DMA0, DMA_CH3, DMA_INT_FLAG_FTF))
   {
     dma_interrupt_flag_clear(DMA0, DMA_CH3, DMA_INT_FLAG_FTF);
-    Peripheral_SCISendCallback();
+    HW_Interface_SCISendCallback();
   }
 }
 
@@ -156,13 +166,12 @@ void EXTI5_9_IRQHandler(void)
   if (RESET != exti_interrupt_flag_get(EXTI_7))
   {
     TIMER_SWEVG(TIMER0) |= TIMER_SWEVG_BRKG;
-    Device_Stop = 1;
+    HW_Interface_SetDeviceStop(true);
     exti_interrupt_flag_clear(EXTI_7);
   }
 }
 
-extern Protect_Flags_t Protect_Flag;
-extern bool Software_BRK;
+/* 原来的全局变量现在通过硬件接口层访问 */
 
 void TIMER0_BRK_IRQHandler(void)
 {
@@ -170,10 +179,10 @@ void TIMER0_BRK_IRQHandler(void)
   {
     // 清除 Break 中断标志
     timer_interrupt_flag_clear(TIMER0, TIMER_INT_FLAG_BRK);
-    Device_Stop = 1;
-    if (Software_BRK == false)
+    HW_Interface_SetDeviceStop(true);
+    if (!HW_Interface_GetSoftwareBRK())
     {
-      Protect.Flag |= Hardware_Fault;
+      HW_Interface_SetHardwareFault();
       timer_interrupt_disable(TIMER0, TIMER_INT_BRK);  // 禁用BRK中断
       timer_primary_output_config(TIMER0, DISABLE);
     }

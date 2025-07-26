@@ -4,7 +4,7 @@
 #include "com.h"
 #include "gd32f30x_gpio.h"
 #include "gpio.h"
-#include "hardware_interface.h"
+#include "hw_interface.h"
 #include "position_sensor.h"
 #include "systick.h"
 #include "tim.h"
@@ -13,6 +13,11 @@
 volatile uint32_t DWT_Count = 0;
 
 bool pin = false;
+
+/* ================ 全局变量定义 ================ */
+FOC_Parameter_t FOC = {0};
+Motor_Parameter_t Motor = {0}; 
+DeviceState_t Device = {0};
 
 /*!
     \brief      main function
@@ -50,8 +55,8 @@ int main(void)
     COM_CANProtocol();
     COM_SCIProtocol();
     // COM_DAQProtocol(systick_ms); Use CCP DAQ may cause PiSnoop display offline
-    Peripheral_TemperatureProtect();
-    Peripheral_GateState();
+    HW_Interface_TemperatureProtect();
+    HW_Interface_GateState();
 
     pin = gpio_input_bit_get(GPIOE, GPIO_PIN_15);
     // DWT_Count = DWT->CYCCNT; // 读取DWT计数器

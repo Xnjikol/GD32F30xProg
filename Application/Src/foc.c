@@ -1,10 +1,10 @@
 #include "foc.h"
 
-#include "hardware_interface.h"
+#include "hw_interface.h"
 #include "position_sensor.h"
 
 
-static inline float Get_Theta(float, float);
+static inline float Get_Theta(float, float, float);
 static inline void SVPWM_Generate(Clark_t*, float, Phase_t*);
 static inline void Speed_Loop_Control(SpdLoop_t* speed_loop, Park_t* idq_ref);
 static inline void Current_Loop_Control(CurLoop_t* hnd, Park_t* out);
@@ -24,7 +24,7 @@ void FOC_Main(FOC_Parameter_t* foc)
     case VF_MODE:
     {
       VF_Parameter_t* hnd_vf = foc->Hnd_vf;
-      hnd_vf->Theta = Get_Theta(hnd_vf->Freq, hnd_vf->Theta);
+      hnd_vf->Theta = Get_Theta(hnd_vf->Freq, hnd_vf->Theta, foc->Ts);
       foc->Theta = hnd_vf->Theta;
       ParkTransform(foc->Iclark_fdbk, foc->Theta, foc->Idq_ref);
       foc->Udq_ref->d = hnd_vf->Vref_Ud;
@@ -41,7 +41,7 @@ void FOC_Main(FOC_Parameter_t* foc)
       }
       else
       {
-        hnd_if->Theta = Get_Theta(hnd_if->IF_Freq, hnd_if->Theta);
+        hnd_if->Theta = Get_Theta(hnd_if->IF_Freq, hnd_if->Theta, foc->Ts);
       }
       foc->Theta = hnd_if->Theta;
 
@@ -146,10 +146,10 @@ static inline void Current_Loop_Control(CurLoop_t* hnd, Park_t* out)
 
 // SECTION - Ramp Generator
 
-static inline float Get_Theta(float Freq, float Theta)
+static inline float Get_Theta(float Freq, float Theta, float Ts)
 {
   // 电角度递推：θ += ω·Ts，ω = 2π·f
-  Theta += M_2PI * Freq * FOC.Ts;
+  Theta += M_2PI * Freq * Ts;
   if (Theta > M_2PI)
   {
     Theta -= M_2PI;
@@ -274,4 +274,85 @@ static inline void SVPWM_Generate(Clark_t* u_ref, float inv_Vdc, Phase_t* out)
   }
 
   *out = tcm;
+}
+
+/* ================ FOC参数更新函数实现 ================ */
+
+void FOC_UpdateThetaAndSpeed(FOC_Parameter_t* foc, const Motor_Parameter_t* motor)
+{
+  if (!foc || !motor)
+    return;
+
+  /* 更新角度和速度反馈 */
+  foc->Theta = motor->Elec_Theta;
+  foc->SpeedFdbk = motor->Speed;
+}
+
+void FOC_UpdateCurrentFeedback(FOC_Parameter_t* foc, const Phase_t* current_phase)
+{
+  if (!foc || !current_phase || !foc->Iabc_fdbk)
+    return;
+
+  /* 更新三相电流反馈 */
+  foc->Iabc_fdbk->a = current_phase->a;
+  foc->Iabc_fdbk->b = current_phase->b;
+  foc->Iabc_fdbk->c = current_phase->c;
+}
+
+void FOC_UpdateVoltageFeedback(FOC_Parameter_t* foc, float udc, float inv_udc)
+{
+  if (!foc)
+    return;
+
+  /* 更新直流母线电压反馈 */
+  foc->Udc = udc;
+  foc->inv_Udc = inv_udc;
+}
+
+bool FOC_GetPWMOutput(const FOC_Parameter_t* foc, Phase_t* tcm_output)
+{
+  if (!foc || !tcm_output || !foc->Tcm)
+    return false;
+
+  /* 获取PWM输出 */
+  tcm_output->a = foc->Tcm->a;
+  tcm_output->b = foc->Tcm->b;
+  tcm_output->c = foc->Tcm->c;
+
+  return true;
+}
+
+void FOC_UpdateFrequencyParams(FOC_Parameter_t* foc, float freq, float ts, float pwm_arr)
+{
+  if (!foc)
+    return;
+
+  /* 更新频率参数 */
+  foc->freq = freq;
+  foc->Ts = ts;
+  foc->PWM_ARR = pwm_arr;
+}
+
+void FOC_SetMode(FOC_Parameter_t* foc, FOC_Mode_t mode)
+{
+  if (!foc)
+    return;
+
+  foc->Mode = mode;
+}
+
+void FOC_SetStopFlag(FOC_Parameter_t* foc, bool stop)
+{
+  if (!foc)
+    return;
+
+  foc->Stop = stop;
+}
+
+void FOC_SetSpeedReference(FOC_Parameter_t* foc, float speed_ref)
+{
+  if (!foc)
+    return;
+
+  foc->SpeedRef = speed_ref;
 }
