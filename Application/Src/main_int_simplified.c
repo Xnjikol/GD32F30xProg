@@ -1,8 +1,14 @@
 #include "main_int_simplified.h"
 
+#include <math.h>
+
 #include "foc.h"
 #include "hw_interface.h"
 
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846f
+#endif
 
 
 /* ================ 外部变量声明 ================ */
@@ -15,34 +21,61 @@ static bool s_hw_interface_initialized = false;
 
 /* ================ 公共函数实现 ================ */
 
+void Motor_Init(Motor_Parameter_t* motor, DeviceState_t* device)
+{
+  if (!motor || !device)
+    return;
+
+  /* 电机基本参数初始化 */
+  motor->Rs = 0.65f;                      // 定子电阻 (Ω)
+  motor->Ld = 0.1175f;                    // d轴电感 (H)
+  motor->Lq = 0.044f;                     // q轴电感 (H)
+  motor->Flux = 0.00656f;                 // 磁链 (Wb)
+  motor->Pn = 2.0f;                       // 极对数
+  motor->Resolver_Pn = 1.0f;              // 旋变极对数
+  motor->inv_MotorPn = 1.0f / motor->Pn;  // 极对数倒数
+
+  /* 位置相关参数初始化 */
+  motor->Position = 0.0f;                   // 位置反馈初始值
+  motor->Position_Scale = 10000.0f - 1.0f;  // 位置量程
+  motor->Position_Offset = 107.0f;          // 零位偏移
+  motor->Mech_Theta = 0.0f;                 // 机械角度
+  motor->Elec_Theta = 0.0f;                 // 电气角度
+  motor->Speed = 0.0f;                      // 转速反馈
+
+  /* 角度转换系数计算 */
+#ifdef Resolver_Position
+  motor->theta_factor = 2.0f * M_PI / ((motor->Position_Scale + 1.0f) * motor->Resolver_Pn);
+#endif
+#ifdef Encoder_Position
+  motor->theta_factor = 2.0f * M_PI / (motor->Position_Scale + 1.0f);
+#endif
+
+  /* 设置指向设备时间频率参数的指针 */
+  motor->main_Ts_ptr = &device->main_Ts;
+  motor->main_Freq_ptr = &device->main_Freq;
+  motor->speed_Ts_ptr = &device->speed_Ts;
+  motor->speed_Freq_ptr = &device->speed_Freq;
+}
+
 void Main_Int_Init(void)
 {
-  /* 基础初始化 */
-  HW_Interface_InitProtectParams();
-  HW_Interface_GetSystemFrequency();
-
-  /* FOC参数初始化 */
-  FOC.initialized = false;
-  FOC.Stop = true;  /* 初始状态为停止 */
-  FOC.Mode = IDLE;  /* 初始模式为空闲 */
-  FOC.SpeedRef = 0.0f;
-  FOC.SpeedFdbk = 0.0f;
-  FOC.I_Max = 10.0f;  /* 默认最大电流 */
-  FOC.Udc = 0.0f;
-  FOC.inv_Udc = 0.0f;
-  FOC.Theta = 0.0f;
-  
-  /* 设备状态初始化 */
-  Device.Mode = INIT;
   Device.basic_init_done = false;
   Device.full_init_done = false;
   Device.system_params_valid = false;
 
-  /* 初始化硬件接口 */
-  if (HW_Interface_Init(&FOC, &Motor, &Device))
+  /* FOC系统初始化 */
+  if (FOC_Init(&FOC))
   {
-    s_hw_interface_initialized = true;
-    Device.basic_init_done = true;
+    /* Motor参数初始化 */
+    Motor_Init(&Motor, &Device);
+
+    /* 初始化硬件接口 */
+    if (HW_Interface_Init(&FOC, &Motor, &Device))
+    {
+      s_hw_interface_initialized = true;
+      Device.basic_init_done = true;
+    }
   }
 }
 
@@ -52,9 +85,6 @@ void Main_Int_Handler(void)
   {
     adc_interrupt_flag_clear(ADC0, ADC_INT_FLAG_EOIC);
 
-    if (!s_hw_interface_initialized)
-      return;
-
     /* 通过硬件接口层更新所有外设数据 */
     HW_Interface_Process();
 
@@ -63,12 +93,13 @@ void Main_Int_Handler(void)
     {
       case INIT:
       {
-        /* 初始化状态 */
-        if (FOC.Udc > 200.0f)  // 200V
+        /* 基础初始化：仅获取系统参数 */
+        Main_Int_Init();
+        Device.Mode = WAITING;
+        if (Device.system_params_valid)
         {
-          HW_Interface_EnableHardwareProtect();
-          HW_Interface_CalibrateADC();
-          Device.Mode = WAITING;
+          Device.basic_init_done = true;
+
           FOC.Mode = IDLE;
         }
         break;
@@ -83,37 +114,39 @@ void Main_Int_Handler(void)
 
       case SETUP:
       {
+        HW_Interface_SetDeviceStop(true);
         /* 设置状态，进行完整的FOC参数初始化 */
-        
         /* FOC完整初始化 */
         if (!FOC.initialized)
         {
-          /* 初始化FOC结构体指针（如果需要的话） */
-          // FOC.Tcm = &tcm_output;  // 根据实际情况设置
-          // FOC.Iabc_fdbk = &iabc_feedback;  // 根据实际情况设置
-          // 其他指针初始化...
-          
-          /* 设置基本参数 */
-          FOC.PWM_ARR = 4200.0f;  /* PWM周期，根据实际情况调整 */
-          FOC.Ts = Device.main_Ts;  /* 采样周期 */
-          FOC.freq = Device.main_Freq;  /* 采样频率 */
-          
-          FOC.initialized = true;
+          /* 初始化状态 */
+          if (FOC.Udc > 200.0f)  // 200V
+          {
+            /* 基础初始化 */
+            HW_Interface_InitProtectParams();
+            HW_Interface_GetSystemFrequency();
+
+            /* 设置基本参数 */
+            Main_Int_Init();
+
+            HW_Interface_EnableHardwareProtect();
+            HW_Interface_CalibrateADC();
+            FOC.Mode = IDLE;
+            FOC.initialized = true;
+            /* 标记完整初始化完成 */
+            Device.full_init_done = true;
+            Device.Mode = READY;
+          }
         }
-        
-        /* 标记完整初始化完成 */
-        Device.full_init_done = true;
-        Device.Mode = READY;
         break;
       }
 
       case READY:
       {
+        HW_Interface_SetDeviceStop(true);
         /* 就绪状态，可以开始运行 */
-        if (!HW_Interface_GetDeviceStop())
-        {
-          Device.Mode = RUNNING;
-        }
+        Device.Mode = RUNNING;
+        FOC.Mode = IDLE;
         break;
       }
 
@@ -150,17 +183,17 @@ void Main_Int_Handler(void)
       }
 
       default:
-        Device.Mode = INIT;
+        Device.Mode = WAITING;
         break;
     }
 
     /* 检查保护状态 */
-    HW_ProtectFlags_t protect_flags = HW_Interface_GetProtectFlags();
-    if (protect_flags != HW_PROTECT_NONE && Device.Mode != SHUTDOWN)
-    {
-      Device.Mode = SHUTDOWN;
-      HW_Interface_SetDeviceStop(true);
-    }
+    // HW_ProtectFlags_t protect_flags = HW_Interface_GetProtectFlags();
+    // if (protect_flags != HW_PROTECT_NONE && Device.Mode != SHUTDOWN)
+    // {
+    //   Device.Mode = SHUTDOWN;
+    //   HW_Interface_SetDeviceStop(true);
+    // }
 
     /* 获取PWM输出并设置到硬件 */
     Phase_t tcm_output;

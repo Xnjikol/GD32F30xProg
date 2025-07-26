@@ -6,6 +6,14 @@
 #include "gd32f30x.h"
 
 /**
+ * @brief Motor参数初始化
+ * 初始化Motor结构体的各个参数
+ * @param motor Motor参数结构体指针
+ * @param device 设备状态结构体指针
+ */
+void Motor_Init(Motor_Parameter_t* motor, DeviceState_t* device);
+
+/**
  * @brief 主中断初始化
  * 初始化硬件接口层和相关参数
  */

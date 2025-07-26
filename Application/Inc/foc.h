@@ -8,6 +8,18 @@
 #include "transformation.h"
 
 /* ================ 主要FOC控制函数 ================ */
+
+/**
+ * @brief FOC系统初始化
+ * @param foc FOC参数结构体指针
+ * @return bool 初始化是否成功
+ */
+bool FOC_Init(FOC_Parameter_t* foc);
+
+/**
+ * @brief FOC主控制函数
+ * @param foc FOC参数结构体指针
+ */
 void FOC_Main(FOC_Parameter_t* foc);
 
 /* ================ FOC参数更新函数 ================ */

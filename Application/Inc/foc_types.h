@@ -27,7 +27,7 @@ typedef enum
 
 typedef enum
 {
-  INIT,     // 基础初始化：仅获取系统参数
+  INIT,     // 初始化状态：仅获取系统参数
   WAITING,  // 基础就绪：等待完整初始化触发
   SETUP,    // 完整初始化：用户触发的全部参数初始化
   READY,    // 就绪：完整初始化完成，准备运行
@@ -63,7 +63,7 @@ typedef struct
   float Elec_Theta;       // Electrical angle (rad)
   float Speed;            // Speed (rpm)
   float theta_factor;     // Sensor data to mechanic angle conversion factor
-  
+
   // 指向设备时间和频率参数的指针
   float* main_Ts_ptr;     // 指向主中断采样周期
   float* main_Freq_ptr;   // 指向主中断频率

@@ -5,14 +5,15 @@
 
 #include "adc.h"
 #include "can.h"
+#include "filter.h"
+#include "foc.h"
 #include "gd32f30x_can.h"
 #include "gpio.h"
 #include "position_sensor.h"
+#include "theta_calc.h"
 #include "tim.h"
 #include "usart.h"
-#include "theta_calc.h"
-#include "filter.h"
-#include "foc.h"
+
 
 /* ================ 静态变量 ================ */
 static FOC_Parameter_t* s_foc_param = NULL;
@@ -31,13 +32,13 @@ static inline void hw_update_gate_state(void);
 static inline void hw_current_protect(float Ia, float Ib, float Ic, float I_Max);
 static inline void hw_voltage_protect(float Udc, float Udc_rate, float Udc_fluctuation);
 static inline void hw_temperature_protect(void);
-static inline bool hw_can_receive_to_frame(const can_receive_message_struct* hw_msg, can_frame_t* frame);
+static inline bool hw_can_receive_to_frame(const can_receive_message_struct* hw_msg,
+                                           can_frame_t* frame);
 
 /* ================ 公共接口函数实现 ================ */
 
-bool HW_Interface_Init(FOC_Parameter_t* foc_param, 
-                      Motor_Parameter_t* motor_param,
-                      DeviceState_t* device_state)
+bool HW_Interface_Init(FOC_Parameter_t* foc_param, Motor_Parameter_t* motor_param,
+                       DeviceState_t* device_state)
 {
   if (!foc_param || !motor_param || !device_state)
     return false;
@@ -68,20 +69,17 @@ void HW_Interface_Process(void)
   hw_update_voltage();
   hw_update_position();
   hw_update_gate_state();
-  
+
   /* 执行保护检查 */
   if (s_foc_param && s_foc_param->Iabc_fdbk)
   {
-    hw_current_protect(s_foc_param->Iabc_fdbk->a, 
-                      s_foc_param->Iabc_fdbk->b, 
-                      s_foc_param->Iabc_fdbk->c, 
-                      s_foc_param->I_Max);
+    hw_current_protect(s_foc_param->Iabc_fdbk->a, s_foc_param->Iabc_fdbk->b,
+                       s_foc_param->Iabc_fdbk->c, s_foc_param->I_Max);
   }
-  
-  hw_voltage_protect(s_foc_param ? s_foc_param->Udc : 0.0f, 
-                    s_protect_params.voltage_rate,
-                    s_protect_params.voltage_fluctuation);
-                    
+
+  hw_voltage_protect(s_foc_param ? s_foc_param->Udc : 0.0f, s_protect_params.voltage_rate,
+                     s_protect_params.voltage_fluctuation);
+
   hw_temperature_protect();
 }
 
@@ -93,7 +91,7 @@ bool HW_Interface_GetPWMOutput(Phase_t* tcm_phase)
   tcm_phase->a = s_foc_param->Tcm->a;
   tcm_phase->b = s_foc_param->Tcm->b;
   tcm_phase->c = s_foc_param->Tcm->c;
-  
+
   return true;
 }
 
@@ -141,7 +139,7 @@ bool HW_Interface_CANSend(const can_frame_t* frame)
     return false;
 
   can_transmit_message_struct msg = {0};
-  
+
   msg.tx_sfid = frame->id;
   msg.tx_dlen = frame->dlc;
   memcpy(msg.tx_data, frame->data, frame->dlc);
@@ -153,17 +151,15 @@ bool HW_Interface_CANSend(const can_frame_t* frame)
 
 bool HW_Interface_CANReceive(can_frame_t* frame)
 {
-  if (!frame)
-    return false;
-
-  can_receive_message_struct hw_msg = {0};
-  
-  if (can_receive_message_length_get(CAN0, CAN_FIFO0) == 0)
-    return false;
-
-  can_message_receive(CAN0, CAN_FIFO0, &hw_msg);
-
-  return hw_can_receive_to_frame(&hw_msg, frame);
+  can_receive_message_struct rx_msg;
+  if (CAN_Buffer_Get(&rx_msg))
+  {
+    if (hw_can_receive_to_frame(&rx_msg, frame))
+    {
+      return true;
+    }
+  }
+  return false;
 }
 
 void HW_Interface_SCISend(float* data, uint8_t count)
@@ -189,7 +185,7 @@ void HW_Interface_GetSystemFrequency(void)
   float PWM_ARR = 0.0F;
 
   cal_fmain(&f, &Ts, &PWM_ARR);
-  
+
   if (s_device_state)
   {
     s_device_state->main_Freq = f;
@@ -197,7 +193,7 @@ void HW_Interface_GetSystemFrequency(void)
     s_device_state->speed_Freq = f / SPEED_LOOP_PRESCALER;
     s_device_state->speed_Ts = Ts * SPEED_LOOP_PRESCALER;
   }
-  
+
   if (s_foc_param)
   {
     s_foc_param->freq = f;
@@ -225,10 +221,10 @@ static inline void hw_update_current(void)
 
   float ia, ib, ic;
   ADC_Read_Injection(&ia, &ib, &ic);
-  
+
   /* 更新电流反馈 */
   s_foc_param->Iabc_fdbk->a = ia;
-  s_foc_param->Iabc_fdbk->b = ib; 
+  s_foc_param->Iabc_fdbk->b = ib;
   s_foc_param->Iabc_fdbk->c = ic;
 }
 
@@ -239,7 +235,7 @@ static inline void hw_update_voltage(void)
 
   float udc, inv_udc;
   ADC_Read_Regular(&udc, &inv_udc);
-  
+
   /* 更新电压反馈 */
   s_foc_param->Udc = udc;
   s_foc_param->inv_Udc = inv_udc;
@@ -263,8 +259,7 @@ static inline void hw_update_gate_state(void)
 
 static inline void hw_current_protect(float Ia, float Ib, float Ic, float I_Max)
 {
-  if ((Ia > 0.9f * I_Max || Ia < -0.9f * I_Max) || 
-      (Ib > 0.9f * I_Max || Ib < -0.9f * I_Max) ||
+  if ((Ia > 0.9f * I_Max || Ia < -0.9f * I_Max) || (Ib > 0.9f * I_Max || Ib < -0.9f * I_Max) ||
       (Ic > 0.9f * I_Max || Ic < -0.9f * I_Max))
   {
     static uint16_t current_count = 0;
@@ -302,12 +297,12 @@ static inline void hw_voltage_protect(float Udc, float Udc_rate, float Udc_fluct
 static inline void hw_temperature_protect(void)
 {
   extern float Temperature; /* 来自 adc.h 的全局变量 */
-  
+
   if (Temperature > 0.35f * s_protect_params.temperature_max)
   {
     gpio_bit_set(FAN_OPEN_PORT, FAN_OPEN_PIN);
   }
-  
+
   if (Temperature > s_protect_params.temperature_max)
   {
     s_device_stop = true;
@@ -315,14 +310,27 @@ static inline void hw_temperature_protect(void)
   }
 }
 
-static inline bool hw_can_receive_to_frame(const can_receive_message_struct* hw_msg, can_frame_t* frame)
+static inline bool hw_can_receive_to_frame(const can_receive_message_struct* hw_msg,
+                                           can_frame_t* frame)
 {
   if (!hw_msg || !frame)
     return false;
 
-  frame->id = hw_msg->rx_sfid;
-  frame->dlc = hw_msg->rx_dlen;
-  memcpy(frame->data, hw_msg->rx_data, hw_msg->rx_dlen);
+  // 判断标准帧还是扩展帧
+  if (hw_msg->rx_ff == CAN_FF_STANDARD)
+  {
+    frame->id = hw_msg->rx_sfid & 0x7FF;  // 11-bit 标准ID
+    frame->is_ext = false;
+  }
+  else
+  {
+    frame->id = hw_msg->rx_efid & 0x1FFFFFFF;  // 29-bit 扩展ID
+    frame->is_ext = true;
+  }
+
+  frame->dlc = (hw_msg->rx_dlen > 8) ? 8 : hw_msg->rx_dlen;
+  frame->is_rtr = (hw_msg->rx_ft == CAN_FT_REMOTE);
+  memcpy(frame->data, hw_msg->rx_data, frame->dlc);
 
   return true;
 }

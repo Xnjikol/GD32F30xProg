@@ -3,11 +3,148 @@
 #include "hw_interface.h"
 #include "position_sensor.h"
 
+/* ================ FOC模块内部全局变量定义 ================ */
+// 三相电流、电压结构体
+static Phase_t Foc_CurPhase_Fdbk = {0};  // 三相电流反馈
+static Phase_t Foc_Pwm_Tcm = {0};        // 三相PWM输出
+
+// Clarke和Park变换结构体
+static Clark_t Foc_CurClark_Fdbk = {0};  // αβ轴电流反馈
+static Clark_t Fov_VolClark_Fdbk = {0};  // αβ轴电压指令
+static Park_t Foc_CurPark_Ref = {0};     // dq轴电流参考
+static Park_t Foc_CurPark_Fdbk = {0};    // dq轴电流反馈
+static Park_t Foc_VolPark_Ref = {0};     // dq轴电压参考
+
+// 速度环和电流环结构体
+static SpdLoop_t Foc_SpdLoop = {0};  // 速度环控制
+static CurLoop_t Foc_CurLoop = {0};  // 电流环控制
+
+// VF和IF控制结构体
+static VF_Parameter_t Foc_VF_Param = {0};  // VF模式参数
+static IF_Parameter_t Foc_IF_Param = {0};  // IF模式参数
+
+// PID控制器
+static PID_Handler_t Foc_PidSpeed = {0};  // 速度环PID
+static PID_Handler_t Foc_PidCurD = {0};   // d轴电流PID
+static PID_Handler_t Foc_PidCurQ = {0};   // q轴电流PID
+
+// 斜坡发生器
+static RampGenerator_t FOC_RampSpd = {0};  // 速度斜坡发生器
 
 static inline float Get_Theta(float, float, float);
 static inline void SVPWM_Generate(Clark_t*, float, Phase_t*);
-static inline void Speed_Loop_Control(SpdLoop_t* speed_loop, Park_t* idq_ref);
-static inline void Current_Loop_Control(CurLoop_t* hnd, Park_t* out);
+static inline void Speed_Loop_Control(SpdLoop_t*, Park_t*);
+static inline void Current_Loop_Control(CurLoop_t*, Park_t*);
+
+// SECTION - FOC Init
+bool FOC_Init(FOC_Parameter_t* foc)
+{
+  if (!foc)
+    return false;
+
+  /* 基础参数初始化 */
+  foc->initialized = false;
+  foc->Stop = true; /* 初始状态为停止 */
+  foc->Mode = IDLE; /* 初始模式为空闲 */
+  foc->SpeedRef = 0.0f;
+  foc->SpeedFdbk = 0.0f;
+  foc->I_Max = 10.0f; /* 默认最大电流 */
+  foc->Udc = 0.0f;
+  foc->inv_Udc = 0.0f;
+  foc->Theta = 0.0f;
+  foc->PWM_ARR = 4200.0f; /* PWM周期，根据实际情况调整 */
+
+  /* 连接指针到全局变量 */
+  foc->Iabc_fdbk = &Foc_CurPhase_Fdbk;
+  foc->Tcm = &Foc_Pwm_Tcm;
+  foc->Iclark_fdbk = &Foc_CurClark_Fdbk;
+  foc->Uclark_ref = &Fov_VolClark_Fdbk;
+  foc->Idq_ref = &Foc_CurPark_Ref;
+  foc->Idq_fdbk = &Foc_CurPark_Fdbk;
+  foc->Udq_ref = &Foc_VolPark_Ref;
+  foc->Hnd_spdloop = &Foc_SpdLoop;
+  foc->Hnd_curloop = &Foc_CurLoop;
+  foc->Hnd_vf = &Foc_VF_Param;
+  foc->Hnd_if = &Foc_IF_Param;
+
+  /* 速度环初始化 */
+  Foc_SpdLoop.ref = 0.0f;
+  Foc_SpdLoop.fdbk = 0.0f;
+  Foc_SpdLoop.reset = true;
+  Foc_SpdLoop.prescaler = 10; /* 使用SPEED_LOOP_PRESCALER值 */
+  Foc_SpdLoop.counter = 0;
+  Foc_SpdLoop.hnd_ramp = &FOC_RampSpd;
+  Foc_SpdLoop.hnd_speed = &Foc_PidSpeed;
+
+  /* 电流环初始化 */
+  Foc_CurLoop.ref = &Foc_CurPark_Ref;
+  Foc_CurLoop.fdbk = &Foc_CurPark_Fdbk;
+  Foc_CurLoop.reset = true;
+  Foc_CurLoop.handler_d = &Foc_PidCurD;
+  Foc_CurLoop.handler_q = &Foc_PidCurQ;
+
+  /* PID控制器基础初始化 */
+  // 速度PID初始化
+  Foc_PidSpeed.Kp = 1.0f;
+  Foc_PidSpeed.Ki = 0.1f;
+  Foc_PidSpeed.Kd = 0.0f;
+  Foc_PidSpeed.integral = 0.0f;
+  Foc_PidSpeed.previous_error = 0.0f;
+  Foc_PidSpeed.MaxOutput = 10.0f;
+  Foc_PidSpeed.MinOutput = -10.0f;
+  Foc_PidSpeed.output = 0.0f;
+  Foc_PidSpeed.IntegralLimit = 5.0f;
+  Foc_PidSpeed.Ts = 0.001f; /* 1ms，稍后会更新 */
+  Foc_PidSpeed.Reset = false;
+
+  // Id PID初始化
+  Foc_PidCurD.Kp = 0.5f;
+  Foc_PidCurD.Ki = 50.0f;
+  Foc_PidCurD.Kd = 0.0f;
+  Foc_PidCurD.integral = 0.0f;
+  Foc_PidCurD.previous_error = 0.0f;
+  Foc_PidCurD.MaxOutput = 24.0f; /* 电压限制 */
+  Foc_PidCurD.MinOutput = -24.0f;
+  Foc_PidCurD.output = 0.0f;
+  Foc_PidCurD.IntegralLimit = 10.0f;
+  Foc_PidCurD.Ts = 0.0001f; /* 100us，稍后会更新 */
+  Foc_PidCurD.Reset = false;
+
+  // Iq PID初始化
+  Foc_PidCurQ.Kp = 0.5f;
+  Foc_PidCurQ.Ki = 50.0f;
+  Foc_PidCurQ.Kd = 0.0f;
+  Foc_PidCurQ.integral = 0.0f;
+  Foc_PidCurQ.previous_error = 0.0f;
+  Foc_PidCurQ.MaxOutput = 24.0f; /* 电压限制 */
+  Foc_PidCurQ.MinOutput = -24.0f;
+  Foc_PidCurQ.output = 0.0f;
+  Foc_PidCurQ.IntegralLimit = 10.0f;
+  Foc_PidCurQ.Ts = 0.0001f; /* 100us，稍后会更新 */
+  Foc_PidCurQ.Reset = false;
+
+  /* VF参数初始化 */
+  Foc_VF_Param.Vref_Ud = 0.0f;
+  Foc_VF_Param.Vref_Uq = 0.0f;
+  Foc_VF_Param.Freq = 0.0f;
+  Foc_VF_Param.Theta = 0.0f;
+
+  /* IF参数初始化 */
+  Foc_IF_Param.Id_Ref = 0.0f;
+  Foc_IF_Param.Iq_Ref = 0.0f;
+  Foc_IF_Param.IF_Freq = 0.0f;
+  Foc_IF_Param.Theta = 0.0f;
+  Foc_IF_Param.Sensor_State = Disable;
+
+  /* 斜坡发生器初始化 */
+  FOC_RampSpd.value = 0.0f;
+  FOC_RampSpd.target = 0.0f;
+  FOC_RampSpd.slope = 100.0f;       /* 默认斜坡率 */
+  FOC_RampSpd.limit_min = -3000.0f; /* 最小速度 */
+  FOC_RampSpd.limit_max = 3000.0f;  /* 最大速度 */
+  FOC_RampSpd.Ts = 0.0001f;         /* 采样周期，稍后会更新 */
+  return true;
+}
 
 // SECTION - FOC Main
 void FOC_Main(FOC_Parameter_t* foc)
