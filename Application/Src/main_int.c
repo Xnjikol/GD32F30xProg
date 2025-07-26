@@ -10,28 +10,26 @@ float theta_factor = 0.0F;  // Sensor data to mechanic angle conversion factor
 float Speed_Ref = 0.0F;
 float Speed_Fdbk = 0.0F;
 
-DeviceState_t Device = {BASIC_INIT, false, false, false};
+DeviceState_t Device;
 Motor_Parameter_t Motor;
 FOC_Parameter_t FOC;
-VF_Parameter_t VF;
-IF_Parameter_t IF;
-PID_Handler_t Id_PID;
-PID_Handler_t Iq_PID;
+VF_Parameter_t OpenLoop_VF;
+IF_Parameter_t OpenLoop_IF;
+PID_Handler_t Pid_CurLoop_d;
+PID_Handler_t Pid_CurLoop_q;
 PID_Handler_t Pid_SpdLoop;
 RampGenerator_t Rmp_Speed;
-Clark_t VoltageClark;
-Clark_t CurrentClark;
-Phase_t CurrentPhase;
-Phase_t Phase_Tcm;
+Clark_t VoltageClark_Ref;
+Clark_t CurrentClark_Fdbk;
+Phase_t CurrentPhase_Fdbk;
+Phase_t TcmPhase_Ref;
 Park_t CurrentPark_Fdbk;
 Park_t CurrentPark_Ref;
-Park_t VoltagePark;
+Park_t VoltagePark_Ref;
 
 static inline void Main_Int_Parameter_Init(void);
 static inline void Main_Int_Basic_Init(void);
 static inline void Theta_Process(Motor_Parameter_t*, float);
-static inline void Write_Variables();
-static inline void Read_Variables();
 static inline void UpdateThetaAndSpeed(FOC_Parameter_t* foc, Motor_Parameter_t* motor);
 
 /*!
@@ -52,11 +50,9 @@ void Main_Int_Handler(void)
     Peripheral_UpdateUdc();
     Peripheral_UpdatePosition();
 
-    Write_Variables();
-
     switch (Device.Mode)
     {
-      case BASIC_INIT:
+      case INIT:
       {
         // 基础初始化：仅获取系统参数，不进行完整的FOC初始化
         Main_Int_Basic_Init();
@@ -64,13 +60,13 @@ void Main_Int_Handler(void)
         if (Device.system_params_valid)
         {
           Device.basic_init_done = true;
-          Device.Mode = BASIC_READY;
+          Device.Mode = WAITING;
           FOC.Mode = IDLE;
         }
         break;
       }
 
-      case BASIC_READY:
+      case WAITING:
       {
         // 基础就绪状态：系统参数已获取，等待完整初始化触发
         // 继续运行基本逻辑但不进行FOC控制
@@ -85,7 +81,7 @@ void Main_Int_Handler(void)
         break;
       }
 
-      case FULL_INIT:
+      case SETUP:
       {
         // 完整初始化：用户触发的完整参数初始化
         Main_Int_Parameter_Init();
@@ -113,17 +109,15 @@ void Main_Int_Handler(void)
       {
         // 运行状态：正常FOC控制
         UpdateThetaAndSpeed(&FOC, &Motor);
-        FOC_Main(&FOC, &VF, &IF);
-        switch (FOC.Mode)
-        {
-          case EXIT:
-          {
-            Peripheral_DisableHardwareProtect();
-            break;
-          }
-          default:
-            break;
-        }
+        FOC.Stop = Device_Stop;
+        FOC.SpeedRef = Speed_Ref;
+        FOC_Main(&FOC);
+        break;
+      }
+
+      case SHUTDOWN:
+      {
+        Peripheral_DisableHardwareProtect();
         break;
       }
 
@@ -131,7 +125,6 @@ void Main_Int_Handler(void)
         break;
     }
 
-    Read_Variables();
     Peripheral_SetPWMChangePoint();
   }
 }
@@ -169,38 +162,42 @@ void Main_Int_Parameter_Init(void)
 {
   // 注意：基础系统参数（Ts, freq等）已在Main_Int_Basic_Init中获取，这里不再重复
 
-  memset(&VF, 0, sizeof(VF_Parameter_t));
+  memset(&OpenLoop_VF, 0, sizeof(VF_Parameter_t));
   memset(&FOC, 0, sizeof(FOC_Parameter_t));
-  memset(&Id_PID, 0, sizeof(PID_Handler_t));
-  memset(&Iq_PID, 0, sizeof(PID_Handler_t));
+  memset(&Pid_CurLoop_d, 0, sizeof(PID_Handler_t));
+  memset(&Pid_CurLoop_q, 0, sizeof(PID_Handler_t));
   memset(&Pid_SpdLoop, 0, sizeof(PID_Handler_t));
-  memset(&VoltageClark, 0, sizeof(Clark_t));
-  memset(&CurrentClark, 0, sizeof(Clark_t));
+  memset(&VoltageClark_Ref, 0, sizeof(Clark_t));
+  memset(&CurrentClark_Fdbk, 0, sizeof(Clark_t));
   memset(&Rmp_Speed, 0, sizeof(RampGenerator_t));
   memset(&Motor, 0, sizeof(Motor_Parameter_t));
-  memset(&CurrentPhase, 0, sizeof(Phase_t));
-  memset(&Phase_Tcm, 0, sizeof(Phase_t));
+  memset(&CurrentPhase_Fdbk, 0, sizeof(Phase_t));
+  memset(&TcmPhase_Ref, 0, sizeof(Phase_t));
   memset(&CurrentPark_Fdbk, 0, sizeof(Park_t));
   memset(&CurrentPark_Ref, 0, sizeof(Park_t));
-  memset(&VoltagePark, 0, sizeof(Park_t));
+  memset(&VoltagePark_Ref, 0, sizeof(Park_t));
 
   // 由于基础初始化已完成，这里只需要校准ADC
   Peripheral_InitProtectParameter();  // 已在基础初始化中完成
   Peripheral_GetSystemFrequency();    // 已在基础初始化中完成
   Peripheral_CalibrateADC();
 
-  FOC.Iabc_fdbk = &CurrentPhase;
-  FOC.Iclark_fdbk = &CurrentClark;
+  FOC.Iabc_fdbk = &CurrentPhase_Fdbk;
+  FOC.Iclark_fdbk = &CurrentClark_Fdbk;
   FOC.Idq_ref = &CurrentPark_Ref;
   FOC.Idq_fdbk = &CurrentPark_Fdbk;
-  FOC.Tcm = &Phase_Tcm;
+  FOC.Tcm = &TcmPhase_Ref;
+
+  // 开环相关变量
+  FOC.Hnd_vf = &OpenLoop_VF;
+  FOC.Hnd_if = &OpenLoop_IF;
 
   // 电流环相关变量
   FOC.Hnd_curloop = (CurLoop_t*) calloc(1, sizeof(CurLoop_t));
   FOC.Hnd_curloop->fdbk = (Park_t*) calloc(1, sizeof(Park_t));
   FOC.Hnd_curloop->ref = (Park_t*) calloc(1, sizeof(Park_t));
-  FOC.Hnd_curloop->handler_d = &Id_PID;
-  FOC.Hnd_curloop->handler_q = &Iq_PID;
+  FOC.Hnd_curloop->handler_d = &Pid_CurLoop_d;
+  FOC.Hnd_curloop->handler_q = &Pid_CurLoop_q;
   FOC.Hnd_curloop->reset = 0;  // 初始化停止标志
 
   // 转速环相关变量
@@ -211,8 +208,8 @@ void Main_Int_Parameter_Init(void)
   FOC.Hnd_spdloop->prescaler = (uint16_t) SPEED_LOOP_PRESCALER;  // 设置分频数
   FOC.Hnd_spdloop->counter = 0;                                  // 初始化分频计数器
 
-  FOC.Udq_ref = &VoltagePark;
-  FOC.Uclark_ref = &VoltageClark;
+  FOC.Udq_ref = &VoltagePark_Ref;
+  FOC.Uclark_ref = &VoltageClark_Ref;
 
   Motor.Rs = 1.25F;
   Motor.Ld = 0.006F;
@@ -230,6 +227,13 @@ void Main_Int_Parameter_Init(void)
 #ifdef Encoder_Position
   theta_factor = M_2PI / (float) (Motor.Position_Scale + 1);
 #endif
+  Rmp_Speed.slope = 50.0F;  // limit to 50 rpm/s
+  Rmp_Speed.limit_min = -1800.0F;
+  Rmp_Speed.limit_max = 1800.0F;
+  Rmp_Speed.value = 0.0F;
+  Rmp_Speed.target = 0.0F;
+  Rmp_Speed.Ts = FOC.Ts * SPEED_LOOP_PRESCALER;  // Speed loop time;
+
   Pid_SpdLoop.Kp = 0.005F;
   Pid_SpdLoop.Ki = 0.03F;
   Pid_SpdLoop.Kd = 0.0F;
@@ -241,47 +245,40 @@ void Main_Int_Parameter_Init(void)
   Pid_SpdLoop.output = 0.0F;
   Pid_SpdLoop.Ts = FOC.Ts * SPEED_LOOP_PRESCALER;  // Speed loop time;
 
-  Rmp_Speed.slope = 50.0F;  // limit to 50 rpm/s
-  Rmp_Speed.limit_min = -1800.0F;
-  Rmp_Speed.limit_max = 1800.0F;
-  Rmp_Speed.value = 0.0F;
-  Rmp_Speed.target = 0.0F;
-  Rmp_Speed.Ts = FOC.Ts * SPEED_LOOP_PRESCALER;  // Speed loop time;
+  Pid_CurLoop_d.Kp = 73.8274273F;
+  Pid_CurLoop_d.Ki = 408.40704496F;
+  Pid_CurLoop_d.Kd = 0.0F;
+  Pid_CurLoop_d.MaxOutput = 50.0F;  // Maximum Udc/sqrt(3)
+  Pid_CurLoop_d.MinOutput = -50.0F;
+  Pid_CurLoop_d.IntegralLimit = 50.0F;
+  Pid_CurLoop_d.previous_error = 0.0F;
+  Pid_CurLoop_d.integral = 0.0F;
+  Pid_CurLoop_d.output = 0.0F;
+  Pid_CurLoop_d.Ts = FOC.Ts;  // Current loop time
+  Pid_CurLoop_d.Reset = true;
 
-  Id_PID.Kp = 73.8274273F;
-  Id_PID.Ki = 408.40704496F;
-  Id_PID.Kd = 0.0F;
-  Id_PID.MaxOutput = 50.0F;  // Maximum Udc/sqrt(3)
-  Id_PID.MinOutput = -50.0F;
-  Id_PID.IntegralLimit = 50.0F;
-  Id_PID.previous_error = 0.0F;
-  Id_PID.integral = 0.0F;
-  Id_PID.output = 0.0F;
-  Id_PID.Ts = FOC.Ts;  // Current loop time
-  Id_PID.Reset = true;
+  Pid_CurLoop_q.Kp = 27.646015F;
+  Pid_CurLoop_q.Ki = 408.40704496F;
+  Pid_CurLoop_q.Kd = 0.0F;
+  Pid_CurLoop_q.MaxOutput = 50.0F;
+  Pid_CurLoop_q.MinOutput = -50.0F;
+  Pid_CurLoop_q.IntegralLimit = 50.0F;
+  Pid_CurLoop_q.previous_error = 0.0F;
+  Pid_CurLoop_q.integral = 0.0F;
+  Pid_CurLoop_q.output = 0.0F;
+  Pid_CurLoop_q.Ts = FOC.Ts;  // Current loop time
+  Pid_CurLoop_q.Reset = true;
 
-  Iq_PID.Kp = 27.646015F;
-  Iq_PID.Ki = 408.40704496F;
-  Iq_PID.Kd = 0.0F;
-  Iq_PID.MaxOutput = 50.0F;
-  Iq_PID.MinOutput = -50.0F;
-  Iq_PID.IntegralLimit = 50.0F;
-  Iq_PID.previous_error = 0.0F;
-  Iq_PID.integral = 0.0F;
-  Iq_PID.output = 0.0F;
-  Iq_PID.Ts = FOC.Ts;  // Current loop time
-  Iq_PID.Reset = true;
+  OpenLoop_VF.Vref_Ud = 0.0F;
+  OpenLoop_VF.Vref_Uq = 0.0F;
+  OpenLoop_VF.Freq = 0.0F;
+  OpenLoop_VF.Theta = 0.0F;
 
-  VF.Vref_Ud = 0.0F;
-  VF.Vref_Uq = 0.0F;
-  VF.Freq = 0.0F;
-  VF.Theta = 0.0F;
-
-  IF.Id_ref = 0.0F;
-  IF.Iq_ref = 0.0F;
-  IF.IF_Freq = 0.0F;
-  IF.Theta = 0.0F;
-  IF.Sensor_State = Disable;
+  OpenLoop_IF.Id_Ref = 0.0F;
+  OpenLoop_IF.Iq_Ref = 0.0F;
+  OpenLoop_IF.IF_Freq = 0.0F;
+  OpenLoop_IF.Theta = 0.0F;
+  OpenLoop_IF.Sensor_State = Disable;
 }
 
 void FOC_UpdateMainFrequency(float freq, float Ts, float PWM_ARR)
@@ -331,19 +328,10 @@ static inline void Theta_Process(Motor_Parameter_t* motor, float freq)
   }
 }
 
-static inline void Write_Variables()
-{
-  FOC.Stop = Device_Stop;
-  FOC.Hnd_spdloop->ref = Speed_Ref;
-  // FOC.Theta = Sensor.Elec_Theta;
-  // FOC.hnd_spdloop->fdbk = Sensor.Speed;
-}
-
-static inline void Read_Variables() {}
 
 static inline void UpdateThetaAndSpeed(FOC_Parameter_t* foc, Motor_Parameter_t* motor)
 {
   Theta_Process(motor, foc->freq);
   foc->Theta = motor->Elec_Theta;
-  foc->Hnd_spdloop->fdbk = motor->Speed;
+  foc->SpeedFdbk = motor->Speed;
 }

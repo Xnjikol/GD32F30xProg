@@ -79,9 +79,9 @@ void Main_Int_Handler(void);
 static inline void Main_Int_TriggerFullInit(void)
 {
   extern DeviceState_t Device;
-  if (Device.Mode == BASIC_READY)
+  if (Device.Mode == WAITING)
   {
-    Device.Mode = FULL_INIT;
+    Device.Mode = SETUP;
   }
 }
 
@@ -89,7 +89,7 @@ static inline void Main_Int_TriggerFullInit(void)
 static inline bool Main_Int_IsBasicReady(void)
 {
   extern DeviceState_t Device;
-  return Device.Mode == BASIC_READY && Device.basic_init_done;
+  return Device.Mode == WAITING && Device.basic_init_done;
 }
 
 static inline bool Main_Int_IsFullyReady(void)

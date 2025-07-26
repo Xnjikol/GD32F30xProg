@@ -10,7 +10,7 @@ static inline void Speed_Loop_Control(SpdLoop_t* speed_loop, Park_t* idq_ref);
 static inline void Current_Loop_Control(CurLoop_t* hnd, Park_t* out);
 
 // SECTION - FOC Main
-void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p)
+void FOC_Main(FOC_Parameter_t* foc)
 {
   ClarkeTransform(foc->Iabc_fdbk, foc->Iclark_fdbk);
 
@@ -23,30 +23,32 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p)
     }
     case VF_MODE:
     {
-      vf->Theta = Get_Theta(vf->Freq, vf->Theta);
-      foc->Theta = vf->Theta;
+      VF_Parameter_t* hnd_vf = foc->Hnd_vf;
+      hnd_vf->Theta = Get_Theta(hnd_vf->Freq, hnd_vf->Theta);
+      foc->Theta = hnd_vf->Theta;
       ParkTransform(foc->Iclark_fdbk, foc->Theta, foc->Idq_ref);
-      foc->Udq_ref->d = vf->Vref_Ud;
-      foc->Udq_ref->q = vf->Vref_Uq;
+      foc->Udq_ref->d = hnd_vf->Vref_Ud;
+      foc->Udq_ref->q = hnd_vf->Vref_Uq;
       break;
     }
     // SECTION - IF Mode
     case IF_MODE:
     {
-      if (if_p->Sensor_State == Enable)
+      IF_Parameter_t* hnd_if = foc->Hnd_if;
+      if (hnd_if->Sensor_State == Enable)
       {
-        if_p->Theta = foc->Theta;
+        hnd_if->Theta = foc->Theta;
       }
       else
       {
-        if_p->Theta = Get_Theta(if_p->IF_Freq, if_p->Theta);
+        hnd_if->Theta = Get_Theta(hnd_if->IF_Freq, hnd_if->Theta);
       }
-      foc->Theta = if_p->Theta;
+      foc->Theta = hnd_if->Theta;
 
       ParkTransform(foc->Iclark_fdbk, foc->Theta, foc->Idq_ref);
 
-      foc->Idq_ref->d = if_p->Id_ref;
-      foc->Idq_ref->q = if_p->Iq_ref;
+      foc->Idq_ref->d = hnd_if->Id_Ref;
+      foc->Idq_ref->q = hnd_if->Iq_Ref;
 
       // 更新电流环参数
       CurLoop_t* hCurrent = foc->Hnd_curloop;
@@ -63,7 +65,9 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p)
       ParkTransform(foc->Iclark_fdbk, foc->Theta, foc->Idq_fdbk);
 
       SpdLoop_t* hSpeed = foc->Hnd_spdloop;
-      hSpeed->reset = foc->Stop;  // 更新转速环的停止标志
+      hSpeed->ref = foc->SpeedRef;    // 更新目标速度
+      hSpeed->fdbk = foc->SpeedFdbk;  // 更新实际速度
+      hSpeed->reset = foc->Stop;      // 更新转速环的停止标志
 
       Speed_Loop_Control(hSpeed, foc->Idq_ref);
 
@@ -78,11 +82,11 @@ void FOC_Main(FOC_Parameter_t* foc, VF_Parameter_t* vf, IF_Parameter_t* if_p)
       break;
     }
     // !SECTION
-    case EXIT:
+    case SHUTDOWN:
     {
       foc->Stop = 1;
-      foc->Idq_fdbk->d = 0.0F;  // Id_ref = 0
-      foc->Idq_fdbk->q = 0.0F;  // Iq_ref = Pid_SpdLoop.output
+      foc->Idq_fdbk->d = 0.0F;  // Id_Ref = 0
+      foc->Idq_fdbk->q = 0.0F;  // Iq_Ref = Pid_SpdLoop.output
       foc->Udq_ref->d = 0.0F;
       foc->Udq_ref->q = 0.0F;
       break;
@@ -114,8 +118,8 @@ static inline void Speed_Loop_Control(SpdLoop_t* hnd, Park_t* out)
   }
 
   // 每次调用都读取当前PID输出值（保持控制连续性）
-  out->q = hnd->hnd_speed->output;  // Iq_ref = Pid_SpdLoop.output
-  out->d = 0.0F;                    // Id_ref = 0 (按要求暂时设为0)
+  out->q = hnd->hnd_speed->output;  // Iq_Ref = Pid_SpdLoop.output
+  out->d = 0.0F;                    // Id_Ref = 0 (按要求暂时设为0)
 }
 
 // SECTION - Current Loop Control

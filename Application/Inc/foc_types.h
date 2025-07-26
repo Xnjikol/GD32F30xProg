@@ -21,26 +21,28 @@ typedef enum
   VF_MODE,
   IF_MODE,
   Speed,
-  EXIT,
   Identify,
   space
 } FOC_Mode_t;
 
 typedef enum
 {
-  BASIC_INIT,      // 基础初始化：仅获取系统参数
-  BASIC_READY,     // 基础就绪：等待完整初始化触发
-  FULL_INIT,       // 完整初始化：用户触发的完整参数初始化
-  READY,           // 就绪：完整初始化完成，准备运行
-  RUNNING          // 运行：正常工作状态
+  INIT,     // 基础初始化：仅获取系统参数
+  WAITING,  // 基础就绪：等待完整初始化触发
+  SETUP,    // 完整初始化：用户触发的全部参数初始化
+  READY,    // 就绪：完整初始化完成，准备运行
+  RUNNING,  // 运行：正常工作状态
+  SHUTDOWN  // 关机状态
 } DeviceStateEnum_t;
 
 typedef struct
 {
   DeviceStateEnum_t Mode;
-  bool basic_init_done;     // 基础初始化完成标志
-  bool full_init_done;      // 完整初始化完成标志
-  bool system_params_valid; // 系统参数有效标志
+  bool basic_init_done;      // 基础初始化完成标志
+  bool full_init_done;       // 完整初始化完成标志
+  bool system_params_valid;  // 系统参数有效标志
+  float Ts;                  // 采样周期
+  float Freq;                // 主频率
 } DeviceState_t;
 
 typedef struct
@@ -70,8 +72,8 @@ typedef struct
 
 typedef struct
 {
-  float Id_ref;
-  float Iq_ref;
+  float Id_Ref;
+  float Iq_Ref;
   float IF_Freq;
   float Theta;
   EnableStatus Sensor_State;
@@ -109,6 +111,8 @@ typedef struct
   float Ts;
   float freq;
   bool Stop;               // Stop flag
+  float SpeedRef;          // 参考速度
+  float SpeedFdbk;         // 实际速度反馈
   SpdLoop_t* Hnd_spdloop;  // 转速环相关变量
   CurLoop_t* Hnd_curloop;  // 电流环相关变量
   Phase_t* Iabc_fdbk;      // ABC相电流反馈
@@ -117,6 +121,8 @@ typedef struct
   Park_t* Idq_fdbk;        // DQ轴电流反馈
   Park_t* Udq_ref;         // DQ轴电压参考
   Clark_t* Uclark_ref;     // αβ轴电压指令
+  VF_Parameter_t* Hnd_vf;  // VF开环控制
+  IF_Parameter_t* Hnd_if;  // IF开环控制
   FOC_Mode_t Mode;         // 当前控制模式
 } FOC_Parameter_t;
 
