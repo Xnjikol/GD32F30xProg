@@ -41,8 +41,10 @@ typedef struct
   bool basic_init_done;      // 基础初始化完成标志
   bool full_init_done;       // 完整初始化完成标志
   bool system_params_valid;  // 系统参数有效标志
-  float Ts;                  // 采样周期
-  float Freq;                // 主频率
+  float main_Ts;             // 主中断采样周期
+  float main_Freq;           // 主中断频率
+  float speed_Ts;            // 转速环采样周期
+  float speed_Freq;          // 转速环频率
 } DeviceState_t;
 
 typedef struct
@@ -60,6 +62,13 @@ typedef struct
   float Mech_Theta;       // Mechanical angle (rad)
   float Elec_Theta;       // Electrical angle (rad)
   float Speed;            // Speed (rpm)
+  float theta_factor;     // Sensor data to mechanic angle conversion factor
+  
+  // 指向设备时间和频率参数的指针
+  float* main_Ts_ptr;     // 指向主中断采样周期
+  float* main_Freq_ptr;   // 指向主中断频率
+  float* speed_Ts_ptr;    // 指向转速环采样周期
+  float* speed_Freq_ptr;  // 指向转速环频率
 } Motor_Parameter_t;
 
 typedef struct

@@ -10,6 +10,8 @@
 #include "stdbool.h"
 #include "tim.h"
 #include "usart.h"
+#include "theta_calc.h"
+#include "filter.h"
 
 volatile uint16_t Device_Stop = 1;
 
@@ -159,11 +161,53 @@ void Peripheral_UpdateCurrent(void)
   FOC_UpdateCurrent(Ia, Ib, Ic);
 }
 
-void Peripheral_UpdatePosition(void)
+void Peripheral_UpdatePosition(Motor_Parameter_t* motor)
 {
   uint16_t position_data = 0;
   ReadPositionSensor(&position_data);
-  Sensor_UpdatePosition(position_data);
+  
+  // 更新位置数据
+  motor->Position = (float)position_data;
+  
+  // 位置传感器数据处理
+  float delta = motor->Position - motor->Position_Offset;
+  if (delta < 0)
+  {
+    delta += (float) (motor->Position_Scale + 1);
+  }
+
+  motor->Mech_Theta = delta * motor->theta_factor;
+
+  motor->Elec_Theta = motor->Mech_Theta * motor->Pn;
+  motor->Elec_Theta = wrap_theta_pi(motor->Elec_Theta);
+
+  // 速度计算 - 通过指针访问转速环频率
+  if (motor->speed_Freq_ptr != NULL)
+  {
+    static uint16_t cnt_speed = 0;
+    cnt_speed++;
+    if (cnt_speed >= SPEED_LOOP_PRESCALER)
+    {
+      cnt_speed = 0;
+
+      static float last_theta = 0.0F;
+      float delta_theta = motor->Mech_Theta - last_theta;
+
+      delta_theta = wrap_theta_pi(delta_theta);
+
+      last_theta = motor->Mech_Theta;
+
+      motor->Speed = radps2rpm(delta_theta * (*motor->speed_Freq_ptr));
+
+      static LowPassFilter_t hLPF_speed = {.initialized = false};
+      if (!hLPF_speed.initialized)
+      {  // 初始化低通滤波器
+        LowPassFilter_Init(&hLPF_speed, 10.0F, *motor->speed_Freq_ptr);
+        hLPF_speed.initialized = true;
+      }
+      motor->Speed = LowPassFilter_Update(&hLPF_speed, motor->Speed);
+    }
+  }
 }
 
 void Peripheral_CalibrateADC(void)

@@ -48,7 +48,7 @@ void Peripheral_SCISendCallback(void);
 void Peripheral_CalibrateADC(void);
 void Peripheral_UpdateUdc(void);
 void Peripheral_UpdateCurrent(void);
-void Peripheral_UpdatePosition(void);
+void Peripheral_UpdatePosition(Motor_Parameter_t* motor);
 void Peripheral_GetSystemFrequency(void);
 
 void Peripheral_TemperatureProtect(void);

@@ -5,7 +5,6 @@
 
 float theta_mech = 0.0F;
 float theta_elec = 0.0F;
-float theta_factor = 0.0F;  // Sensor data to mechanic angle conversion factor
 
 float Speed_Ref = 0.0F;
 float Speed_Fdbk = 0.0F;
@@ -29,7 +28,6 @@ Park_t VoltagePark_Ref;
 
 static inline void Main_Int_Parameter_Init(void);
 static inline void Main_Int_Basic_Init(void);
-static inline void Theta_Process(Motor_Parameter_t*, float);
 static inline void UpdateThetaAndSpeed(FOC_Parameter_t* foc, Motor_Parameter_t* motor);
 
 /*!
@@ -48,7 +46,7 @@ void Main_Int_Handler(void)
     Peripheral_UpdateCurrent();
     Peripheral_GateState();
     Peripheral_UpdateUdc();
-    Peripheral_UpdatePosition();
+    Peripheral_UpdatePosition(&Motor);
 
     switch (Device.Mode)
     {
@@ -152,7 +150,7 @@ void Main_Int_Basic_Init(void)
   }
 
   // 检查系统参数是否已获取到有效值
-  if (FOC.Ts > 0.0F && FOC.freq > 0.0F)
+  if (Device.main_Ts > 0.0F && Device.main_Freq > 0.0F)
   {
     Device.system_params_valid = true;
   }
@@ -176,6 +174,12 @@ void Main_Int_Parameter_Init(void)
   memset(&CurrentPark_Fdbk, 0, sizeof(Park_t));
   memset(&CurrentPark_Ref, 0, sizeof(Park_t));
   memset(&VoltagePark_Ref, 0, sizeof(Park_t));
+
+  // 设置 Motor 结构体中的指针，指向 Device 中的时间和频率变量
+  Motor.main_Ts_ptr = &Device.main_Ts;
+  Motor.main_Freq_ptr = &Device.main_Freq;
+  Motor.speed_Ts_ptr = &Device.speed_Ts;
+  Motor.speed_Freq_ptr = &Device.speed_Freq;
 
   // 由于基础初始化已完成，这里只需要校准ADC
   Peripheral_InitProtectParameter();  // 已在基础初始化中完成
@@ -221,18 +225,19 @@ void Main_Int_Parameter_Init(void)
   Motor.inv_MotorPn = 1.0F / 2.0F;  // Pn
   Motor.Position_Offset = 39833.000000F;
 
+  // 设置theta_factor
 #ifdef Resolver_Position
-  theta_factor = M_2PI / ((Motor.Position_Scale + 1) * Motor.Resolver_Pn);
+  Motor.theta_factor = M_2PI / ((Motor.Position_Scale + 1) * Motor.Resolver_Pn);
 #endif
 #ifdef Encoder_Position
-  theta_factor = M_2PI / (float) (Motor.Position_Scale + 1);
+  Motor.theta_factor = M_2PI / (float) (Motor.Position_Scale + 1);
 #endif
   Rmp_Speed.slope = 50.0F;  // limit to 50 rpm/s
   Rmp_Speed.limit_min = -1800.0F;
   Rmp_Speed.limit_max = 1800.0F;
   Rmp_Speed.value = 0.0F;
   Rmp_Speed.target = 0.0F;
-  Rmp_Speed.Ts = FOC.Ts * SPEED_LOOP_PRESCALER;  // Speed loop time;
+  Rmp_Speed.Ts = Device.speed_Ts;  // Speed loop time;
 
   Pid_SpdLoop.Kp = 0.005F;
   Pid_SpdLoop.Ki = 0.03F;
@@ -243,7 +248,7 @@ void Main_Int_Parameter_Init(void)
   Pid_SpdLoop.previous_error = 0.0F;
   Pid_SpdLoop.integral = 0.0F;
   Pid_SpdLoop.output = 0.0F;
-  Pid_SpdLoop.Ts = FOC.Ts * SPEED_LOOP_PRESCALER;  // Speed loop time;
+  Pid_SpdLoop.Ts = Device.speed_Ts;  // Speed loop time;
 
   Pid_CurLoop_d.Kp = 73.8274273F;
   Pid_CurLoop_d.Ki = 408.40704496F;
@@ -254,7 +259,7 @@ void Main_Int_Parameter_Init(void)
   Pid_CurLoop_d.previous_error = 0.0F;
   Pid_CurLoop_d.integral = 0.0F;
   Pid_CurLoop_d.output = 0.0F;
-  Pid_CurLoop_d.Ts = FOC.Ts;  // Current loop time
+  Pid_CurLoop_d.Ts = Device.main_Ts;  // Current loop time
   Pid_CurLoop_d.Reset = true;
 
   Pid_CurLoop_q.Kp = 27.646015F;
@@ -266,7 +271,7 @@ void Main_Int_Parameter_Init(void)
   Pid_CurLoop_q.previous_error = 0.0F;
   Pid_CurLoop_q.integral = 0.0F;
   Pid_CurLoop_q.output = 0.0F;
-  Pid_CurLoop_q.Ts = FOC.Ts;  // Current loop time
+  Pid_CurLoop_q.Ts = Device.main_Ts;  // Current loop time
   Pid_CurLoop_q.Reset = true;
 
   OpenLoop_VF.Vref_Ud = 0.0F;
@@ -283,55 +288,24 @@ void Main_Int_Parameter_Init(void)
 
 void FOC_UpdateMainFrequency(float freq, float Ts, float PWM_ARR)
 {
+  // 更新主中断相关参数
+  Device.main_Freq = freq;
+  Device.main_Ts = Ts;
+  
+  // 计算转速环相关参数
+  Device.speed_Freq = freq / SPEED_LOOP_PRESCALER;
+  Device.speed_Ts = Ts * SPEED_LOOP_PRESCALER;
+  
+  // 同时更新FOC结构体中的参数（为了兼容性）
   FOC.freq = freq;
   FOC.Ts = Ts;
   FOC.PWM_ARR = PWM_ARR;
 }
 
-static inline void Theta_Process(Motor_Parameter_t* motor, float freq)
-{
-  freq = freq / SPEED_LOOP_PRESCALER;
-  // 位置传感器数据处理
-  float delta = motor->Position - motor->Position_Offset;
-  if (delta < 0)
-  {
-    delta += (float) (motor->Position_Scale + 1);
-  }
-
-  motor->Mech_Theta = delta * theta_factor;
-
-  motor->Elec_Theta = motor->Mech_Theta * motor->Pn;
-  motor->Elec_Theta = wrap_theta_pi(motor->Elec_Theta);
-
-  static uint16_t cnt_speed = 0;
-  cnt_speed++;
-  if (cnt_speed >= SPEED_LOOP_PRESCALER)
-  {
-    cnt_speed = 0;
-
-    static float last_theta = 0.0F;
-    float delta_theta = motor->Mech_Theta - last_theta;
-
-    delta_theta = wrap_theta_pi(delta_theta);
-
-    last_theta = motor->Mech_Theta;
-
-    motor->Speed = radps2rpm(delta_theta * freq);
-
-    static LowPassFilter_t hLPF_speed = {.initialized = false};
-    if (!hLPF_speed.initialized)
-    {  // 初始化低通滤波器
-      LowPassFilter_Init(&hLPF_speed, 10.0F, freq);
-      hLPF_speed.initialized = true;
-    }
-    motor->Speed = LowPassFilter_Update(&hLPF_speed, motor->Speed);
-  }
-}
-
 
 static inline void UpdateThetaAndSpeed(FOC_Parameter_t* foc, Motor_Parameter_t* motor)
 {
-  Theta_Process(motor, foc->freq);
+  // theta 和 speed 现在由 Peripheral_UpdatePosition 直接更新
   foc->Theta = motor->Elec_Theta;
   foc->SpeedFdbk = motor->Speed;
 }

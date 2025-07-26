@@ -37,11 +37,6 @@ extern FOC_Parameter_t FOC;
 extern Motor_Parameter_t Motor;
 extern DeviceState_t Device;
 
-static inline void Sensor_UpdatePosition(float Position)
-{
-  Motor.Position = Position;  // Update zero position
-}
-
 static inline void FOC_UpdateCurrent(float Ia, float Ib, float Ic)
 {
   FOC.Iabc_fdbk->a = Ia;
