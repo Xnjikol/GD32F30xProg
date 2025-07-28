@@ -13,26 +13,25 @@
 
 #include <string.h>
 
-
 /* 私有宏定义 */
 #ifndef SQRT3
-#define SQRT3 1.73205080757F
+#    define SQRT3 1.73205080757F
 #endif
 
 #ifndef SQRT3_2
-#define SQRT3_2 0.86602540378F /* √3/2 */
+#    define SQRT3_2 0.86602540378F /* √3/2 */
 #endif
 
 #ifndef M_PI
-#define M_PI 3.14159265358979323846F /* π */
+#    define M_PI 3.14159265358979323846F /* π */
 #endif
 
 #ifndef M_2PI
-#define M_2PI 6.28318530717958647692F /* 2π */
+#    define M_2PI 6.28318530717958647692F /* 2π */
 #endif
 
 #ifndef M_PI_2
-#define M_PI_2 1.57079632679489661923F /* π/2 */
+#    define M_PI_2 1.57079632679489661923F /* π/2 */
 #endif
 #define POSITION_ERROR_MAX 0.1f    /* 最大位置误差 (rad) */
 #define CONVERGENCE_TIME 1000      /* 收敛时间计数器 */
@@ -42,341 +41,320 @@
 /* 私有函数声明 */
 static void HF_Injection_InitFilters(hf_injection_t* hf_inj);
 // static void HF_Injection_UpdatePhase(hf_injection_t* hf_inj);
-static void HF_Injection_ExtractHighFreqCurrent(hf_injection_t* hf_inj, const Clark_t* current_ab);
+static void HF_Injection_ExtractHighFreqCurrent(hf_injection_t* hf_inj,
+                                                const Clark_t*  current_ab);
 static void HF_Injection_CalculatePositionError(hf_injection_t* hf_inj);
 static void HF_Injection_PositionTracking(hf_injection_t* hf_inj);
 
 /**
  * @brief 初始化高频注入观测器
  */
-int HF_Injection_Init(hf_injection_t* hf_inj, const hf_injection_params_t* params)
-{
-  if (hf_inj == NULL || params == NULL)
-  {
-    return -1;
-  }
+int HF_Injection_Init(hf_injection_t*              hf_inj,
+                      const hf_injection_params_t* params) {
+    if (hf_inj == NULL || params == NULL) {
+        return -1;
+    }
 
-  /* 参数检查 */
-  if (params->injection_freq < MIN_INJECTION_FREQ || params->injection_freq > MAX_INJECTION_FREQ ||
-      params->injection_voltage <= 0.0f || params->Ts <= 0.0f || params->delta_L == 0.0f)
-  {
-    return -1;
-  }
+    /* 参数检查 */
+    if (params->injection_freq < MIN_INJECTION_FREQ
+        || params->injection_freq > MAX_INJECTION_FREQ
+        || params->injection_voltage <= 0.0f || params->Ts <= 0.0f
+        || params->delta_L == 0.0f) {
+        return -1;
+    }
 
-  /* 复制参数 */
-  memcpy(&hf_inj->params, params, sizeof(hf_injection_params_t));
+    /* 复制参数 */
+    memcpy(&hf_inj->params, params, sizeof(hf_injection_params_t));
 
-  /* 初始化状态 */
-  memset(&hf_inj->state, 0, sizeof(hf_injection_state_t));
+    /* 初始化状态 */
+    memset(&hf_inj->state, 0, sizeof(hf_injection_state_t));
 
-  /* 设置PLL控制器参数 */
-  pll_params_t pll_params = {
-    .kp = 100.0f,                    // 默认值，会被参数覆盖
-    .ki = 1000.0f,                   // 默认值，会被参数覆盖
-    .kd = 0.0f,                      // 默认值，会被参数覆盖
-    .ts = params->Ts,
-    .max_output = 1000.0f,           // 默认值，会被参数覆盖
-    .min_output = -1000.0f,          // 默认值，会被参数覆盖
-    .integral_limit = 1000.0f        // 默认值，会被参数覆盖
-  };
-  
-  /* 如果参数中包含PLL参数，则使用它们 */
-  if (params->pll_kp > 0.0f) pll_params.kp = params->pll_kp;
-  if (params->pll_ki > 0.0f) pll_params.ki = params->pll_ki;
-  pll_params.kd = params->pll_kd;
-  if (params->pll_max_speed != 0.0f) pll_params.max_output = params->pll_max_speed;
-  if (params->pll_min_speed != 0.0f) pll_params.min_output = params->pll_min_speed;
-  if (params->pll_integral_limit > 0.0f) pll_params.integral_limit = params->pll_integral_limit;
-  
-  /* 初始化PLL控制器 */
-  if (PLL_Init(&hf_inj->state.position_pll, &pll_params) != 0)
-  {
-    return -1;
-  }
+    /* 设置PLL控制器参数 */
+    pll_params_t pll_params = {
+        .kp             = 100.0f,   // 默认值，会被参数覆盖
+        .ki             = 1000.0f,  // 默认值，会被参数覆盖
+        .kd             = 0.0f,     // 默认值，会被参数覆盖
+        .ts             = params->Ts,
+        .max_output     = 1000.0f,   // 默认值，会被参数覆盖
+        .min_output     = -1000.0f,  // 默认值，会被参数覆盖
+        .integral_limit = 1000.0f    // 默认值，会被参数覆盖
+    };
 
-  /* 初始化高频正弦波生成器 */
-  SineWave_Init(&hf_inj->state.hf_sine_gen,
-                1.0f,                    // amplitude = 1.0，后续与电压幅值相乘
-                params->injection_freq,  // 注入频率
-                0.0f,                    // phase = 0
-                params->Ts);             // 采样周期
+    /* 如果参数中包含PLL参数，则使用它们 */
+    if (params->pll_kp > 0.0f)
+        pll_params.kp = params->pll_kp;
+    if (params->pll_ki > 0.0f)
+        pll_params.ki = params->pll_ki;
+    pll_params.kd = params->pll_kd;
+    if (params->pll_max_speed != 0.0f)
+        pll_params.max_output = params->pll_max_speed;
+    if (params->pll_min_speed != 0.0f)
+        pll_params.min_output = params->pll_min_speed;
+    if (params->pll_integral_limit > 0.0f)
+        pll_params.integral_limit = params->pll_integral_limit;
 
-  /* 初始化滤波器 */
-  HF_Injection_InitFilters(hf_inj);
+    /* 初始化PLL控制器 */
+    if (PLL_Init(&hf_inj->state.position_pll, &pll_params) != 0) {
+        return -1;
+    }
 
-  /* 使能标志 */
-  hf_inj->state.is_enabled = 0;
-  hf_inj->state.is_converged = 0;
+    /* 初始化高频余弦波生成器 */
+    SineWave_Init(&hf_inj->state.hf_cos_gen,
+                  1.0f,  // amplitude = 1.0，后续与电压幅值相乘
+                  params->injection_freq,  // 注入频率
+                  M_PI_2,                  // phase = 0
+                  params->Ts);             // 采样周期
 
-  return 0;
+    /* 初始化滤波器 */
+    HF_Injection_InitFilters(hf_inj);
+
+    /* 使能标志 */
+    hf_inj->state.is_enabled   = 0;
+    hf_inj->state.is_converged = 0;
+
+    return 0;
 }
 
 /**
  * @brief 反初始化高频注入观测器
  */
-void HF_Injection_DeInit(hf_injection_t* hf_inj)
-{
-  if (hf_inj == NULL)
-  {
-    return;
-  }
+void HF_Injection_DeInit(hf_injection_t* hf_inj) {
+    if (hf_inj == NULL) {
+        return;
+    }
 
-  /* 释放PLL控制器 */
-  PLL_DeInit(&hf_inj->state.position_pll);
+    /* 释放PLL控制器 */
+    PLL_DeInit(&hf_inj->state.position_pll);
 
-  /* 释放滤波器内存 */
-  if (hf_inj->state.lpf_epsilon != NULL)
-  {
-    LowPassFilter_Reset(hf_inj->state.lpf_epsilon);
-    free(hf_inj->state.lpf_epsilon);
-    hf_inj->state.lpf_epsilon = NULL;
-  }
+    /* 释放滤波器内存 */
+    if (hf_inj->state.lpf_epsilon != NULL) {
+        LowPassFilter_Reset(hf_inj->state.lpf_epsilon);
+        free(hf_inj->state.lpf_epsilon);
+        hf_inj->state.lpf_epsilon = NULL;
+    }
 
-  if (hf_inj->state.bpf_current != NULL)
-  {
-    BandPassFilter_Reset(hf_inj->state.bpf_current);
-    free(hf_inj->state.bpf_current);
-    hf_inj->state.bpf_current = NULL;
-  }
+    if (hf_inj->state.bpf_current != NULL) {
+        BandPassFilter_Reset(hf_inj->state.bpf_current);
+        free(hf_inj->state.bpf_current);
+        hf_inj->state.bpf_current = NULL;
+    }
 
-  if (hf_inj->state.hpf_current != NULL)
-  {
-    HighPassFilter_Reset(hf_inj->state.hpf_current);
-    free(hf_inj->state.hpf_current);
-    hf_inj->state.hpf_current = NULL;
-  }
+    if (hf_inj->state.hpf_current != NULL) {
+        HighPassFilter_Reset(hf_inj->state.hpf_current);
+        free(hf_inj->state.hpf_current);
+        hf_inj->state.hpf_current = NULL;
+    }
 
-  /* 清零状态 */
-  memset(&hf_inj->state, 0, sizeof(hf_injection_state_t));
+    /* 清零状态 */
+    memset(&hf_inj->state, 0, sizeof(hf_injection_state_t));
 }
 
 /**
  * @brief 生成高频注入信号
  */
-void HF_Injection_GenerateSignal(hf_injection_t* hf_inj, Clark_t* v_inj_ab)
-{
-  if (hf_inj == NULL || v_inj_ab == NULL || !hf_inj->state.is_enabled)
-  {
-    if (v_inj_ab != NULL)
-    {
-      v_inj_ab->a = 0.0f;
-      v_inj_ab->b = 0.0f;
+void HF_Injection_GenerateSignal(hf_injection_t* hf_inj, Clark_t* v_inj_ab) {
+    if (hf_inj == NULL || v_inj_ab == NULL || !hf_inj->state.is_enabled) {
+        if (v_inj_ab != NULL) {
+            v_inj_ab->a = 0.0f;
+            v_inj_ab->b = 0.0f;
+        }
+        return;
     }
-    return;
-  }
 
-  /* 更新高频相位 */
-  hf_inj->state.hf_phase_current = hf_inj->state.hf_sine_gen.theta;
+    /* 更新高频相位 */
+    hf_inj->state.hf_current_phase = hf_inj->state.hf_cos_gen.theta;
 
-  /* 生成脉振高频注入信号 (d轴注入) */
-  float cos_hf = SineWaveGenerator(&hf_inj->state.hf_sine_gen, false);
-  hf_inj->state.v_hf_dq.d = hf_inj->params.injection_voltage * cos_hf;
-  hf_inj->state.v_hf_dq.q = 0.0f;
+    /* 生成脉振高频注入信号 (d轴注入) */
+    float cos_hf = SineWaveGenerator(&hf_inj->state.hf_cos_gen, false);
+    hf_inj->state.v_hf_dq.d = hf_inj->params.injection_voltage * cos_hf;
+    hf_inj->state.v_hf_dq.q = 0.0f;
 
-  /* 将dq轴注入电压转换到αβ轴 */
-  Clark_t clarke_voltage;
-  InvParkTransform(&hf_inj->state.v_hf_dq, hf_inj->state.theta_est, &clarke_voltage);
+    /* 将dq轴注入电压转换到αβ轴 */
+    Clark_t clarke_voltage;
+    InvParkTransform(
+        &hf_inj->state.v_hf_dq, hf_inj->state.theta_est, &clarke_voltage);
 
-  v_inj_ab->a = clarke_voltage.a;
-  v_inj_ab->b = clarke_voltage.b;
+    v_inj_ab->a = clarke_voltage.a;
+    v_inj_ab->b = clarke_voltage.b;
 
-  /* 保存注入电压 */
-  hf_inj->state.v_hf_ab.a = clarke_voltage.a;
-  hf_inj->state.v_hf_ab.b = clarke_voltage.b;
+    /* 保存注入电压 */
+    hf_inj->state.v_hf_ab.a = clarke_voltage.a;
+    hf_inj->state.v_hf_ab.b = clarke_voltage.b;
 }
 
 /**
  * @brief 处理高频电流响应并估计位置
  */
-void HF_Injection_ProcessResponse(hf_injection_t* hf_inj, const Clark_t* current_ab)
-{
-  if (hf_inj == NULL || current_ab == NULL || !hf_inj->state.is_enabled)
-  {
-    return;
-  }
-
-  /* 保存当前αβ轴电流 */
-  hf_inj->state.current_ab = (Clark_t*) current_ab;
-
-  /* 提取高频电流分量 */
-  HF_Injection_ExtractHighFreqCurrent(hf_inj, current_ab);
-
-  /* 计算位置误差信号 */
-  HF_Injection_CalculatePositionError(hf_inj);
-
-  /* 位置跟踪控制 */
-  HF_Injection_PositionTracking(hf_inj);
-
-  /* 速度现在由PLL直接提供，无需额外计算 */
-  /* 更新前一次位置 */
-  hf_inj->state.theta_prev = hf_inj->state.theta_hf;
-
-  /* 检查收敛性 */
-  if (fabsf(hf_inj->state.epsilon_filtered) < POSITION_ERROR_MAX)
-  {
-    static uint16_t converge_counter = 0;
-    converge_counter++;
-    if (converge_counter > CONVERGENCE_TIME)
-    {
-      hf_inj->state.is_converged = 1;
-      converge_counter = CONVERGENCE_TIME;
+void HF_Injection_ProcessResponse(hf_injection_t* hf_inj,
+                                  const Clark_t*  current_ab) {
+    if (hf_inj == NULL || current_ab == NULL || !hf_inj->state.is_enabled) {
+        return;
     }
-  }
-  else
-  {
-    hf_inj->state.is_converged = 0;
-  }
+
+    /* 保存当前αβ轴电流 */
+    hf_inj->state.current_ab = (Clark_t*) current_ab;
+
+    /* 提取高频电流分量 */
+    HF_Injection_ExtractHighFreqCurrent(hf_inj, current_ab);
+
+    /* 计算位置误差信号 */
+    HF_Injection_CalculatePositionError(hf_inj);
+
+    /* 位置跟踪控制 */
+    HF_Injection_PositionTracking(hf_inj);
+
+    /* 速度现在由PLL直接提供，无需额外计算 */
+    /* 更新前一次位置 */
+    hf_inj->state.theta_prev = hf_inj->state.theta_hf;
+
+    /* 检查收敛性 */
+    if (fabsf(hf_inj->state.epsilon_filtered) < POSITION_ERROR_MAX) {
+        static uint16_t converge_counter = 0;
+        converge_counter++;
+        if (converge_counter > CONVERGENCE_TIME) {
+            hf_inj->state.is_converged = 1;
+            converge_counter           = CONVERGENCE_TIME;
+        }
+    } else {
+        hf_inj->state.is_converged = 0;
+    }
 }
 
 /**
  * @brief 获取估计的转子位置
  */
-float HF_Injection_GetPosition(const hf_injection_t* hf_inj)
-{
-  if (hf_inj == NULL)
-  {
-    return 0.0f;
-  }
+float HF_Injection_GetPosition(const hf_injection_t* hf_inj) {
+    if (hf_inj == NULL) {
+        return 0.0f;
+    }
 
-  return hf_inj->state.theta_hf;
+    return hf_inj->state.theta_hf;
 }
 
 /**
  * @brief 获取估计的转子速度
  */
-float HF_Injection_GetSpeed(const hf_injection_t* hf_inj)
-{
-  if (hf_inj == NULL)
-  {
-    return 0.0f;
-  }
+float HF_Injection_GetSpeed(const hf_injection_t* hf_inj) {
+    if (hf_inj == NULL) {
+        return 0.0f;
+    }
 
-  return hf_inj->state.omega_hf;
+    return hf_inj->state.omega_hf;
 }
 
 /**
  * @brief 使能/禁用高频注入
  */
-void HF_Injection_Enable(hf_injection_t* hf_inj, uint8_t enable)
-{
-  if (hf_inj == NULL)
-  {
-    return;
-  }
+void HF_Injection_Enable(hf_injection_t* hf_inj, uint8_t enable) {
+    if (hf_inj == NULL) {
+        return;
+    }
 
-  hf_inj->state.is_enabled = enable;
+    hf_inj->state.is_enabled = enable;
 
-  if (!enable)
-  {
-    /* 禁用时重置状态 */
-    hf_inj->state.is_converged = 0;
-    SineWaveGenerator(&hf_inj->state.hf_sine_gen, true);  // 重置正弦波生成器
-    PLL_Enable(&hf_inj->state.position_pll, false);       // 禁用PLL
-  }
-  else
-  {
-    /* 使能时启用PLL */
-    PLL_Enable(&hf_inj->state.position_pll, true);
-  }
+    if (!enable) {
+        /* 禁用时重置状态 */
+        hf_inj->state.is_converged = 0;
+        SineWaveGenerator(&hf_inj->state.hf_cos_gen,
+                          true);                         // 重置正弦波生成器
+        PLL_Enable(&hf_inj->state.position_pll, false);  // 禁用PLL
+    } else {
+        /* 使能时启用PLL */
+        PLL_Enable(&hf_inj->state.position_pll, true);
+    }
 }
 
 /**
  * @brief 检查高频注入是否收敛
  */
-uint8_t HF_Injection_IsConverged(const hf_injection_t* hf_inj)
-{
-  if (hf_inj == NULL)
-  {
-    return 0;
-  }
+uint8_t HF_Injection_IsConverged(const hf_injection_t* hf_inj) {
+    if (hf_inj == NULL) {
+        return 0;
+    }
 
-  return hf_inj->state.is_converged;
+    return hf_inj->state.is_converged;
 }
 
 /**
  * @brief 重置高频注入观测器状态
  */
-void HF_Injection_Reset(hf_injection_t* hf_inj)
-{
-  if (hf_inj == NULL)
-  {
-    return;
-  }
+void HF_Injection_Reset(hf_injection_t* hf_inj) {
+    if (hf_inj == NULL) {
+        return;
+    }
 
-  /* 重置状态变量 */
-  hf_inj->state.theta_hf = 0.0f;
-  hf_inj->state.omega_hf = 0.0f;
-  hf_inj->state.theta_integral = 0.0f;
-  hf_inj->state.theta_prev = 0.0f;
-  hf_inj->state.hf_phase_current = 0.0f;
-  SineWaveGenerator(&hf_inj->state.hf_sine_gen, true);  // 重置正弦波生成器
-  hf_inj->state.epsilon = 0.0f;
-  hf_inj->state.epsilon_filtered = 0.0f;
-  hf_inj->state.is_converged = 0;
+    /* 重置状态变量 */
+    hf_inj->state.theta_hf         = 0.0f;
+    hf_inj->state.omega_hf         = 0.0f;
+    hf_inj->state.theta_integral   = 0.0f;
+    hf_inj->state.theta_prev       = 0.0f;
+    hf_inj->state.hf_current_phase = 0.0f;
+    SineWaveGenerator(&hf_inj->state.hf_cos_gen, true);  // 重置正弦波生成器
+    hf_inj->state.epsilon          = 0.0f;
+    hf_inj->state.epsilon_filtered = 0.0f;
+    hf_inj->state.is_converged     = 0;
 
-  /* 重置PLL控制器 */
-  PLL_Reset(&hf_inj->state.position_pll);
+    /* 重置PLL控制器 */
+    PLL_Reset(&hf_inj->state.position_pll);
 
-  /* 重置滤波器 */
-  if (hf_inj->state.lpf_epsilon != NULL)
-  {
-    LowPassFilter_Reset(hf_inj->state.lpf_epsilon);
-  }
-  if (hf_inj->state.bpf_current != NULL)
-  {
-    BandPassFilter_Reset(hf_inj->state.bpf_current);
-  }
-  if (hf_inj->state.hpf_current != NULL)
-  {
-    HighPassFilter_Reset(hf_inj->state.hpf_current);
-  }
+    /* 重置滤波器 */
+    if (hf_inj->state.lpf_epsilon != NULL) {
+        LowPassFilter_Reset(hf_inj->state.lpf_epsilon);
+    }
+    if (hf_inj->state.bpf_current != NULL) {
+        BandPassFilter_Reset(hf_inj->state.bpf_current);
+    }
+    if (hf_inj->state.hpf_current != NULL) {
+        HighPassFilter_Reset(hf_inj->state.hpf_current);
+    }
 }
 
 /**
  * @brief 设置初始位置
  */
-void HF_Injection_SetInitialPosition(hf_injection_t* hf_inj, float initial_theta)
-{
-  if (hf_inj == NULL)
-  {
-    return;
-  }
+void HF_Injection_SetInitialPosition(hf_injection_t* hf_inj,
+                                     float           initial_theta) {
+    if (hf_inj == NULL) {
+        return;
+    }
 
-  hf_inj->state.theta_hf = wrap_theta_pi(initial_theta);
-  hf_inj->state.theta_est = hf_inj->state.theta_hf;
-  hf_inj->state.theta_prev = hf_inj->state.theta_hf;
-  
-  /* 设置PLL初始位置 */
-  PLL_SetInitialPosition(&hf_inj->state.position_pll, initial_theta);
+    hf_inj->state.theta_hf   = wrap_theta_pi(initial_theta);
+    hf_inj->state.theta_est  = hf_inj->state.theta_hf;
+    hf_inj->state.theta_prev = hf_inj->state.theta_hf;
+
+    /* 设置PLL初始位置 */
+    PLL_SetInitialPosition(&hf_inj->state.position_pll, initial_theta);
 }
 
 /**
  * @brief 更新控制器参数
  */
-void HF_Injection_UpdateParams(hf_injection_t* hf_inj, const hf_injection_params_t* params)
-{
-  if (hf_inj == NULL || params == NULL)
-  {
-    return;
-  }
+void HF_Injection_UpdateParams(hf_injection_t*              hf_inj,
+                               const hf_injection_params_t* params) {
+    if (hf_inj == NULL || params == NULL) {
+        return;
+    }
 
-  /* 更新参数 */
-  memcpy(&hf_inj->params, params, sizeof(hf_injection_params_t));
+    /* 更新参数 */
+    memcpy(&hf_inj->params, params, sizeof(hf_injection_params_t));
 
-  /* 更新PLL参数 */
-  pll_params_t pll_params = {
-    .kp = params->pll_kp > 0.0f ? params->pll_kp : 100.0f,
-    .ki = params->pll_ki > 0.0f ? params->pll_ki : 1000.0f,
-    .kd = params->pll_kd,
-    .ts = params->Ts,
-    .max_output = params->pll_max_speed != 0.0f ? params->pll_max_speed : 1000.0f,
-    .min_output = params->pll_min_speed != 0.0f ? params->pll_min_speed : -1000.0f,
-    .integral_limit = params->pll_integral_limit > 0.0f ? params->pll_integral_limit : 1000.0f
-  };
-  PLL_UpdateParams(&hf_inj->state.position_pll, &pll_params);
+    /* 更新PLL参数 */
+    pll_params_t pll_params
+        = {.kp = params->pll_kp > 0.0f ? params->pll_kp : 100.0f,
+           .ki = params->pll_ki > 0.0f ? params->pll_ki : 1000.0f,
+           .kd = params->pll_kd,
+           .ts = params->Ts,
+           .max_output
+           = params->pll_max_speed != 0.0f ? params->pll_max_speed : 1000.0f,
+           .min_output
+           = params->pll_min_speed != 0.0f ? params->pll_min_speed : -1000.0f,
+           .integral_limit = params->pll_integral_limit > 0.0f
+                                 ? params->pll_integral_limit
+                                 : 1000.0f};
+    PLL_UpdateParams(&hf_inj->state.position_pll, &pll_params);
 
-  /* 重新初始化滤波器 */
-  HF_Injection_InitFilters(hf_inj);
+    /* 重新初始化滤波器 */
+    HF_Injection_InitFilters(hf_inj);
 }
 
 /* 私有函数实现 */
@@ -384,58 +362,56 @@ void HF_Injection_UpdateParams(hf_injection_t* hf_inj, const hf_injection_params
 /**
  * @brief 初始化滤波器
  */
-static void HF_Injection_InitFilters(hf_injection_t* hf_inj)
-{
-  if (hf_inj == NULL)
-  {
-    return;
-  }
+static void HF_Injection_InitFilters(hf_injection_t* hf_inj) {
+    if (hf_inj == NULL) {
+        return;
+    }
 
-  /* 释放已存在的滤波器 */
-  if (hf_inj->state.lpf_epsilon != NULL)
-  {
-    LowPassFilter_Reset(hf_inj->state.lpf_epsilon);
-    free(hf_inj->state.lpf_epsilon);
-  }
+    /* 释放已存在的滤波器 */
+    if (hf_inj->state.lpf_epsilon != NULL) {
+        LowPassFilter_Reset(hf_inj->state.lpf_epsilon);
+        free(hf_inj->state.lpf_epsilon);
+    }
 
-  if (hf_inj->state.bpf_current != NULL)
-  {
-    BandPassFilter_Reset(hf_inj->state.bpf_current);
-    free(hf_inj->state.bpf_current);
-  }
+    if (hf_inj->state.bpf_current != NULL) {
+        BandPassFilter_Reset(hf_inj->state.bpf_current);
+        free(hf_inj->state.bpf_current);
+    }
 
-  if (hf_inj->state.hpf_current != NULL)
-  {
-    HighPassFilter_Reset(hf_inj->state.hpf_current);
-    free(hf_inj->state.hpf_current);
-  }
+    if (hf_inj->state.hpf_current != NULL) {
+        HighPassFilter_Reset(hf_inj->state.hpf_current);
+        free(hf_inj->state.hpf_current);
+    }
 
-  /* 创建新的滤波器 */
-  hf_inj->state.lpf_epsilon = (LowPassFilter_t*) malloc(sizeof(LowPassFilter_t));
-  hf_inj->state.bpf_current = (BandPassFilter_t*) malloc(sizeof(BandPassFilter_t));
-  hf_inj->state.hpf_current = (HighPassFilter_t*) malloc(sizeof(HighPassFilter_t));
+    /* 创建新的滤波器 */
+    hf_inj->state.lpf_epsilon
+        = (LowPassFilter_t*) malloc(sizeof(LowPassFilter_t));
+    hf_inj->state.bpf_current
+        = (BandPassFilter_t*) malloc(sizeof(BandPassFilter_t));
+    hf_inj->state.hpf_current
+        = (HighPassFilter_t*) malloc(sizeof(HighPassFilter_t));
 
-  if (hf_inj->state.lpf_epsilon != NULL)
-  {
-    float sample_freq = 1.0f / hf_inj->params.Ts;
-    LowPassFilter_Init(hf_inj->state.lpf_epsilon, hf_inj->params.cutoff_freq_lf, sample_freq);
-  }
+    if (hf_inj->state.lpf_epsilon != NULL) {
+        float sample_freq = 1.0f / hf_inj->params.Ts;
+        LowPassFilter_Init(hf_inj->state.lpf_epsilon,
+                           hf_inj->params.cutoff_freq_lf,
+                           sample_freq);
+    }
 
-  if (hf_inj->state.bpf_current != NULL)
-  {
-    float sample_freq = 1.0f / hf_inj->params.Ts;
-    float center_freq = hf_inj->params.injection_freq;
-    float bandwidth = hf_inj->params.injection_freq * 0.2f; /* 20% 带宽 */
-    float low_cutoff = center_freq - bandwidth / 2.0f;
-    float high_cutoff = center_freq + bandwidth / 2.0f;
-    BandPassFilter_Init(hf_inj->state.bpf_current, low_cutoff, high_cutoff, sample_freq);
-  }
+    if (hf_inj->state.bpf_current != NULL) {
+        float sample_freq = 1.0f / hf_inj->params.Ts;
+        float center_freq = hf_inj->params.injection_freq;
+        float bandwidth   = hf_inj->params.injection_freq * 0.2f; /* 20% 带宽 */
+        BandPassFilter_Init(
+            hf_inj->state.bpf_current, sample_freq, center_freq, bandwidth);
+    }
 
-  if (hf_inj->state.hpf_current != NULL)
-  {
-    float sample_freq = 1.0f / hf_inj->params.Ts;
-    HighPassFilter_Init(hf_inj->state.hpf_current, hf_inj->params.cutoff_freq_hf, sample_freq);
-  }
+    if (hf_inj->state.hpf_current != NULL) {
+        float sample_freq = 1.0f / hf_inj->params.Ts;
+        HighPassFilter_Init(hf_inj->state.hpf_current,
+                            hf_inj->params.cutoff_freq_hf,
+                            sample_freq);
+    }
 }
 
 /**
@@ -451,80 +427,73 @@ static void HF_Injection_InitFilters(hf_injection_t* hf_inj)
 /**
  * @brief 提取高频电流分量
  */
-static void HF_Injection_ExtractHighFreqCurrent(hf_injection_t* hf_inj, const Clark_t* current_ab)
-{
-  if (hf_inj == NULL || current_ab == NULL)
-  {
-    return;
-  }
+static void HF_Injection_ExtractHighFreqCurrent(hf_injection_t* hf_inj,
+                                                const Clark_t*  current_ab) {
+    if (hf_inj == NULL || current_ab == NULL) {
+        return;
+    }
 
-  /* 使用带通滤波器提取高频电流分量 */
-  Clark_t i_hf_filtered;
+    /* 使用带通滤波器提取高频电流分量 */
+    Clark_t i_hf_filtered;
 
-  if (hf_inj->state.bpf_current != NULL)
-  {
-    i_hf_filtered.a = BandPassFilter_Update(hf_inj->state.bpf_current, current_ab->a);
-    i_hf_filtered.b = BandPassFilter_Update(hf_inj->state.bpf_current, current_ab->b);
-  }
-  else
-  {
-    i_hf_filtered.a = current_ab->a;
-    i_hf_filtered.b = current_ab->b;
-  }
+    if (hf_inj->state.bpf_current != NULL) {
+        i_hf_filtered.a
+            = BandPassFilter_Update(hf_inj->state.bpf_current, current_ab->a);
+        i_hf_filtered.b
+            = BandPassFilter_Update(hf_inj->state.bpf_current, current_ab->b);
+    } else {
+        i_hf_filtered.a = current_ab->a;
+        i_hf_filtered.b = current_ab->b;
+    }
 
-  /* 转换到dq轴 */
-  ParkTransform(&i_hf_filtered, hf_inj->state.theta_est, &hf_inj->state.i_hf_dq);
+    /* 转换到dq轴 */
+    ParkTransform(
+        &i_hf_filtered, hf_inj->state.theta_est, &hf_inj->state.i_hf_dq);
 
-  /* 保存αβ轴高频电流 */
-  hf_inj->state.i_hf_ab.a = i_hf_filtered.a;
-  hf_inj->state.i_hf_ab.b = i_hf_filtered.b;
+    /* 保存αβ轴高频电流 */
+    hf_inj->state.i_hf_ab.a = i_hf_filtered.a;
+    hf_inj->state.i_hf_ab.b = i_hf_filtered.b;
 }
 
 /**
  * @brief 计算位置误差信号
  */
-static void HF_Injection_CalculatePositionError(hf_injection_t* hf_inj)
-{
-  if (hf_inj == NULL)
-  {
-    return;
-  }
+static void HF_Injection_CalculatePositionError(hf_injection_t* hf_inj) {
+    if (hf_inj == NULL) {
+        return;
+    }
 
-  /* 解调获取位置误差信号 */
-  /* 使用 id_hf * sin(ωt) 来提取位置误差 */
-  /* 当前高频相位已保存在 hf_phase_current 中 */
-  float sin_hf = sinf(hf_inj->state.hf_phase_current);
+    /* 解调获取位置误差信号 */
+    /* 使用 id_hf * sin(ωt) 来提取位置误差 */
+    /* 当前高频相位已保存在 hf_current_phase 中 */
+    float sin_hf = SIN(hf_inj->state.hf_current_phase);
 
-  hf_inj->state.epsilon = hf_inj->state.i_hf_dq.d * sin_hf;
+    hf_inj->state.epsilon = hf_inj->state.i_hf_dq.d * sin_hf;
 
-  /* 低通滤波去除高频成分 */
-  if (hf_inj->state.lpf_epsilon != NULL)
-  {
-    hf_inj->state.epsilon_filtered =
-        LowPassFilter_Update(hf_inj->state.lpf_epsilon, hf_inj->state.epsilon);
-  }
-  else
-  {
-    hf_inj->state.epsilon_filtered = hf_inj->state.epsilon;
-  }
+    /* 低通滤波去除高频成分 */
+    if (hf_inj->state.lpf_epsilon != NULL) {
+        hf_inj->state.epsilon_filtered = LowPassFilter_Update(
+            hf_inj->state.lpf_epsilon, hf_inj->state.epsilon);
+    } else {
+        hf_inj->state.epsilon_filtered = hf_inj->state.epsilon;
+    }
 }
 
 /**
  * @brief 位置跟踪控制
  */
-static void HF_Injection_PositionTracking(hf_injection_t* hf_inj)
-{
-  if (hf_inj == NULL)
-  {
-    return;
-  }
+static void HF_Injection_PositionTracking(hf_injection_t* hf_inj) {
+    if (hf_inj == NULL) {
+        return;
+    }
 
-  /* 使用PLL进行位置跟踪 */
-  hf_inj->state.theta_hf = PLL_Update(&hf_inj->state.position_pll, hf_inj->state.epsilon_filtered);
-  
-  /* 获取PLL估计的速度 */
-  hf_inj->state.omega_hf = PLL_GetSpeed(&hf_inj->state.position_pll);
+    /* 使用PLL进行位置跟踪 */
+    hf_inj->state.theta_hf = PLL_Update(&hf_inj->state.position_pll,
+                                        hf_inj->state.epsilon_filtered);
 
-  /* 更新估计位置用于下次计算 */
-  hf_inj->state.theta_est = hf_inj->state.theta_hf;
+    /* 获取PLL估计的速度 */
+    hf_inj->state.omega_hf = PLL_GetSpeed(&hf_inj->state.position_pll);
+
+    /* 更新估计位置用于下次计算 */
+    hf_inj->state.theta_est = hf_inj->state.theta_hf;
 }

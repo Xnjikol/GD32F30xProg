@@ -433,7 +433,7 @@ static void sensorless_calculate_speed(void) {
     }
 
     /* 计算瞬时角速度 */
-    float instant_speed = angle_diff / (*g_sl_cfg_ptr->control_ts_ptr);
+    float instant_speed = angle_diff * (*g_sl_cfg_ptr->control_freq_ptr);
 
     /* 低通滤波 */
     float filtered_speed = LowPassFilter_Update(&g_speed_filter, instant_speed);

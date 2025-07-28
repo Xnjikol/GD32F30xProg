@@ -76,8 +76,8 @@ typedef struct
     float omega_hf;               /*!< 高频注入估计速度 (rad/s) */
     
     /* 内部状态 */
-    SineWave_t hf_sine_gen;       /*!< 高频正弦波生成器 */
-    float hf_phase_current;       /*!< 当前高频相位值 (rad) */
+    SineWave_t hf_cos_gen;       /*!< 高频正弦波生成器 */
+    float hf_current_phase;       /*!< 当前高频相位值 (rad) */
     float theta_integral;         /*!< 位置积分值 (rad) */
     float theta_prev;             /*!< 前一次位置估计值 (rad) */
     
