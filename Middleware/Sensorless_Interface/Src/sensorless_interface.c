@@ -573,8 +573,8 @@ static void sensorless_execute_hf_injection(Clark_t* voltage, Clark_t* current,
   {
     if (injection_voltage != NULL)
     {
-      injection_voltage->a = 0.0f;
-      injection_voltage->b = 0.0f;
+      // injection_voltage->a = 0.0f;
+      // injection_voltage->b = 0.0f;
     }
     return;
   }

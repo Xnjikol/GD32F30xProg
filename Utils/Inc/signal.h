@@ -11,8 +11,16 @@
 #define SQRT3_2 0.86602540378F /* √3/2 */
 #endif
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846F /* π */
+#endif
+
 #ifndef M_2PI
 #define M_2PI 6.28318530717958647692F /* 2π */
+#endif
+
+#ifndef M_PI_2
+#define M_PI_2 1.57079632679489661923F /* π/2 */
 #endif
 
 // 通用斜坡生成器

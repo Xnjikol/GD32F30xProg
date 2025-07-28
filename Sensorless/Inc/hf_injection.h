@@ -23,6 +23,7 @@ extern "C"
 #include "filter.h"
 #include "theta_calc.h"
 #include "transformation.h"
+#include "signal.h"
 
 /**
  * @brief 高频注入参数结构体
@@ -66,7 +67,8 @@ typedef struct
     float omega_hf;               /*!< 高频注入估计速度 (rad/s) */
     
     /* 内部状态 */
-    float hf_phase;               /*!< 高频相位 (rad) */
+    SawtoothWave_t hf_phase_gen;      /*!< 高频相位生成器 */
+    float hf_phase_current;       /*!< 当前高频相位值 (rad) */
     float theta_integral;         /*!< 位置积分值 (rad) */
     float theta_prev;             /*!< 前一次位置估计值 (rad) */
     

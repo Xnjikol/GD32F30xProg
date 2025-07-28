@@ -15,11 +15,25 @@
 
 
 /* 私有宏定义 */
-#ifndef PI
-#define PI 3.14159265358979323846f
+#ifndef SQRT3
+#define SQRT3 1.73205080757F
 #endif
-#define TWO_PI (2.0f * PI)
-#define PI_2 (PI / 2.0f)
+
+#ifndef SQRT3_2
+#define SQRT3_2 0.86602540378F /* √3/2 */
+#endif
+
+#ifndef M_PI
+#define M_PI 3.14159265358979323846F /* π */
+#endif
+
+#ifndef M_2PI
+#define M_2PI 6.28318530717958647692F /* 2π */
+#endif
+
+#ifndef M_PI_2
+#define M_PI_2 1.57079632679489661923F /* π/2 */
+#endif
 #define POSITION_ERROR_MAX 0.1f    /* 最大位置误差 (rad) */
 #define CONVERGENCE_TIME 1000      /* 收敛时间计数器 */
 #define MIN_INJECTION_FREQ 500.0f  /* 最小注入频率 (Hz) */
@@ -58,6 +72,13 @@ int HF_Injection_Init(hf_injection_t* hf_inj, const hf_injection_params_t* param
   /* 设置PI控制器参数 */
   hf_inj->state.kp_track = 100.0f;
   hf_inj->state.ki_track = 1000.0f;
+
+  /* 初始化高频相位生成器 */
+  SawtoothWave_Init(&hf_inj->state.hf_phase_gen, 
+                    6.283185307f,  // amplitude = 2π，输出范围0到2π
+                    params->injection_freq, 
+                    0.0f,          // offset = 0
+                    params->Ts);
 
   /* 初始化滤波器 */
   HF_Injection_InitFilters(hf_inj);
@@ -121,10 +142,10 @@ void HF_Injection_GenerateSignal(hf_injection_t* hf_inj, Clark_t* v_inj_ab)
   }
 
   /* 更新高频相位 */
-  HF_Injection_UpdatePhase(hf_inj);
+  hf_inj->state.hf_phase_current = SawtoothWaveGenerator(&hf_inj->state.hf_phase_gen, false);
 
   /* 生成脉振高频注入信号 (d轴注入) */
-  float cos_hf = COS(hf_inj->state.hf_phase);
+  float cos_hf = COS(hf_inj->state.hf_phase_current);
   hf_inj->state.v_hf_dq.d = hf_inj->params.injection_voltage * cos_hf;
   hf_inj->state.v_hf_dq.q = 0.0f;
 
@@ -229,7 +250,7 @@ void HF_Injection_Enable(hf_injection_t* hf_inj, uint8_t enable)
   {
     /* 禁用时重置状态 */
     hf_inj->state.is_converged = 0;
-    hf_inj->state.hf_phase = 0.0f;
+    SawtoothWaveGenerator(&hf_inj->state.hf_phase_gen, true);  // 重置锯齿波生成器
     hf_inj->state.integral_track = 0.0f;
   }
 }
@@ -262,7 +283,8 @@ void HF_Injection_Reset(hf_injection_t* hf_inj)
   hf_inj->state.omega_hf = 0.0f;
   hf_inj->state.theta_integral = 0.0f;
   hf_inj->state.theta_prev = 0.0f;
-  hf_inj->state.hf_phase = 0.0f;
+  hf_inj->state.hf_phase_current = 0.0f;
+  SawtoothWaveGenerator(&hf_inj->state.hf_phase_gen, true);  // 重置锯齿波生成器
   hf_inj->state.epsilon = 0.0f;
   hf_inj->state.epsilon_filtered = 0.0f;
   hf_inj->state.integral_track = 0.0f;
@@ -379,17 +401,9 @@ static void HF_Injection_InitFilters(hf_injection_t* hf_inj)
  */
 static void HF_Injection_UpdatePhase(hf_injection_t* hf_inj)
 {
-  if (hf_inj == NULL)
-  {
-    return;
-  }
-
-  /* 更新相位 */
-  float omega_hf = TWO_PI * hf_inj->params.injection_freq;
-  hf_inj->state.hf_phase += omega_hf * hf_inj->params.Ts;
-
-  /* 限制相位范围 */
-  hf_inj->state.hf_phase = wrap_theta_pi(hf_inj->state.hf_phase);
+  /* 相位更新现在由锯齿波生成器自动处理 */
+  /* 此函数保留以保持接口兼容性 */
+  (void)hf_inj; // 避免未使用参数警告
 }
 
 /**
@@ -436,7 +450,7 @@ static void HF_Injection_CalculatePositionError(hf_injection_t* hf_inj)
 
   /* 解调获取位置误差信号 */
   /* 使用 id_hf * sin(ωt) 来提取位置误差 */
-  float sin_hf = SIN(hf_inj->state.hf_phase);
+  float sin_hf = SIN(hf_inj->state.hf_phase_current);
   hf_inj->state.epsilon = hf_inj->state.i_hf_dq.d * sin_hf;
 
   /* 低通滤波去除高频成分 */
