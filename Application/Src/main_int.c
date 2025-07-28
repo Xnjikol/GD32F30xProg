@@ -31,10 +31,15 @@ Park_t          CurrentPark_Fdbk;
 Park_t          CurrentPark_Ref;
 Park_t          VoltagePark_Ref;
 
+// 高频注入带阻滤波器
+BandStopFilter_t BandStopFilter_Alpha;
+BandStopFilter_t BandStopFilter_Beta;
+
 static inline void Main_Int_Parameter_Init(void);
 static inline void Main_Int_Basic_Init(void);
 static inline void UpdateThetaAndSpeed(FOC_Parameter_t*   foc,
-                                       Motor_Parameter_t* motor);
+                                       Motor_Parameter_t* motor,
+                                       bool               hf_en);
 static inline void SVPWM_Generate(Clark_t*, float, Phase_t*);
 
 /*!
@@ -105,11 +110,32 @@ void Main_Int_Handler(void) {
 
         case RUNNING: {
             // 运行状态：正常FOC控制
-            UpdateThetaAndSpeed(&FOC, &Motor);
-            FOC.Stop     = Device_Stop;
-            FOC.SpeedRef = Speed_Ref;
+            UpdateThetaAndSpeed(&FOC, &Motor, Sensorless.hf_enabled);
+            FOC.Stop              = Device_Stop;
+            FOC.SpeedRef          = Speed_Ref;
+            Clark_t i_ab_origin   = {0};
+            Clark_t i_ab_filtered = {0};
+            ClarkeTransform(FOC.Iabc_fdbk, &i_ab_origin);
+
+            // 使用带阻滤波器滤除高频注入信号
+            i_ab_filtered.a
+                = BandStopFilter_Update(&BandStopFilter_Alpha, i_ab_origin.a);
+            i_ab_filtered.b
+                = BandStopFilter_Update(&BandStopFilter_Beta, i_ab_origin.b);
+
+            // 将滤波后的电流反馈更新到FOC结构体中
+            *FOC.Iclark_fdbk = i_ab_filtered;
+
             FOC_Update(&FOC);
-            SVPWM_Generate(FOC.Uclark_ref, FOC.inv_Udc, FOC.Tcm);
+
+            Sensorless_UpdateCurrentAB(&i_ab_origin);
+            Sensorless_UpdateVoltageAB(FOC.Uclark_ref);
+            Sensorless_Update();
+
+            Clark_t u_ab_ref = {0};
+            Sensorless_GetInjectionVoltageAB(&u_ab_ref);
+
+            SVPWM_Generate(&u_ab_ref, FOC.inv_Udc, FOC.Tcm);
             break;
         }
 
@@ -170,6 +196,13 @@ void Main_Int_Parameter_Init(void) {
     memset(&CurrentPark_Fdbk, 0, sizeof(Park_t));
     memset(&CurrentPark_Ref, 0, sizeof(Park_t));
     memset(&VoltagePark_Ref, 0, sizeof(Park_t));
+
+    // 初始化高频注入带阻滤波器
+    // 假设高频注入频率为1000Hz，滤波器带宽为200Hz，采样频率为Device.main_Freq
+    BandStopFilter_Init(
+        &BandStopFilter_Alpha, Device.main_Freq, 1000.0F, 200.0F);
+    BandStopFilter_Init(
+        &BandStopFilter_Beta, Device.main_Freq, 1000.0F, 200.0F);
 
     // 设置 Motor 结构体中的指针，指向 Device 中的时间和频率变量
     Motor.main_Ts_ptr    = &Device.main_Ts;
@@ -414,8 +447,14 @@ static inline void SVPWM_Generate(Clark_t* u_ref, float inv_Vdc, Phase_t* out) {
 }
 
 static inline void UpdateThetaAndSpeed(FOC_Parameter_t*   foc,
-                                       Motor_Parameter_t* motor) {
-    // theta 和 speed 现在由 Peripheral_UpdatePosition 直接更新
-    foc->Theta     = motor->Elec_Theta;
-    foc->SpeedFdbk = motor->Speed;
+                                       Motor_Parameter_t* motor,
+                                       bool               hf_en) {
+    if (!hf_en) {
+        // theta 和 speed 现在由 Peripheral_UpdatePosition 直接更新
+        foc->Theta     = motor->Elec_Theta;
+        foc->SpeedFdbk = motor->Speed;
+    } else {
+        foc->Theta     = Sensorless_GetEstimatedAngle();
+        foc->SpeedFdbk = Sensorless_GetEstimatedSpeed();
+    }
 }

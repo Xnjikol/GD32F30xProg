@@ -11,6 +11,7 @@
 #include "pid.h"
 #include "sensorless_interface.h"
 #include "systick.h"
+#include "filter.h"
 
 /*  Gate polarity definition */
 #ifndef GATE_POLARITY_HIGH_ACTIVE
@@ -41,6 +42,10 @@ extern DeviceState_t Device;
 extern Sensorless_Parameter_t Sensorless;
 extern sensorless_config_t SensorlessConfig;
 extern sensorless_output_t SensorlessOutput;
+
+// 高频注入带阻滤波器 (defined in main_int.c) //
+extern BandStopFilter_t BandStopFilter_Alpha;
+extern BandStopFilter_t BandStopFilter_Beta;
 
 static inline void FOC_UpdateCurrent(float Ia, float Ib, float Ic)
 {
