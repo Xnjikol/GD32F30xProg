@@ -33,7 +33,8 @@ Park_t          VoltagePark_Ref;
 
 static inline void Main_Int_Parameter_Init(void);
 static inline void Main_Int_Basic_Init(void);
-static inline void UpdateThetaAndSpeed(FOC_Parameter_t* foc, Motor_Parameter_t* motor);
+static inline void UpdateThetaAndSpeed(FOC_Parameter_t*   foc,
+                                       Motor_Parameter_t* motor);
 static inline void SVPWM_Generate(Clark_t*, float, Phase_t*);
 
 /*!
@@ -56,7 +57,11 @@ void Main_Int_Handler(void) {
         case INIT: {
             // 基础初始化：仅获取系统参数，不进行完整的FOC初始化
             Main_Int_Basic_Init();
-            Sensorless_Init(&Sensorless, &SensorlessConfig, &SensorlessOutput, &Motor, &Device);
+            Sensorless_Init(&Sensorless,
+                            &SensorlessConfig,
+                            &SensorlessOutput,
+                            &Motor,
+                            &Device);
             if (Device.system_params_valid) {
                 Device.basic_init_done = true;
                 Device.Mode            = WAITING;
@@ -80,9 +85,8 @@ void Main_Int_Handler(void) {
 
         case SETUP: {
             // 完整初始化：用户触发的完整参数初始化
-            Main_Int_Parameter_Init();
-
             if (FOC.Udc > 200.0F) {
+                Main_Int_Parameter_Init();
                 Peripheral_EnableHardwareProtect();
             }
             Protect.Flag          = No_Protect;
@@ -149,7 +153,8 @@ void Main_Int_Basic_Init(void) {
 }
 
 void Main_Int_Parameter_Init(void) {
-    // 注意：基础系统参数（Ts, freq等）已在Main_Int_Basic_Init中获取，这里不再重复
+    // 注意：基础系统参数（Ts,
+    // freq等）已在Main_Int_Basic_Init中获取，这里不再重复
 
     memset(&OpenLoop_VF, 0, sizeof(VF_Parameter_t));
     memset(&FOC, 0, sizeof(FOC_Parameter_t));
@@ -199,9 +204,9 @@ void Main_Int_Parameter_Init(void) {
     FOC.Hnd_spdloop            = (SpdLoop_t*) calloc(1, sizeof(SpdLoop_t));
     FOC.Hnd_spdloop->hnd_speed = &Pid_SpdLoop;
     FOC.Hnd_spdloop->hnd_ramp  = &Rmp_Speed;
-    FOC.Hnd_spdloop->reset     = 0;                                // 初始化停止标志
+    FOC.Hnd_spdloop->reset     = 0;  // 初始化停止标志
     FOC.Hnd_spdloop->prescaler = (uint16_t) SPEED_LOOP_PRESCALER;  // 设置分频数
-    FOC.Hnd_spdloop->counter   = 0;                                // 初始化分频计数器
+    FOC.Hnd_spdloop->counter   = 0;  // 初始化分频计数器
 
     FOC.Udq_ref    = &VoltagePark_Ref;
     FOC.Uclark_ref = &VoltageClark_Ref;
@@ -218,7 +223,8 @@ void Main_Int_Parameter_Init(void) {
 
     // 设置theta_factor
 #ifdef Resolver_Position
-    Motor.theta_factor = M_2PI / ((Motor.Position_Scale + 1) * Motor.Resolver_Pn);
+    Motor.theta_factor
+        = M_2PI / ((Motor.Position_Scale + 1) * Motor.Resolver_Pn);
 #endif
 #ifdef Encoder_Position
     Motor.theta_factor = M_2PI / (float) (Motor.Position_Scale + 1);
@@ -265,18 +271,20 @@ void Main_Int_Parameter_Init(void) {
     Pid_CurLoop_q.Ts             = Device.main_Ts;  // Current loop time
     Pid_CurLoop_q.Reset          = true;
 
-    OpenLoop_VF.Vref_Ud      = 0.0F;
-    OpenLoop_VF.Vref_Uq      = 0.0F;
-    OpenLoop_VF.Freq         = 0.0F;
-    OpenLoop_VF.Theta        = 0.0F;
-    OpenLoop_VF.hnd_sawtooth = (SawtoothWave_t*) calloc(1, sizeof(SawtoothWave_t));
+    OpenLoop_VF.Vref_Ud = 0.0F;
+    OpenLoop_VF.Vref_Uq = 0.0F;
+    OpenLoop_VF.Freq    = 0.0F;
+    OpenLoop_VF.Theta   = 0.0F;
+    OpenLoop_VF.hnd_sawtooth
+        = (SawtoothWave_t*) calloc(1, sizeof(SawtoothWave_t));
 
     OpenLoop_IF.Id_Ref       = 0.0F;
     OpenLoop_IF.Iq_Ref       = 0.0F;
     OpenLoop_IF.IF_Freq      = 0.0F;
     OpenLoop_IF.Theta        = 0.0F;
     OpenLoop_IF.Sensor_State = Disable;
-    OpenLoop_IF.hnd_sawtooth = (SawtoothWave_t*) calloc(1, sizeof(SawtoothWave_t));
+    OpenLoop_IF.hnd_sawtooth
+        = (SawtoothWave_t*) calloc(1, sizeof(SawtoothWave_t));
 }
 
 void FOC_UpdateMainFrequency(float freq, float Ts, float PWM_ARR) {
@@ -405,7 +413,8 @@ static inline void SVPWM_Generate(Clark_t* u_ref, float inv_Vdc, Phase_t* out) {
     *out = tcm;
 }
 
-static inline void UpdateThetaAndSpeed(FOC_Parameter_t* foc, Motor_Parameter_t* motor) {
+static inline void UpdateThetaAndSpeed(FOC_Parameter_t*   foc,
+                                       Motor_Parameter_t* motor) {
     // theta 和 speed 现在由 Peripheral_UpdatePosition 直接更新
     foc->Theta     = motor->Elec_Theta;
     foc->SpeedFdbk = motor->Speed;
