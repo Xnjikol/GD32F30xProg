@@ -69,9 +69,30 @@ int HF_Injection_Init(hf_injection_t* hf_inj, const hf_injection_params_t* param
   /* 初始化状态 */
   memset(&hf_inj->state, 0, sizeof(hf_injection_state_t));
 
-  /* 设置PI控制器参数 */
-  hf_inj->state.kp_track = 100.0f;
-  hf_inj->state.ki_track = 1000.0f;
+  /* 设置PLL控制器参数 */
+  pll_params_t pll_params = {
+    .kp = 100.0f,                    // 默认值，会被参数覆盖
+    .ki = 1000.0f,                   // 默认值，会被参数覆盖
+    .kd = 0.0f,                      // 默认值，会被参数覆盖
+    .ts = params->Ts,
+    .max_output = 1000.0f,           // 默认值，会被参数覆盖
+    .min_output = -1000.0f,          // 默认值，会被参数覆盖
+    .integral_limit = 1000.0f        // 默认值，会被参数覆盖
+  };
+  
+  /* 如果参数中包含PLL参数，则使用它们 */
+  if (params->pll_kp > 0.0f) pll_params.kp = params->pll_kp;
+  if (params->pll_ki > 0.0f) pll_params.ki = params->pll_ki;
+  pll_params.kd = params->pll_kd;
+  if (params->pll_max_speed != 0.0f) pll_params.max_output = params->pll_max_speed;
+  if (params->pll_min_speed != 0.0f) pll_params.min_output = params->pll_min_speed;
+  if (params->pll_integral_limit > 0.0f) pll_params.integral_limit = params->pll_integral_limit;
+  
+  /* 初始化PLL控制器 */
+  if (PLL_Init(&hf_inj->state.position_pll, &pll_params) != 0)
+  {
+    return -1;
+  }
 
   /* 初始化高频正弦波生成器 */
   SineWave_Init(&hf_inj->state.hf_sine_gen,
@@ -99,6 +120,9 @@ void HF_Injection_DeInit(hf_injection_t* hf_inj)
   {
     return;
   }
+
+  /* 释放PLL控制器 */
+  PLL_DeInit(&hf_inj->state.position_pll);
 
   /* 释放滤波器内存 */
   if (hf_inj->state.lpf_epsilon != NULL)
@@ -183,11 +207,7 @@ void HF_Injection_ProcessResponse(hf_injection_t* hf_inj, const Clark_t* current
   /* 位置跟踪控制 */
   HF_Injection_PositionTracking(hf_inj);
 
-  /* 计算速度 */
-  float dt = hf_inj->params.Ts;
-  float theta_diff = wrap_theta_pi(hf_inj->state.theta_hf - hf_inj->state.theta_prev);
-  hf_inj->state.omega_hf = theta_diff / dt;
-
+  /* 速度现在由PLL直接提供，无需额外计算 */
   /* 更新前一次位置 */
   hf_inj->state.theta_prev = hf_inj->state.theta_hf;
 
@@ -251,7 +271,12 @@ void HF_Injection_Enable(hf_injection_t* hf_inj, uint8_t enable)
     /* 禁用时重置状态 */
     hf_inj->state.is_converged = 0;
     SineWaveGenerator(&hf_inj->state.hf_sine_gen, true);  // 重置正弦波生成器
-    hf_inj->state.integral_track = 0.0f;
+    PLL_Enable(&hf_inj->state.position_pll, false);       // 禁用PLL
+  }
+  else
+  {
+    /* 使能时启用PLL */
+    PLL_Enable(&hf_inj->state.position_pll, true);
   }
 }
 
@@ -287,8 +312,10 @@ void HF_Injection_Reset(hf_injection_t* hf_inj)
   SineWaveGenerator(&hf_inj->state.hf_sine_gen, true);  // 重置正弦波生成器
   hf_inj->state.epsilon = 0.0f;
   hf_inj->state.epsilon_filtered = 0.0f;
-  hf_inj->state.integral_track = 0.0f;
   hf_inj->state.is_converged = 0;
+
+  /* 重置PLL控制器 */
+  PLL_Reset(&hf_inj->state.position_pll);
 
   /* 重置滤波器 */
   if (hf_inj->state.lpf_epsilon != NULL)
@@ -318,6 +345,9 @@ void HF_Injection_SetInitialPosition(hf_injection_t* hf_inj, float initial_theta
   hf_inj->state.theta_hf = wrap_theta_pi(initial_theta);
   hf_inj->state.theta_est = hf_inj->state.theta_hf;
   hf_inj->state.theta_prev = hf_inj->state.theta_hf;
+  
+  /* 设置PLL初始位置 */
+  PLL_SetInitialPosition(&hf_inj->state.position_pll, initial_theta);
 }
 
 /**
@@ -332,6 +362,18 @@ void HF_Injection_UpdateParams(hf_injection_t* hf_inj, const hf_injection_params
 
   /* 更新参数 */
   memcpy(&hf_inj->params, params, sizeof(hf_injection_params_t));
+
+  /* 更新PLL参数 */
+  pll_params_t pll_params = {
+    .kp = params->pll_kp > 0.0f ? params->pll_kp : 100.0f,
+    .ki = params->pll_ki > 0.0f ? params->pll_ki : 1000.0f,
+    .kd = params->pll_kd,
+    .ts = params->Ts,
+    .max_output = params->pll_max_speed != 0.0f ? params->pll_max_speed : 1000.0f,
+    .min_output = params->pll_min_speed != 0.0f ? params->pll_min_speed : -1000.0f,
+    .integral_limit = params->pll_integral_limit > 0.0f ? params->pll_integral_limit : 1000.0f
+  };
+  PLL_UpdateParams(&hf_inj->state.position_pll, &pll_params);
 
   /* 重新初始化滤波器 */
   HF_Injection_InitFilters(hf_inj);
@@ -477,32 +519,11 @@ static void HF_Injection_PositionTracking(hf_injection_t* hf_inj)
     return;
   }
 
-  /* PI控制器 */
-  float error = -hf_inj->state.epsilon_filtered; /* 负反馈 */
-
-  /* 比例项 */
-  float proportional = hf_inj->state.kp_track * error;
-
-  /* 积分项 */
-  hf_inj->state.integral_track += hf_inj->state.ki_track * error * hf_inj->params.Ts;
-
-  /* 积分限幅 */
-  float integral_limit = 1000.0f; /* rad/s */
-  if (hf_inj->state.integral_track > integral_limit)
-  {
-    hf_inj->state.integral_track = integral_limit;
-  }
-  else if (hf_inj->state.integral_track < -integral_limit)
-  {
-    hf_inj->state.integral_track = -integral_limit;
-  }
-
-  /* 计算估计速度 */
-  float omega_est = proportional + hf_inj->state.integral_track;
-
-  /* 位置积分 */
-  hf_inj->state.theta_integral += omega_est * hf_inj->params.Ts;
-  hf_inj->state.theta_hf = wrap_theta_pi(hf_inj->state.theta_integral);
+  /* 使用PLL进行位置跟踪 */
+  hf_inj->state.theta_hf = PLL_Update(&hf_inj->state.position_pll, hf_inj->state.epsilon_filtered);
+  
+  /* 获取PLL估计的速度 */
+  hf_inj->state.omega_hf = PLL_GetSpeed(&hf_inj->state.position_pll);
 
   /* 更新估计位置用于下次计算 */
   hf_inj->state.theta_est = hf_inj->state.theta_hf;

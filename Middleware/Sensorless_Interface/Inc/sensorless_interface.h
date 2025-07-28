@@ -104,8 +104,8 @@ extern "C"
     sensorless_output_t* output;         /*!< 输出数据指针 */
     
     /* 输入数据指针 */
-    Clark_t* voltage_ab_ptr;             /*!< αβ轴电压输入指针 */
-    Clark_t* current_ab_ptr;             /*!< αβ轴电流输入指针 */
+    Clark_t* vol_ab_ptr;             /*!< αβ轴电压输入指针 */
+    Clark_t* cur_ab_ptr;             /*!< αβ轴电流输入指针 */
     Clark_t* injection_voltage_ptr;      /*!< 高频注入电压输出指针 */
     
     /* 中间变量 (外部可访问) */
@@ -126,9 +126,9 @@ extern "C"
   } Sensorless_Parameter_t;
 
   /* 全局变量声明 (在main_int.c中定义) */
-  extern Sensorless_Parameter_t* g_sensorless_ptr;
-  extern sensorless_config_t* g_sensorless_config_ptr;
-  extern sensorless_output_t* g_sensorless_output_ptr;
+  extern Sensorless_Parameter_t* g_sl_hnd_ptr;
+  extern sensorless_config_t* g_sl_cfg_ptr;
+  extern sensorless_output_t* g_sl_out_ptr;
 
   /* 内联函数接口 (类似FOC接口) */
   
@@ -139,10 +139,10 @@ extern "C"
    */
   static inline void Sensorless_UpdateVoltage(float v_alpha, float v_beta)
   {
-    if (g_sensorless_ptr && g_sensorless_ptr->voltage_ab_ptr != NULL)
+    if (g_sl_hnd_ptr && g_sl_hnd_ptr->vol_ab_ptr != NULL)
     {
-      g_sensorless_ptr->voltage_ab_ptr->a = v_alpha;
-      g_sensorless_ptr->voltage_ab_ptr->b = v_beta;
+      g_sl_hnd_ptr->vol_ab_ptr->a = v_alpha;
+      g_sl_hnd_ptr->vol_ab_ptr->b = v_beta;
     }
   }
 
@@ -153,10 +153,10 @@ extern "C"
    */
   static inline void Sensorless_UpdateCurrent(float i_alpha, float i_beta)
   {
-    if (g_sensorless_ptr && g_sensorless_ptr->current_ab_ptr != NULL)
+    if (g_sl_hnd_ptr && g_sl_hnd_ptr->cur_ab_ptr != NULL)
     {
-      g_sensorless_ptr->current_ab_ptr->a = i_alpha;
-      g_sensorless_ptr->current_ab_ptr->b = i_beta;
+      g_sl_hnd_ptr->cur_ab_ptr->a = i_alpha;
+      g_sl_hnd_ptr->cur_ab_ptr->b = i_beta;
     }
   }
 
@@ -166,7 +166,7 @@ extern "C"
    */
   static inline float Sensorless_GetRotorAngle(void)
   {
-    return (g_sensorless_output_ptr) ? g_sensorless_output_ptr->rotor_angle : 0.0f;
+    return (g_sl_out_ptr) ? g_sl_out_ptr->rotor_angle : 0.0f;
   }
 
   /**
@@ -175,7 +175,7 @@ extern "C"
    */
   static inline float Sensorless_GetRotorSpeed(void)
   {
-    return (g_sensorless_output_ptr) ? g_sensorless_output_ptr->rotor_speed : 0.0f;
+    return (g_sl_out_ptr) ? g_sl_out_ptr->rotor_speed : 0.0f;
   }
 
   /**
@@ -185,11 +185,11 @@ extern "C"
    */
   static inline void Sensorless_GetInjectionVoltage(float* v_alpha_inj, float* v_beta_inj)
   {
-    if (g_sensorless_ptr && g_sensorless_ptr->injection_voltage_ptr != NULL && 
+    if (g_sl_hnd_ptr && g_sl_hnd_ptr->injection_voltage_ptr != NULL && 
         v_alpha_inj != NULL && v_beta_inj != NULL)
     {
-      *v_alpha_inj = g_sensorless_ptr->injection_voltage_ptr->a;
-      *v_beta_inj = g_sensorless_ptr->injection_voltage_ptr->b;
+      *v_alpha_inj = g_sl_hnd_ptr->injection_voltage_ptr->a;
+      *v_beta_inj = g_sl_hnd_ptr->injection_voltage_ptr->b;
     }
     else if (v_alpha_inj != NULL && v_beta_inj != NULL)
     {
@@ -242,9 +242,9 @@ extern "C"
    */
   static inline void Sensorless_SetEnable(bool enable)
   {
-    if (g_sensorless_ptr)
+    if (g_sl_hnd_ptr)
     {
-      g_sensorless_ptr->enabled = enable;
+      g_sl_hnd_ptr->enabled = enable;
     }
   }
 
@@ -254,7 +254,7 @@ extern "C"
    */
   static inline bool Sensorless_IsValid(void)
   {
-    return (g_sensorless_output_ptr) ? (g_sensorless_output_ptr->valid != 0) : false;
+    return (g_sl_out_ptr) ? (g_sl_out_ptr->valid != 0) : false;
   }
 
   /**
@@ -263,7 +263,7 @@ extern "C"
    */
   static inline bool Sensorless_IsInitialized(void)
   {
-    return (g_sensorless_ptr) ? g_sensorless_ptr->initialized : false;
+    return (g_sl_hnd_ptr) ? g_sl_hnd_ptr->initialized : false;
   }
 
   /**
@@ -272,7 +272,7 @@ extern "C"
    */
   static inline sensorless_state_t Sensorless_GetState(void)
   {
-    return (g_sensorless_output_ptr) ? g_sensorless_output_ptr->state : SENSORLESS_STATE_STOPPED;
+    return (g_sl_out_ptr) ? g_sl_out_ptr->state : SENSORLESS_STATE_STOPPED;
   }
 
   /**
@@ -281,7 +281,7 @@ extern "C"
    */
   static inline sensorless_method_t Sensorless_GetMethod(void)
   {
-    return (g_sensorless_output_ptr) ? g_sensorless_output_ptr->active_method : SENSORLESS_METHOD_FLUX_OBSERVER;
+    return (g_sl_out_ptr) ? g_sl_out_ptr->active_method : SENSORLESS_METHOD_FLUX_OBSERVER;
   }
 
   /* 封装的算法接口函数 */

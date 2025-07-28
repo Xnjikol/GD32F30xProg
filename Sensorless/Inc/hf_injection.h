@@ -24,6 +24,7 @@ extern "C"
 #include "theta_calc.h"
 #include "transformation.h"
 #include "signal.h"
+#include "pll.h"
 
 /**
  * @brief 高频注入参数结构体
@@ -39,6 +40,14 @@ typedef struct
     float cutoff_freq_hf;   /*!< 高频滤波器截止频率 (Hz) */
     float cutoff_freq_lf;   /*!< 低频滤波器截止频率 (Hz) */
     float speed_threshold;  /*!< 切换到高频注入的速度阈值 (rad/s) */
+    
+    /* PLL位置跟踪参数 */
+    float pll_kp;           /*!< PLL比例增益 */
+    float pll_ki;           /*!< PLL积分增益 */
+    float pll_kd;           /*!< PLL微分增益 */
+    float pll_max_speed;    /*!< PLL最大速度输出 (rad/s) */
+    float pll_min_speed;    /*!< PLL最小速度输出 (rad/s) */
+    float pll_integral_limit; /*!< PLL积分限幅 (rad/s) */
 } hf_injection_params_t;
 
 /**
@@ -77,10 +86,8 @@ typedef struct
     BandPassFilter_t* bpf_current;     /*!< 电流带通滤波器 */
     HighPassFilter_t* hpf_current;     /*!< 电流高通滤波器 */
     
-    /* PI控制器用于位置跟踪 */
-    float kp_track;               /*!< 位置跟踪比例增益 */
-    float ki_track;               /*!< 位置跟踪积分增益 */
-    float integral_track;         /*!< 位置跟踪积分项 */
+    /* PLL位置跟踪控制器 */
+    pll_t position_pll;               /*!< PLL位置跟踪控制器 */
     
     /* 状态标志 */
     uint8_t is_enabled;           /*!< 高频注入使能标志 */

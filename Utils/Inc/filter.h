@@ -8,154 +8,273 @@
 
 #include "gd32f30x.h"
 
-
 #define MAX_FILTER_SIZE 32
+
+#ifndef SQRT3
+#    define SQRT3 1.73205080757F
+#endif
+
+#ifndef SQRT3_2
+#    define SQRT3_2 0.86602540378F /* √3/2 */
+#endif
+
+#ifndef M_PI
+#    define M_PI 3.14159265358979323846F /* π */
+#endif
+
+#ifndef M_2PI
+#    define M_2PI 6.28318530717958647692F /* 2π */
+#endif
+
+#ifndef M_PI_2
+#    define M_PI_2 1.57079632679489661923F /* π/2 */
+#endif
+
+/*  DSP math function    */
+#ifndef ARM_DSP
+#    define ARM_DSP
+#endif
+
+#ifdef ARM_DSP
+#    include "arm_math.h" /* CMSIS-DSP math */  // IWYU pragma: export
+
+#    define COS(x) arm_cos_f32(x)
+#    define SIN(x) arm_sin_f32(x)
+
+#else
+#    include <math.h>
+
+#    define COS(x) cosf(x)
+#    define SIN(x) sinf(x)
+
+#endif
 
 /**
  * @brief Low pass filter structure
  */
-typedef struct
-{
-  float alpha;        // Filter coefficient
-  float prev_output;  // Previous output value
-  bool initialized;   // Initialization flag
+typedef struct {
+    float alpha;        // Filter coefficient
+    float prev_output;  // Previous output value
+    bool  initialized;  // Initialization flag
 } LowPassFilter_t;
 
 /**
  * @brief Moving average filter structure
  */
-typedef struct
-{
-  float buffer[MAX_FILTER_SIZE];  // Circular buffer
-  float sum;                      // Sum of values in buffer
-  uint16_t window_size;           // Size of moving window
-  uint16_t index;                 // Current index in buffer
-  uint16_t count;                 // Number of valid samples
+typedef struct {
+    float    buffer[MAX_FILTER_SIZE];  // Circular buffer
+    float    sum;                      // Sum of values in buffer
+    uint16_t window_size;              // Size of moving window
+    uint16_t index;                    // Current index in buffer
+    uint16_t count;                    // Number of valid samples
 } MovingAverageFilter_t;
 
 /**
  * @brief Median filter structure
  */
-typedef struct
-{
-  float buffer[MAX_FILTER_SIZE];  // Circular buffer
-  uint16_t window_size;           // Size of filter window
-  uint16_t index;                 // Current index in buffer
-  uint16_t count;                 // Number of valid samples
+typedef struct {
+    float    buffer[MAX_FILTER_SIZE];  // Circular buffer
+    uint16_t window_size;              // Size of filter window
+    uint16_t index;                    // Current index in buffer
+    uint16_t count;                    // Number of valid samples
 } MedianFilter_t;
 
 /**
  * @brief Simple 1D Kalman filter structure
  */
-typedef struct
-{
-  float x;  // State estimate
-  float P;  // Estimate uncertainty
-  float Q;  // Process noise variance
-  float R;  // Measurement noise variance
-  float K;  // Kalman gain
+typedef struct {
+    float x;  // State estimate
+    float P;  // Estimate uncertainty
+    float Q;  // Process noise variance
+    float R;  // Measurement noise variance
+    float K;  // Kalman gain
 } KalmanFilter_t;
 
 /**
- * @brief Band pass filter structure (using two cascaded filters)
+ * @brief Band pass filter structure (using two cascaded
+ * filters)
  */
-typedef struct
-{
-  LowPassFilter_t low_pass;     // Low pass stage
-  float high_pass_alpha;        // High pass coefficient
-  float high_pass_prev_input;   // Previous input for high pass
-  float high_pass_prev_output;  // Previous output for high pass
-  bool initialized;             // Initialization flag
+typedef struct {
+    // 滤波器系数
+    float b0, b1, b2;  // 分子系数
+    float a1, a2;      // 分母系数（a0固定为1）
+
+    // 延迟线（存储过去的输入和输出）
+    float x1, x2;       // 过去的输入
+    float y1, y2;       // 过去的输出
+    bool  initialized;  // 是否已初始化
 } BandPassFilter_t;
 
 /**
  * @brief High pass filter structure
  */
-typedef struct
-{
-  float alpha;        // Filter coefficient
-  float prev_input;   // Previous input value
-  float prev_output;  // Previous output value
-  bool initialized;   // Initialization flag
+typedef struct {
+    float alpha;        // Filter coefficient
+    float prev_input;   // Previous input value
+    float prev_output;  // Previous output value
+    bool  initialized;  // Initialization flag
 } HighPassFilter_t;
 
 /**
  * @brief Band stop (notch) filter structure
  */
-typedef struct
-{
-  LowPassFilter_t low_pass;    // Low pass path
-  HighPassFilter_t high_pass;  // High pass path
-  float low_gain;              // Low frequency gain
-  float high_gain;             // High frequency gain
+typedef struct {
+    // 滤波器系数
+    float b0;
+    float b1;
+    float b2;
+    float a1;
+    float a2;
+
+    // 延迟线（存储历史输入输出）
+    float x1;  // 前一个输入
+    float x2;  // 前两个输入
+    float y1;  // 前一个输出
+    float y2;  // 前两个输出
 } BandStopFilter_t;
 
+// Moving average filter functions
+void  MovingAverageFilter_Init(MovingAverageFilter_t* filter,
+                               uint16_t               window_size);
+float MovingAverageFilter_Update(MovingAverageFilter_t* filter, float input);
+void  MovingAverageFilter_Reset(MovingAverageFilter_t* filter);
+
+// Median filter functions
+void  MedianFilter_Init(MedianFilter_t* filter, uint16_t window_size);
+float MedianFilter_Update(MedianFilter_t* filter, float input);
+void  MedianFilter_Reset(MedianFilter_t* filter);
+
+// Kalman filter functions
+void  KalmanFilter_Init(KalmanFilter_t* filter,
+                        float           process_noise,
+                        float           measurement_noise,
+                        float           initial_value,
+                        float           initial_uncertainty);
+void  KalmanFilter_InitSimple(KalmanFilter_t* filter,
+                              float           process_noise,
+                              float           measurement_noise,
+                              float           initial_value);
+float KalmanFilter_Update(KalmanFilter_t* filter, float measurement);
+float KalmanFilter_GetUncertainty(KalmanFilter_t* filter);
+void  KalmanFilter_Reset(KalmanFilter_t* filter, float initial_value);
+
 // Low pass filter functions
-void LowPassFilter_Init(LowPassFilter_t* filter, float cutoff_freq, float sample_freq);
+void LowPassFilter_Init(LowPassFilter_t* filter,
+                        float            cutoff_freq,
+                        float            sample_freq);
 /**
- * @brief Update low pass filter with improved initialization
+ * @brief Update low pass filter with improved
+ * initialization
  * @param filter: pointer to LowPassFilter_t structure
  * @param input: input value
  * @return filtered output value
  */
-static inline float LowPassFilter_Update(LowPassFilter_t* filter, float x)
-{
-  float y = filter->alpha * filter->prev_output + (1.0F - filter->alpha) * x;
-  filter->prev_output = y;
-  return y;
+static inline float LowPassFilter_Update(LowPassFilter_t* filter, float x) {
+    float y = filter->alpha * filter->prev_output + (1.0F - filter->alpha) * x;
+    filter->prev_output = y;
+    return y;
 }
-// static inline float LowPassFilter_Update(LowPassFilter_t *filter, float input)
-// {
-//     if (filter == NULL) return input;
 
-//     // Initialize with first input value for better transient response
-//     if (!filter->initialized) {
-//         filter->prev_output = input;
-//         filter->initialized = true;
-//         return input;
-//     }
-
-//     // Apply low pass filter equation: y[n] = α * x[n] + (1-α) * y[n-1]
-//     filter->prev_output = filter->alpha * input + (1.0f - filter->alpha) * filter->prev_output;
-
-//     return filter->prev_output;
-// }
 void LowPassFilter_Reset(LowPassFilter_t* filter);
 
-// Moving average filter functions
-void MovingAverageFilter_Init(MovingAverageFilter_t* filter, uint16_t window_size);
-float MovingAverageFilter_Update(MovingAverageFilter_t* filter, float input);
-void MovingAverageFilter_Reset(MovingAverageFilter_t* filter);
-
-// Median filter functions
-void MedianFilter_Init(MedianFilter_t* filter, uint16_t window_size);
-float MedianFilter_Update(MedianFilter_t* filter, float input);
-void MedianFilter_Reset(MedianFilter_t* filter);
-
-// Kalman filter functions
-void KalmanFilter_Init(KalmanFilter_t* filter, float process_noise, float measurement_noise,
-                       float initial_value, float initial_uncertainty);
-void KalmanFilter_InitSimple(KalmanFilter_t* filter, float process_noise, float measurement_noise,
-                             float initial_value);
-float KalmanFilter_Update(KalmanFilter_t* filter, float measurement);
-float KalmanFilter_GetUncertainty(KalmanFilter_t* filter);
-void KalmanFilter_Reset(KalmanFilter_t* filter, float initial_value);
-
 // High pass filter functions
-void HighPassFilter_Init(HighPassFilter_t* filter, float cutoff_freq, float sample_freq);
-float HighPassFilter_Update(HighPassFilter_t* filter, float input);
+void HighPassFilter_Init(HighPassFilter_t* filter,
+                         float             cutoff_freq,
+                         float             sample_freq);
+/**
+ * @brief Update high pass filter
+ * @param filter: pointer to HighPassFilter_t structure
+ * @param input: input value
+ * @return filtered output value
+ */
+static inline float HighPassFilter_Update(HighPassFilter_t* filter,
+                                          float             input) {
+    if (filter == NULL)
+        return input;
+
+    // Initialize with first input value
+    if (!filter->initialized) {
+        filter->prev_input  = input;
+        filter->prev_output = 0.0f;
+        filter->initialized = true;
+        return 0.0f;
+    }
+
+    // High pass filter equation: y[n] = α * (y[n-1] + x[n] - x[n-1])
+    filter->prev_output
+        = filter->alpha * (filter->prev_output + input - filter->prev_input);
+    filter->prev_input = input;
+
+    return filter->prev_output;
+}
 void HighPassFilter_Reset(HighPassFilter_t* filter);
 
 // Band pass filter functions
-void BandPassFilter_Init(BandPassFilter_t* filter, float low_cutoff, float high_cutoff,
-                         float sample_freq);
-float BandPassFilter_Update(BandPassFilter_t* filter, float input);
+void BandPassFilter_Init(BandPassFilter_t* filter,
+                         float             sampleRate,
+                         float             centerFreq,
+                         float             bandwidth);
+
+/**
+ * @brief Update band pass filter
+ * @param filter: pointer to BandPassFilter_t structure
+ * @param input: input value
+ * @return filtered output value
+ */
+static inline float BandPassFilter_Update(BandPassFilter_t* filter,
+                                          float             input) {
+    if (filter == NULL) {
+        return input;  // 如果滤波器指针无效，返回原始输入
+    }
+
+    // 计算当前输出（二阶IIR滤波器公式）
+    float output = filter->b0 * input + filter->b1 * filter->x1
+                   + filter->b2 * filter->x2 - filter->a1 * filter->y1
+                   - filter->a2 * filter->y2;
+
+    // 更新延迟线（移位操作）
+    filter->x2 = filter->x1;
+    filter->x1 = input;
+    filter->y2 = filter->y1;
+    filter->y1 = output;
+
+    return output;
+}
 void BandPassFilter_Reset(BandPassFilter_t* filter);
 
 // Band stop (notch) filter functions
-void BandStopFilter_Init(BandStopFilter_t* filter, float low_cutoff, float high_cutoff,
-                         float sample_freq);
-float BandStopFilter_Update(BandStopFilter_t* filter, float input);
+void BandStopFilter_Init(BandStopFilter_t* filter,
+                         float             sampleRate,
+                         float             centerFreq,
+                         float             bandwidth);
+
+/**
+ * @brief Update band stop filter (parallel low-pass and
+ * high-pass combination)
+ * @param filter: pointer to BandStopFilter_t structure
+ * @param input: input value
+ * @return filtered output value
+ */
+static inline float BandStopFilter_Update(BandStopFilter_t* filter,
+                                          float             input) {
+    if (filter == NULL) {
+        return input;  // 如果滤波器指针无效，返回原始输入
+    }
+
+    // 计算当前输出（二阶IIR滤波器公式）
+    float output = filter->b0 * input + filter->b1 * filter->x1
+                   + filter->b2 * filter->x2 - filter->a1 * filter->y1
+                   - filter->a2 * filter->y2;
+
+    // 更新延迟线（移位操作）
+    filter->x2 = filter->x1;
+    filter->x1 = input;
+    filter->y2 = filter->y1;
+    filter->y1 = output;
+
+    return output;
+}
+
 void BandStopFilter_Reset(BandStopFilter_t* filter);
 
 #endif /* __FILTER_H__ */
