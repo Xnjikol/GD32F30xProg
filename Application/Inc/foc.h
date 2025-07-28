@@ -7,6 +7,6 @@
 #include "theta_calc.h"
 #include "transformation.h"
 
-void FOC_Main(FOC_Parameter_t* foc);
+void FOC_Update(FOC_Parameter_t* foc);
 
 #endif /* _FOC_H_ */
