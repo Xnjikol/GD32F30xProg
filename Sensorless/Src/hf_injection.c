@@ -41,7 +41,7 @@
 
 /* 私有函数声明 */
 static void HF_Injection_InitFilters(hf_injection_t* hf_inj);
-static void HF_Injection_UpdatePhase(hf_injection_t* hf_inj);
+// static void HF_Injection_UpdatePhase(hf_injection_t* hf_inj);
 static void HF_Injection_ExtractHighFreqCurrent(hf_injection_t* hf_inj, const Clark_t* current_ab);
 static void HF_Injection_CalculatePositionError(hf_injection_t* hf_inj);
 static void HF_Injection_PositionTracking(hf_injection_t* hf_inj);
@@ -74,7 +74,7 @@ int HF_Injection_Init(hf_injection_t* hf_inj, const hf_injection_params_t* param
   hf_inj->state.ki_track = 1000.0f;
 
   /* 初始化高频正弦波生成器 */
-  SineWave_Init(&hf_inj->state.hf_sine_gen, 
+  SineWave_Init(&hf_inj->state.hf_sine_gen,
                 1.0f,                    // amplitude = 1.0，后续与电压幅值相乘
                 params->injection_freq,  // 注入频率
                 0.0f,                    // phase = 0
@@ -399,12 +399,12 @@ static void HF_Injection_InitFilters(hf_injection_t* hf_inj)
 /**
  * @brief 更新高频相位
  */
-static void HF_Injection_UpdatePhase(hf_injection_t* hf_inj)
-{
-  /* 相位更新现在由锯齿波生成器自动处理 */
-  /* 此函数保留以保持接口兼容性 */
-  (void)hf_inj; // 避免未使用参数警告
-}
+// static void HF_Injection_UpdatePhase(hf_injection_t* hf_inj)
+// {
+//   /* 相位更新现在由锯齿波生成器自动处理 */
+//   /* 此函数保留以保持接口兼容性 */
+//   (void)hf_inj; // 避免未使用参数警告
+// }
 
 /**
  * @brief 提取高频电流分量
@@ -452,7 +452,7 @@ static void HF_Injection_CalculatePositionError(hf_injection_t* hf_inj)
   /* 使用 id_hf * sin(ωt) 来提取位置误差 */
   /* 当前高频相位已保存在 hf_phase_current 中 */
   float sin_hf = sinf(hf_inj->state.hf_phase_current);
-  
+
   hf_inj->state.epsilon = hf_inj->state.i_hf_dq.d * sin_hf;
 
   /* 低通滤波去除高频成分 */
