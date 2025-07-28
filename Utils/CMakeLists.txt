@@ -5,6 +5,7 @@
 set(Utils_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/filter.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/pid.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Src/signal.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/transformation.c
 )
 

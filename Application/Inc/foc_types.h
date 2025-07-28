@@ -63,7 +63,7 @@ typedef struct
   float Elec_Theta;       // Electrical angle (rad)
   float Speed;            // Speed (rpm)
   float theta_factor;     // Sensor data to mechanic angle conversion factor
-  
+
   // 指向设备时间和频率参数的指针
   float* main_Ts_ptr;     // 指向主中断采样周期
   float* main_Freq_ptr;   // 指向主中断频率
@@ -77,6 +77,7 @@ typedef struct
   float Vref_Uq;
   float Freq;
   float Theta;
+  SawtoothWave_t* hnd_sawtooth;  // 锯齿波生成器
 } VF_Parameter_t;
 
 typedef struct
@@ -86,6 +87,7 @@ typedef struct
   float IF_Freq;
   float Theta;
   EnableStatus Sensor_State;
+  SawtoothWave_t* hnd_sawtooth;  // 锯齿波生成器
 } IF_Parameter_t;
 
 typedef struct

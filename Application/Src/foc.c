@@ -3,8 +3,6 @@
 #include "hardware_interface.h"
 #include "position_sensor.h"
 
-
-static inline float Get_Theta(float, float);
 static inline void Speed_Loop_Control(SpdLoop_t* speed_loop, Park_t* idq_ref);
 static inline void Current_Loop_Control(CurLoop_t* hnd, Park_t* out);
 
@@ -23,7 +21,14 @@ void FOC_Update(FOC_Parameter_t* foc)
     case VF_MODE:
     {
       VF_Parameter_t* hnd_vf = foc->Hnd_vf;
-      hnd_vf->Theta = Get_Theta(hnd_vf->Freq, hnd_vf->Theta);
+      SawtoothWave_t* sawtooth = hnd_vf->hnd_sawtooth;
+      if (!sawtooth->initialized)
+      {
+        SawtoothWave_Init(sawtooth, M_2PI, hnd_vf->Freq, 0.0F, foc->Ts);
+        sawtooth->initialized = true;
+      }
+      sawtooth->frequency = hnd_vf->Freq;
+      hnd_vf->Theta = SawtoothWaveGenerator(sawtooth, foc->Stop);
       foc->Theta = hnd_vf->Theta;
       ParkTransform(foc->Iclark_fdbk, foc->Theta, foc->Idq_ref);
       foc->Udq_ref->d = hnd_vf->Vref_Ud;
@@ -40,7 +45,15 @@ void FOC_Update(FOC_Parameter_t* foc)
       }
       else
       {
-        hnd_if->Theta = Get_Theta(hnd_if->IF_Freq, hnd_if->Theta);
+        SawtoothWave_t* sawtooth = hnd_if->hnd_sawtooth;
+        if (!sawtooth->initialized)
+        {
+          SawtoothWave_Init(sawtooth, M_2PI, hnd_if->IF_Freq, 0.0F, foc->Ts);
+          sawtooth->initialized = true;
+        }
+        sawtooth->frequency = hnd_if->IF_Freq;
+        // 生成锯齿波角度
+        hnd_if->Theta = SawtoothWaveGenerator(sawtooth, foc->Stop);
       }
       foc->Theta = hnd_if->Theta;
 
@@ -140,21 +153,4 @@ static inline void Current_Loop_Control(CurLoop_t* hnd, Park_t* out)
   // 输出DQ轴电压指令
   out->d = hnd->handler_d->output;
   out->q = hnd->handler_q->output;
-}
-
-// SECTION - Ramp Generator
-
-static inline float Get_Theta(float Freq, float Theta)
-{
-  // 电角度递推：θ += ω·Ts，ω = 2π·f
-  Theta += M_2PI * Freq * FOC.Ts;
-  if (Theta > M_2PI)
-  {
-    Theta -= M_2PI;
-  }
-  else if (Theta < 0.0F)
-  {
-    Theta += M_2PI;
-  }
-  return Theta;
 }

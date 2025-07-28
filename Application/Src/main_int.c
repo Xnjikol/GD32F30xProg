@@ -280,12 +280,14 @@ void Main_Int_Parameter_Init(void)
   OpenLoop_VF.Vref_Uq = 0.0F;
   OpenLoop_VF.Freq = 0.0F;
   OpenLoop_VF.Theta = 0.0F;
+  OpenLoop_VF.hnd_sawtooth = (SawtoothWave_t*) calloc(1, sizeof(SawtoothWave_t));
 
   OpenLoop_IF.Id_Ref = 0.0F;
   OpenLoop_IF.Iq_Ref = 0.0F;
   OpenLoop_IF.IF_Freq = 0.0F;
   OpenLoop_IF.Theta = 0.0F;
   OpenLoop_IF.Sensor_State = Disable;
+  OpenLoop_IF.hnd_sawtooth = (SawtoothWave_t*) calloc(1, sizeof(SawtoothWave_t));
 }
 
 void FOC_UpdateMainFrequency(float freq, float Ts, float PWM_ARR)
