@@ -73,12 +73,12 @@ int HF_Injection_Init(hf_injection_t* hf_inj, const hf_injection_params_t* param
   hf_inj->state.kp_track = 100.0f;
   hf_inj->state.ki_track = 1000.0f;
 
-  /* 初始化高频相位生成器 */
-  SawtoothWave_Init(&hf_inj->state.hf_phase_gen, 
-                    6.283185307f,  // amplitude = 2π，输出范围0到2π
-                    params->injection_freq, 
-                    0.0f,          // offset = 0
-                    params->Ts);
+  /* 初始化高频正弦波生成器 */
+  SineWave_Init(&hf_inj->state.hf_sine_gen, 
+                1.0f,                    // amplitude = 1.0，后续与电压幅值相乘
+                params->injection_freq,  // 注入频率
+                0.0f,                    // phase = 0
+                params->Ts);             // 采样周期
 
   /* 初始化滤波器 */
   HF_Injection_InitFilters(hf_inj);
@@ -142,10 +142,10 @@ void HF_Injection_GenerateSignal(hf_injection_t* hf_inj, Clark_t* v_inj_ab)
   }
 
   /* 更新高频相位 */
-  hf_inj->state.hf_phase_current = SawtoothWaveGenerator(&hf_inj->state.hf_phase_gen, false);
+  hf_inj->state.hf_phase_current = hf_inj->state.hf_sine_gen.theta;
 
   /* 生成脉振高频注入信号 (d轴注入) */
-  float cos_hf = COS(hf_inj->state.hf_phase_current);
+  float cos_hf = SineWaveGenerator(&hf_inj->state.hf_sine_gen, false);
   hf_inj->state.v_hf_dq.d = hf_inj->params.injection_voltage * cos_hf;
   hf_inj->state.v_hf_dq.q = 0.0f;
 
@@ -250,7 +250,7 @@ void HF_Injection_Enable(hf_injection_t* hf_inj, uint8_t enable)
   {
     /* 禁用时重置状态 */
     hf_inj->state.is_converged = 0;
-    SawtoothWaveGenerator(&hf_inj->state.hf_phase_gen, true);  // 重置锯齿波生成器
+    SineWaveGenerator(&hf_inj->state.hf_sine_gen, true);  // 重置正弦波生成器
     hf_inj->state.integral_track = 0.0f;
   }
 }
@@ -284,7 +284,7 @@ void HF_Injection_Reset(hf_injection_t* hf_inj)
   hf_inj->state.theta_integral = 0.0f;
   hf_inj->state.theta_prev = 0.0f;
   hf_inj->state.hf_phase_current = 0.0f;
-  SawtoothWaveGenerator(&hf_inj->state.hf_phase_gen, true);  // 重置锯齿波生成器
+  SineWaveGenerator(&hf_inj->state.hf_sine_gen, true);  // 重置正弦波生成器
   hf_inj->state.epsilon = 0.0f;
   hf_inj->state.epsilon_filtered = 0.0f;
   hf_inj->state.integral_track = 0.0f;
@@ -450,7 +450,9 @@ static void HF_Injection_CalculatePositionError(hf_injection_t* hf_inj)
 
   /* 解调获取位置误差信号 */
   /* 使用 id_hf * sin(ωt) 来提取位置误差 */
-  float sin_hf = SIN(hf_inj->state.hf_phase_current);
+  /* 当前高频相位已保存在 hf_phase_current 中 */
+  float sin_hf = sinf(hf_inj->state.hf_phase_current);
+  
   hf_inj->state.epsilon = hf_inj->state.i_hf_dq.d * sin_hf;
 
   /* 低通滤波去除高频成分 */

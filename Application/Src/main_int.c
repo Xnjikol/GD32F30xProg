@@ -12,6 +12,12 @@ float Speed_Fdbk = 0.0F;
 DeviceState_t Device;
 Motor_Parameter_t Motor;
 FOC_Parameter_t FOC;
+
+// Sensorless control global variables
+Sensorless_Parameter_t Sensorless;
+sensorless_config_t SensorlessConfig;
+sensorless_output_t SensorlessOutput;
+
 VF_Parameter_t OpenLoop_VF;
 IF_Parameter_t OpenLoop_IF;
 PID_Handler_t Pid_CurLoop_d;

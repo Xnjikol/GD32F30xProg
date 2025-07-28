@@ -2,6 +2,7 @@
 #define SIGNAL_H
 
 #include <stdbool.h>
+#include "theta_calc.h"  /* 包含角度计算函数 */
 
 #ifndef SQRT3
 #define SQRT3 1.73205080757F
@@ -169,6 +170,74 @@ static inline float SawtoothWaveGenerator(SawtoothWave_t* sawtooth, bool reset)
 
   // 生成锯齿波输出：offset + amplitude * counter
   return sawtooth->offset + sawtooth->amplitude * sawtooth->counter;
+}
+
+/**
+ * @brief  正弦波生成器
+ * @param  sine   指向 SineWave_t 结构体的指针
+ * @param  reset  是否复位正弦波（true: 复位，false: 正常运行）
+ * @retval 当前输出值
+ */
+static inline float SineWaveGenerator(SineWave_t* sine, bool reset)
+{
+  if (reset)
+  {
+    sine->theta = sine->phase;
+    return sine->amplitude * sinf(sine->theta);
+  }
+
+  // 计算角度步进量
+  float omega = M_2PI * sine->frequency;
+  sine->theta += omega * sine->Ts;
+
+  // 使用 wrap_theta_2pi 进行角度归一化到 [0, 2π) 范围
+  sine->theta = wrap_theta_2pi(sine->theta);
+
+  // 生成正弦波输出
+  return sine->amplitude * sinf(sine->theta);
+}
+
+/**
+ * @brief  方波生成器
+ * @param  square  指向 SquareWave_t 结构体的指针
+ * @param  reset   是否复位方波（true: 复位，false: 正常运行）
+ * @retval 当前输出值
+ */
+static inline float SquareWaveGenerator(SquareWave_t* square, bool reset)
+{
+  if (reset)
+  {
+    square->counter = 0.0f;
+    square->state = false;
+    return square->state ? square->amplitude : -square->amplitude;
+  }
+
+  // 计算周期和占空比时间
+  float period = 1.0f / square->frequency;
+  float duty_time = period * square->duty_cycle;
+
+  // 更新计数器
+  square->counter += square->Ts;
+
+  // 检查是否需要切换状态
+  if (square->counter >= period)
+  {
+    square->counter -= period;  // 重置周期计数器
+    square->state = false;      // 新周期开始为低电平
+  }
+
+  // 判断当前状态
+  if (square->counter < duty_time)
+  {
+    square->state = true;   // 高电平
+  }
+  else
+  {
+    square->state = false;  // 低电平
+  }
+
+  // 返回输出值
+  return square->state ? square->amplitude : -square->amplitude;
 }
 
 #endif

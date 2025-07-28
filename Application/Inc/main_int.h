@@ -37,6 +37,11 @@ extern FOC_Parameter_t FOC;
 extern Motor_Parameter_t Motor;
 extern DeviceState_t Device;
 
+// Sensorless control global variables (defined in main_int.c) //
+extern Sensorless_Parameter_t Sensorless;
+extern sensorless_config_t SensorlessConfig;
+extern sensorless_output_t SensorlessOutput;
+
 static inline void FOC_UpdateCurrent(float Ia, float Ib, float Ic)
 {
   FOC.Iabc_fdbk->a = Ia;
@@ -69,6 +74,59 @@ static inline void FOC_UpdateMaxCurrent(float I_Max)
 void FOC_UpdateMainFrequency(float freq, float Ts, float PWM_ARR);
 
 void Main_Int_Handler(void);
+
+// Sensorless control interface functions (similar to FOC functions)
+// static inline void Sensorless_UpdateMainFrequency(float freq, float Ts)
+// {
+//   /* 更新频率和周期信息 - 通过指针自动更新 */
+//   /* 不需要额外操作，因为已经通过指针关联 */
+// }
+
+static inline void Sensorless_UpdateCurrentAB(const Clark_t* i_ab)
+{
+  Sensorless_UpdateCurrentAB_Clark(i_ab);
+}
+
+static inline void Sensorless_UpdateVoltageAB(const Clark_t* v_ab)
+{
+  Sensorless_UpdateVoltageAB_Clark(v_ab);
+}
+
+static inline void Sensorless_GetInjectionVoltageAB(Clark_t* v_inj_ab)
+{
+  Sensorless_GetInjectionVoltageAB_Clark(v_inj_ab);
+}
+
+static inline float Sensorless_GetEstimatedAngle(void)
+{
+  return Sensorless_GetRotorAngle();
+}
+
+static inline float Sensorless_GetEstimatedSpeed(void)
+{
+  return Sensorless_GetRotorSpeed();
+}
+
+static inline void Sensorless_EnableControl(bool enable)
+{
+  Sensorless_SetEnable(enable);
+}
+
+static inline bool Sensorless_IsControlValid(void)
+{
+  return Sensorless_IsValid();
+}
+
+// 便利的全局变量访问宏 (用于调试和监控)
+#define SENSORLESS_GET_FLUX_ALPHA() (Sensorless.flux_alpha)
+#define SENSORLESS_GET_FLUX_BETA() (Sensorless.flux_beta)
+#define SENSORLESS_GET_ESTIMATED_ANGLE() (Sensorless.estimated_angle)
+#define SENSORLESS_GET_OBSERVER_ANGLE() (Sensorless.observer_angle)
+#define SENSORLESS_GET_HF_POSITION() (Sensorless.hf_position)
+#define SENSORLESS_GET_SWITCH_COUNT() (Sensorless.switch_counter)
+#define SENSORLESS_GET_CONVERGENCE_COUNT() (Sensorless.convergence_counter)
+#define SENSORLESS_GET_ANGLE_ERROR() (Sensorless.angle_error)
+#define SENSORLESS_GET_SPEED_FILTER() (Sensorless.speed_filter_output)
 
 // 设备状态管理函数
 static inline void Main_Int_TriggerFullInit(void)
