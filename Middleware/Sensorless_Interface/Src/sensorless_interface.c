@@ -48,11 +48,11 @@ static void sensorless_link_global_variables(Motor_Parameter_t* motor_ptr,
 /**
  * @brief 无传感器控制系统初始化
  */
-int Sensorless_Init(Sensorless_Parameter_t* sensorless_ptr,
-                    sensorless_config_t*    config_ptr,
-                    sensorless_output_t*    output_ptr,
-                    Motor_Parameter_t*      motor_ptr,
-                    DeviceState_t*          device_ptr) {
+int Sensorless_Pre_Initialize(Sensorless_Parameter_t* sensorless_ptr,
+                              sensorless_config_t*    config_ptr,
+                              sensorless_output_t*    output_ptr,
+                              Motor_Parameter_t*      motor_ptr,
+                              DeviceState_t*          device_ptr) {
     if (sensorless_ptr == NULL || config_ptr == NULL || output_ptr == NULL
         || motor_ptr == NULL || device_ptr == NULL) {
         return -1;
@@ -77,23 +77,27 @@ int Sensorless_Init(Sensorless_Parameter_t* sensorless_ptr,
 
     /* 关联全局变量 */
     sensorless_link_global_variables(motor_ptr, device_ptr);
-
     /* 获取默认配置 */
     Sensorless_GetDefaultConfig(g_sl_cfg_ptr);
 
+    return 0;
+}
+
+int Sensorless_Initialize(void) {
     /* 配置磁链观测器参数 */
-    flux_observer_params_t flux_params
-        = {.Rs = *g_sl_cfg_ptr->motor_rs_ptr,
-           .Ls = (*g_sl_cfg_ptr->motor_ld_ptr + *g_sl_cfg_ptr->motor_lq_ptr)
-                 / 2.0f,  // 使用平均电感 .Ts = *g_sl_cfg_ptr->control_ts_ptr,
-                          // .flux_rated =
-           *g_sl_cfg_ptr->motor_flux_ptr,
-           .cutoff_freq = g_sl_cfg_ptr->lpf_cutoff_freq};
+    // flux_observer_params_t flux_params
+    //     = {.Rs = *g_sl_cfg_ptr->motor_rs_ptr,
+    //        .Ls = (*g_sl_cfg_ptr->motor_ld_ptr + *g_sl_cfg_ptr->motor_lq_ptr)
+    //              / 2.0f,  // 使用平均电感 .Ts =
+    //              *g_sl_cfg_ptr->control_ts_ptr,
+    //                       // .flux_rated =
+    //        *g_sl_cfg_ptr->motor_flux_ptr,
+    //        .cutoff_freq = g_sl_cfg_ptr->lpf_cutoff_freq};
 
     /* 初始化磁链观测器 */
-    if (flux_observer_init(&g_flux_observer, &flux_params) != 0) {
-        return -1;
-    }
+    // if (flux_observer_init(&g_flux_observer, &flux_params) != 0) {
+    //     return -1;
+    // }
 
     /* 根据配置初始化高频注入 */
     if (g_sl_cfg_ptr->method == SENSORLESS_METHOD_HF_INJECTION
@@ -110,7 +114,7 @@ int Sensorless_Init(Sensorless_Parameter_t* sensorless_ptr,
     LowPassFilter_Init(
         &filter_init,
         10.0F,
-        device_ptr->speed_Freq);  // 10Hz截止频率，10000Hz采样频率
+        *g_sl_cfg_ptr->speed_ts_ptr);  // 10Hz截止频率，10000Hz采样频率
     g_speed_filter = filter_init;
 
     /* 初始化输出结构 */
@@ -233,9 +237,9 @@ void Sensorless_Update(void) {
  * @brief 获取默认配置参数
  */
 void Sensorless_GetDefaultConfig(sensorless_config_t* config) {
-    if (config == NULL) {
-        return;
-    }
+    // if (config == NULL) {
+    //     return;
+    // }
 
     /* 设置默认参数 */
     config->method = SENSORLESS_METHOD_HF_INJECTION; /* 默认使用高频注入方法 */
@@ -398,6 +402,8 @@ static void sensorless_link_global_variables(Motor_Parameter_t* motor_ptr,
     /* 关联设备参数 */
     g_sl_cfg_ptr->control_ts_ptr   = &device_ptr->main_Ts;
     g_sl_cfg_ptr->control_freq_ptr = &device_ptr->main_Freq;
+    g_sl_cfg_ptr->speed_ts_ptr     = &device_ptr->speed_Ts;
+    g_sl_cfg_ptr->speed_freq_ptr   = &device_ptr->speed_Freq;
 }
 
 /**

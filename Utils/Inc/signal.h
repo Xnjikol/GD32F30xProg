@@ -167,7 +167,7 @@ static inline float SawtoothWaveGenerator(SawtoothWave_t* sawtooth,
 static inline float SineWaveGenerator(SineWave_t* sine, bool reset) {
     if (reset) {
         sine->theta = sine->phase;
-        return sine->amplitude * sinf(sine->theta);
+        return sine->amplitude * SIN(sine->theta);
     }
 
     // 计算角度步进量

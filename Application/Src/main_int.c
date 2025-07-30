@@ -2,6 +2,9 @@
 
 #include <stdlib.h>
 
+bool UseRealTheta = true;
+bool Hf_Enabled   = false;
+
 float theta_mech = 0.0F;
 float theta_elec = 0.0F;
 
@@ -62,11 +65,11 @@ void Main_Int_Handler(void) {
         case INIT: {
             // 基础初始化：仅获取系统参数，不进行完整的FOC初始化
             Main_Int_Basic_Init();
-            Sensorless_Init(&Sensorless,
-                            &SensorlessConfig,
-                            &SensorlessOutput,
-                            &Motor,
-                            &Device);
+            Sensorless_Pre_Initialize(&Sensorless,
+                                      &SensorlessConfig,
+                                      &SensorlessOutput,
+                                      &Motor,
+                                      &Device);
             if (Device.system_params_valid) {
                 Device.basic_init_done = true;
                 Device.Mode            = WAITING;
@@ -78,10 +81,11 @@ void Main_Int_Handler(void) {
         case WAITING: {
             // 基础就绪状态：系统参数已获取，等待完整初始化触发
             // 继续运行基本逻辑但不进行FOC控制
-            if (FOC.Udc > 200.0F) {
+            static bool waiting_init = false;
+            if (!waiting_init && FOC.Udc > 200.0F) {
                 Peripheral_EnableHardwareProtect();
+                waiting_init = true;
             }
-
             // 检查是否触发完整初始化（通过CCP协议修改Device.Mode）
             // 这里不做状态转换，由外部CCP协议触发
             FOC.Mode = IDLE;
@@ -92,12 +96,13 @@ void Main_Int_Handler(void) {
             // 完整初始化：用户触发的完整参数初始化
             if (FOC.Udc > 200.0F) {
                 Main_Int_Parameter_Init();
+                Sensorless_Initialize();
                 Peripheral_EnableHardwareProtect();
+                Protect.Flag          = No_Protect;
+                Device.full_init_done = true;
+                Device.Mode           = READY;
+                FOC.Mode              = IDLE;
             }
-            Protect.Flag          = No_Protect;
-            Device.full_init_done = true;
-            Device.Mode           = READY;
-            FOC.Mode              = IDLE;
             break;
         }
 
@@ -110,7 +115,7 @@ void Main_Int_Handler(void) {
 
         case RUNNING: {
             // 运行状态：正常FOC控制
-            UpdateThetaAndSpeed(&FOC, &Motor, Sensorless.hf_enabled);
+            UpdateThetaAndSpeed(&FOC, &Motor, UseRealTheta);
             FOC.Stop              = Device_Stop;
             FOC.SpeedRef          = Speed_Ref;
             Clark_t i_ab_origin   = {0};
@@ -130,11 +135,16 @@ void Main_Int_Handler(void) {
 
             Sensorless_UpdateCurrentAB(&i_ab_origin);
             Sensorless_UpdateVoltageAB(FOC.Uclark_ref);
+            Sensorless_HfInjectionEnable(Hf_Enabled);
             Sensorless_Update();
 
             Clark_t u_ab_ref = {0};
-            Sensorless_GetInjectionVoltageAB(&u_ab_ref);
-
+            if (Sensorless.hf_enabled) {
+                Sensorless_GetInjectionVoltageAB(&u_ab_ref);
+            } else {
+                memcpy(&u_ab_ref, FOC.Uclark_ref, sizeof(Clark_t));
+            }
+            memcpy(FOC.Uclark_ref, &u_ab_ref, sizeof(Clark_t));
             SVPWM_Generate(&u_ab_ref, FOC.inv_Udc, FOC.Tcm);
             break;
         }
@@ -448,8 +458,8 @@ static inline void SVPWM_Generate(Clark_t* u_ref, float inv_Vdc, Phase_t* out) {
 
 static inline void UpdateThetaAndSpeed(FOC_Parameter_t*   foc,
                                        Motor_Parameter_t* motor,
-                                       bool               hf_en) {
-    if (!hf_en) {
+                                       bool               real_theta) {
+    if (real_theta) {
         // theta 和 speed 现在由 Peripheral_UpdatePosition 直接更新
         foc->Theta     = motor->Elec_Theta;
         foc->SpeedFdbk = motor->Speed;
