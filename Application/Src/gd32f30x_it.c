@@ -49,7 +49,7 @@ OF SUCH DAMAGE.
 #include "gd32f30x.h"
 #include "hw_interface.h"
 #include "justfloat.h"
-#include "main_int_simplified.h"
+#include "main_int.h"
 #include "systick.h"
 
 /* Device_Stop 现在通过 HW_Interface_GetDeviceStop() 访问 */

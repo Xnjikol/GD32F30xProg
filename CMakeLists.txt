@@ -56,7 +56,7 @@ enable_language(C ASM)
 # 创建主可执行文件目标
 add_executable(${PROJECT_NAME}
     ${CMAKE_SOURCE_DIR}/Application/Src/main.c
-    ${CMAKE_SOURCE_DIR}/Application/Src/main_int_simplified.c
+    ${CMAKE_SOURCE_DIR}/Application/Src/main_int.c
     ${CMAKE_SOURCE_DIR}/Application/Src/gd32f30x_it.c
     ${CMAKE_SOURCE_DIR}/Application/Src/foc.c
 )
