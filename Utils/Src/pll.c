@@ -75,7 +75,7 @@ float PLL_Update(pll_t* pll, float error) {
     pll->state.error = error;
 
     /* 使用PID控制器计算速度估计 */
-    Pid_Update(-error, false, &pll->pid); /* 负反馈 */
+    Pid_Update(error, false, &pll->pid); /* 负反馈 */
     pll->state.omega = pll->pid.output;
 
     /* 位置积分 */

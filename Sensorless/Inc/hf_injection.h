@@ -13,95 +13,94 @@
 #define __HF_INJECTION_H__
 
 #ifdef __cplusplus
-extern "C"
-{
+extern "C" {
 #endif
 
-#include <stdlib.h>
 #include <math.h>
+#include <stdlib.h>
+
 
 #include "filter.h"
+#include "pll.h"
+#include "signal.h"
 #include "theta_calc.h"
 #include "transformation.h"
-#include "signal.h"
-#include "pll.h"
+
 
 /**
  * @brief 高频注入参数结构体
  */
-typedef struct
-{
+typedef struct {
     float injection_freq;    /*!< 高频注入频率 (Hz) */
     float injection_voltage; /*!< 注入电压幅值 (V) */
-    float Ts;               /*!< 采样周期 (s) */
-    float Ld;               /*!< d轴电感 (H) */
-    float Lq;               /*!< q轴电感 (H) */
-    float delta_L;          /*!< 电感差值 Ld-Lq (H) */
-    float cutoff_freq_hf;   /*!< 高频滤波器截止频率 (Hz) */
-    float cutoff_freq_lf;   /*!< 低频滤波器截止频率 (Hz) */
-    float speed_threshold;  /*!< 切换到高频注入的速度阈值 (rad/s) */
-    
+    float Ts;                /*!< 采样周期 (s) */
+    float Ld;                /*!< d轴电感 (H) */
+    float Lq;                /*!< q轴电感 (H) */
+    float delta_L;           /*!< 电感差值 Ld-Lq (H) */
+    float cutoff_freq_hf;    /*!< 高频滤波器截止频率 (Hz) */
+    float cutoff_freq_lf;    /*!< 低频滤波器截止频率 (Hz) */
+    float speed_threshold;   /*!< 切换到高频注入的速度阈值 (rad/s) */
+
     /* PLL位置跟踪参数 */
-    float pll_kp;           /*!< PLL比例增益 */
-    float pll_ki;           /*!< PLL积分增益 */
-    float pll_kd;           /*!< PLL微分增益 */
-    float pll_max_speed;    /*!< PLL最大速度输出 (rad/s) */
-    float pll_min_speed;    /*!< PLL最小速度输出 (rad/s) */
+    float pll_kp;             /*!< PLL比例增益 */
+    float pll_ki;             /*!< PLL积分增益 */
+    float pll_kd;             /*!< PLL微分增益 */
+    float pll_max_speed;      /*!< PLL最大速度输出 (rad/s) */
+    float pll_min_speed;      /*!< PLL最小速度输出 (rad/s) */
     float pll_integral_limit; /*!< PLL积分限幅 (rad/s) */
 } hf_injection_params_t;
 
 /**
  * @brief 高频注入状态结构体
  */
-typedef struct
-{
+typedef struct {
     /* 输入量 */
-    Clark_t* current_ab;    /*!< αβ轴电流 (A) */
-    float theta_est;              /*!< 估计的转子位置 (rad) */
-    
+    Clark_t* current_ab; /*!< αβ轴电流 (A) */
+    float    theta_est;  /*!< 估计的转子位置 (rad) */
+
     /* 高频注入信号 */
-    Park_t v_hf_dq;          /*!< dq轴高频注入电压 (V) */
-    Clark_t v_hf_ab;        /*!< αβ轴高频注入电压 (V) */
+    Park_t  v_hf_dq; /*!< dq轴高频注入电压 (V) */
+    Clark_t v_hf_ab; /*!< αβ轴高频注入电压 (V) */
 
     /* 高频电流响应 */
-    Park_t i_hf_dq;          /*!< dq轴高频电流 (A) */
-    Clark_t i_hf_ab;        /*!< αβ轴高频电流 (A) */
+    Park_t  i_hf_dq; /*!< dq轴高频电流 (A) */
+    Clark_t i_hf_ab; /*!< αβ轴高频电流 (A) */
 
     /* 位置误差信号 */
-    float epsilon;                /*!< 位置误差信号 */
-    float epsilon_filtered;       /*!< 滤波后的位置误差信号 */
-    
+    float epsilon;          /*!< 位置误差信号 */
+    float epsilon_filtered; /*!< 滤波后的位置误差信号 */
+
     /* 估计输出 */
-    float theta_hf;               /*!< 高频注入估计位置 (rad) */
-    float omega_hf;               /*!< 高频注入估计速度 (rad/s) */
-    
+    float theta_hf; /*!< 高频注入估计位置 (rad) */
+    float omega_hf; /*!< 高频注入估计速度 (rad/s) */
+
     /* 内部状态 */
+    SineWave_t hf_sin_gen;       /*!< 高频正弦波生成器 */
     SineWave_t hf_cos_gen;       /*!< 高频正弦波生成器 */
-    float hf_current_phase;       /*!< 当前高频相位值 (rad) */
-    float theta_integral;         /*!< 位置积分值 (rad) */
-    float theta_prev;             /*!< 前一次位置估计值 (rad) */
-    
+    float      hf_current_phase; /*!< 当前高频相位值 (rad) */
+    float      theta_integral;   /*!< 位置积分值 (rad) */
+    float      theta_prev;       /*!< 前一次位置估计值 (rad) */
+
     /* 滤波器 */
-    LowPassFilter_t* lpf_epsilon;      /*!< 位置误差低通滤波器 */
-    BandPassFilter_t* bpf_current;     /*!< 电流带通滤波器 */
-    HighPassFilter_t* hpf_current;     /*!< 电流高通滤波器 */
-    
+    LowPassFilter_t*  lpf_epsilon; /*!< 位置误差低通滤波器 */
+    BandPassFilter_t* bpf_current; /*!< 电流带通滤波器 */
+    HighPassFilter_t* hpf_current; /*!< 电流高通滤波器 */
+
     /* PLL位置跟踪控制器 */
-    pll_t position_pll;               /*!< PLL位置跟踪控制器 */
-    
+    pll_t position_pll; /*!< PLL位置跟踪控制器 */
+
     /* 状态标志 */
-    uint8_t is_enabled;           /*!< 高频注入使能标志 */
-    uint8_t is_converged;         /*!< 收敛标志 */
-    
+    uint8_t is_enabled;   /*!< 高频注入使能标志 */
+    uint8_t is_converged; /*!< 收敛标志 */
+
 } hf_injection_state_t;
 
 /**
  * @brief 高频注入控制器结构体
  */
-typedef struct
-{
+typedef struct {
     hf_injection_params_t params; /*!< 参数 */
-    hf_injection_state_t state;   /*!< 状态 */
+    hf_injection_state_t  state;  /*!< 状态 */
 } hf_injection_t;
 
 /* 函数声明 */
@@ -112,7 +111,8 @@ typedef struct
  * @param params 参数结构体指针
  * @retval 0: 成功, -1: 失败
  */
-int HF_Injection_Init(hf_injection_t* hf_inj, const hf_injection_params_t* params);
+int HF_Injection_Init(hf_injection_t*              hf_inj,
+                      const hf_injection_params_t* params);
 
 /**
  * @brief 反初始化高频注入观测器
@@ -132,7 +132,8 @@ void HF_Injection_GenerateSignal(hf_injection_t* hf_inj, Clark_t* v_inj_ab);
  * @param hf_inj 高频注入观测器指针
  * @param current_ab αβ轴电流
  */
-void HF_Injection_ProcessResponse(hf_injection_t* hf_inj, const Clark_t* current_ab);
+void HF_Injection_ProcessResponse(hf_injection_t* hf_inj,
+                                  const Clark_t*  current_ab);
 
 /**
  * @brief 获取估计的转子位置
@@ -173,14 +174,16 @@ void HF_Injection_Reset(hf_injection_t* hf_inj);
  * @param hf_inj 高频注入观测器指针
  * @param initial_theta 初始位置 (rad)
  */
-void HF_Injection_SetInitialPosition(hf_injection_t* hf_inj, float initial_theta);
+void HF_Injection_SetInitialPosition(hf_injection_t* hf_inj,
+                                     float           initial_theta);
 
 /**
  * @brief 更新控制器参数
  * @param hf_inj 高频注入观测器指针
  * @param params 新的参数结构体指针
  */
-void HF_Injection_UpdateParams(hf_injection_t* hf_inj, const hf_injection_params_t* params);
+void HF_Injection_UpdateParams(hf_injection_t*              hf_inj,
+                               const hf_injection_params_t* params);
 
 #ifdef __cplusplus
 }

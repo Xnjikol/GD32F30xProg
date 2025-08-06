@@ -263,7 +263,7 @@ void Sensorless_GetDefaultConfig(sensorless_config_t* config) {
     config->hf_injection_freq    = 1000.0f; /* 高频注入频率 */
     config->hf_injection_voltage = 15.0f;   /* 高频注入电压 */
     config->hf_cutoff_freq_hf    = 2000.0f; /* 高频滤波器截止频率 */
-    config->hf_cutoff_freq_lf    = 10.0f;   /* 低频滤波器截止频率 */
+    config->hf_cutoff_freq_lf    = 100.0f;  /* 低频滤波器截止频率 */
 
     /* 阈值参数 */
     config->min_speed_threshold = 10.0f;  /* 最小速度阈值 */
@@ -450,8 +450,8 @@ static void sensorless_calculate_speed(void) {
         = filtered_speed / (*g_sl_cfg_ptr->motor_pole_pairs_ptr);
 
     /* 更新中间变量 */
-    g_sl_hnd_ptr->estimated_speed     = filtered_speed;
-    g_sl_hnd_ptr->speed_filter_output = filtered_speed;
+    g_sl_hnd_ptr->estimated_speed     = g_sl_out_ptr->rotor_speed_mech;
+    g_sl_hnd_ptr->speed_filter_output = g_sl_out_ptr->rotor_speed_mech;
 
     /* 保存当前角度 */
     g_prev_angle = g_sl_out_ptr->rotor_angle;

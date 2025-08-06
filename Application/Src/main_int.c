@@ -144,6 +144,8 @@ void Main_Int_Handler(void) {
             } else {
                 memcpy(&u_ab_ref, FOC.Uclark_ref, sizeof(Clark_t));
             }
+            Sensorless.angle_error
+                = Motor.Elec_Theta - Sensorless.estimated_angle;
             memcpy(FOC.Uclark_ref, &u_ab_ref, sizeof(Clark_t));
             SVPWM_Generate(&u_ab_ref, FOC.inv_Udc, FOC.Tcm);
             break;

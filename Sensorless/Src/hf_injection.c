@@ -72,7 +72,7 @@ int HF_Injection_Init(hf_injection_t*              hf_inj,
     /* 设置PLL控制器参数 */
     pll_params_t pll_params = {
         .kp             = 100.0f,   // 默认值，会被参数覆盖
-        .ki             = 1000.0f,  // 默认值，会被参数覆盖
+        .ki             = 5000.0f,  // 默认值，会被参数覆盖
         .kd             = 0.0f,     // 默认值，会被参数覆盖
         .ts             = params->Ts,
         .max_output     = 1000.0f,   // 默认值，会被参数覆盖
@@ -98,6 +98,12 @@ int HF_Injection_Init(hf_injection_t*              hf_inj,
         return -1;
     }
 
+    /* 初始化高频正弦波生成器 */
+    SineWave_Init(&hf_inj->state.hf_sin_gen,
+                  1.0f,  // amplitude = 1.0，后续与电压幅值相乘
+                  params->injection_freq,  // 注入频率
+                  0.0F,                    // phase = 0
+                  params->Ts);             // 采样周期
     /* 初始化高频余弦波生成器 */
     SineWave_Init(&hf_inj->state.hf_cos_gen,
                   1.0f,  // amplitude = 1.0，后续与电压幅值相乘
@@ -239,7 +245,8 @@ float HF_Injection_GetSpeed(const hf_injection_t* hf_inj) {
         return 0.0f;
     }
 
-    return hf_inj->state.omega_hf;
+    /* 直接从PLL获取速度 */
+    return radps2rpm(hf_inj->state.omega_hf);
 }
 
 /**
@@ -466,7 +473,7 @@ static void HF_Injection_CalculatePositionError(hf_injection_t* hf_inj) {
     /* 解调获取位置误差信号 */
     /* 使用 id_hf * sin(ωt) 来提取位置误差 */
     /* 当前高频相位已保存在 hf_current_phase 中 */
-    float sin_hf = SIN(hf_inj->state.hf_current_phase);
+    float sin_hf = SineWaveGenerator(&hf_inj->state.hf_sin_gen, false);
 
     hf_inj->state.epsilon = hf_inj->state.i_hf_dq.d * sin_hf;
 
