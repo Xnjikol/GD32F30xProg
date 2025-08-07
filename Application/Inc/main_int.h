@@ -1,7 +1,9 @@
 #ifndef __MAIN_INT_H__
 #define __MAIN_INT_H__
 
+#include "Initialization.h"
 #include "can.h"
+#include "filter.h"
 #include "foc.h"
 #include "gd32f30x.h"
 #include "gd32f30x_it.h"
@@ -11,69 +13,44 @@
 #include "pid.h"
 #include "sensorless_interface.h"
 #include "systick.h"
-#include "filter.h"
 
-/*  Gate polarity definition */
-#ifndef GATE_POLARITY_HIGH_ACTIVE
-#ifndef GATE_POLARITY_LOW_ACTIVE
-#define GATE_POLARITY_LOW_ACTIVE /* Define here */
-#endif
-#endif
-
-#if !defined(GATE_POLARITY_HIGH_ACTIVE) && !defined(GATE_POLARITY_LOW_ACTIVE)
-#error "Please define GATE_POLARITY_HIGH_ACTIVE or GATE_POLARITY_LOW_ACTIVE in foc.h"
-#endif
-
-#ifndef Resolver_Position
-#ifndef Encoder_Position
-#define Encoder_Position /* Define here */
-#endif
-#endif
-
-/* FOC parameters */
-#define SPEED_LOOP_PRESCALER 10.0F /* Speed loop frequency division factor */
-
-// Since CCP demanded struct FOC is Global Variable, make it visible to main ISR //
-extern FOC_Parameter_t FOC;
+// Since CCP demanded struct FOC is Global Variable, make it visible to main ISR
+// //
+extern FOC_Parameter_t   FOC;
 extern Motor_Parameter_t Motor;
-extern DeviceState_t Device;
+extern DeviceState_t     Device;
 
 // Sensorless control global variables (defined in main_int.c) //
 extern Sensorless_Parameter_t Sensorless;
-extern sensorless_config_t SensorlessConfig;
-extern sensorless_output_t SensorlessOutput;
+extern sensorless_config_t    SensorlessConfig;
+extern sensorless_output_t    SensorlessOutput;
 
 // 高频注入带阻滤波器 (defined in main_int.c) //
 extern BandStopFilter_t BandStopFilter_Alpha;
 extern BandStopFilter_t BandStopFilter_Beta;
 
-static inline void FOC_UpdateCurrent(float Ia, float Ib, float Ic)
-{
-  FOC.Iabc_fdbk->a = Ia;
-  FOC.Iabc_fdbk->b = Ib;
-  FOC.Iabc_fdbk->c = Ic;
+static inline void FOC_UpdateCurrent(float Ia, float Ib, float Ic) {
+    FOC.Iabc_fdbk->a = Ia;
+    FOC.Iabc_fdbk->b = Ib;
+    FOC.Iabc_fdbk->c = Ic;
 }
 
-static inline void FOC_UpdateVoltage(float Udc, float inv_Udc)
-{
-  FOC.Udc = Udc;
-  FOC.inv_Udc = inv_Udc;
+static inline void FOC_UpdateVoltage(float Udc, float inv_Udc) {
+    FOC.Udc     = Udc;
+    FOC.inv_Udc = inv_Udc;
 }
 
-static inline void FOC_UpdateTheta(float Theta)
-{
-  FOC.Theta = Theta;
+static inline void FOC_UpdateTheta(float Theta) {
+    FOC.Theta = Theta;
 }
 
-static inline void FOC_OutputCompare(float* Tcm1, float* Tcm2, float* Tcm3)
-{
-  *Tcm1 = FOC.Tcm->a;
-  *Tcm2 = FOC.Tcm->b;
-  *Tcm3 = FOC.Tcm->c;
+static inline void FOC_OutputCompare(float* Tcm1, float* Tcm2, float* Tcm3) {
+    *Tcm1 = FOC.Tcm->a;
+    *Tcm2 = FOC.Tcm->b;
+    *Tcm3 = FOC.Tcm->c;
 }
-static inline void FOC_UpdateMaxCurrent(float I_Max)
-{
-  FOC.I_Max = I_Max;
+static inline void FOC_UpdateMaxCurrent(float I_Max) {
+    FOC.I_Max = I_Max;
 }
 
 void FOC_UpdateMainFrequency(float freq, float Ts, float PWM_ARR);
@@ -87,39 +64,32 @@ void Main_Int_Handler(void);
 //   /* 不需要额外操作，因为已经通过指针关联 */
 // }
 
-static inline void Sensorless_UpdateCurrentAB(const Clark_t* i_ab)
-{
-  Sensorless_UpdateCurrentAB_Clark(i_ab);
+static inline void Sensorless_UpdateCurrentAB(const Clark_t* i_ab) {
+    Sensorless_UpdateCurrentAB_Clark(i_ab);
 }
 
-static inline void Sensorless_UpdateVoltageAB(const Clark_t* v_ab)
-{
-  Sensorless_UpdateVoltageAB_Clark(v_ab);
+static inline void Sensorless_UpdateVoltageAB(const Clark_t* v_ab) {
+    Sensorless_UpdateVoltageAB_Clark(v_ab);
 }
 
-static inline void Sensorless_GetInjectionVoltageAB(Clark_t* v_inj_ab)
-{
-  Sensorless_GetInjectionVoltageAB_Clark(v_inj_ab);
+static inline void Sensorless_GetInjectionVoltageAB(Clark_t* v_inj_ab) {
+    Sensorless_GetInjectionVoltageAB_Clark(v_inj_ab);
 }
 
-static inline float Sensorless_GetEstimatedAngle(void)
-{
-  return Sensorless_GetRotorAngle();
+static inline float Sensorless_GetEstimatedAngle(void) {
+    return Sensorless_GetRotorAngle();
 }
 
-static inline float Sensorless_GetEstimatedSpeed(void)
-{
-  return Sensorless_GetRotorSpeed();
+static inline float Sensorless_GetEstimatedSpeed(void) {
+    return Sensorless_GetRotorSpeed();
 }
 
-static inline void Sensorless_EnableControl(bool enable)
-{
-  Sensorless_SetEnable(enable);
+static inline void Sensorless_EnableControl(bool enable) {
+    Sensorless_SetEnable(enable);
 }
 
-static inline bool Sensorless_IsControlValid(void)
-{
-  return Sensorless_IsValid();
+static inline bool Sensorless_IsControlValid(void) {
+    return Sensorless_IsValid();
 }
 
 // 便利的全局变量访问宏 (用于调试和监控)
@@ -134,26 +104,22 @@ static inline bool Sensorless_IsControlValid(void)
 #define SENSORLESS_GET_SPEED_FILTER() (Sensorless.speed_filter_output)
 
 // 设备状态管理函数
-static inline void Main_Int_TriggerFullInit(void)
-{
-  extern DeviceState_t Device;
-  if (Device.Mode == WAITING)
-  {
-    Device.Mode = SETUP;
-  }
+static inline void Main_Int_TriggerFullInit(void) {
+    extern DeviceState_t Device;
+    if (Device.Mode == WAITING) {
+        Device.Mode = SETUP;
+    }
 }
 
 // 获取设备状态的便利函数
-static inline bool Main_Int_IsBasicReady(void)
-{
-  extern DeviceState_t Device;
-  return Device.Mode == WAITING && Device.basic_init_done;
+static inline bool Main_Int_IsBasicReady(void) {
+    extern DeviceState_t Device;
+    return Device.Mode == WAITING && Device.basic_init_done;
 }
 
-static inline bool Main_Int_IsFullyReady(void)
-{
-  extern DeviceState_t Device;
-  return Device.Mode >= READY && Device.full_init_done;
+static inline bool Main_Int_IsFullyReady(void) {
+    extern DeviceState_t Device;
+    return Device.Mode >= READY && Device.full_init_done;
 }
 
 #endif /* __MAIN_INT_H__ */
