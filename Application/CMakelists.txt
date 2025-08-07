@@ -1,26 +1,27 @@
 #
-set ( User_SOURCES
+set(User_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/main.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/main_int.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/gd32f30x_it.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Src/initialization.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/foc.c
 )
 
-add_library ( User STATIC
+add_library(User STATIC
     ${User_SOURCES}
 )
 
-target_include_directories ( User PUBLIC
+target_include_directories(User PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/Inc
 )
 
-add_library ( Application INTERFACE )
+add_library(Application INTERFACE)
 
-target_link_libraries ( Application
+target_link_libraries(Application
     INTERFACE User
 )
 
-target_link_libraries ( User PUBLIC
+target_link_libraries(User PUBLIC
     Core
     Middleware
     Communication
