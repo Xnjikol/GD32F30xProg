@@ -1,17 +1,16 @@
-# clang-format configuration for embedded C project
-# Based on Google style with customizations for embedded development
-
-# 基于Google代码风格
+# 基于Google代码风格，适合嵌入式C项目（兼容更多Clang版本）
 BasedOnStyle: Google
 
 # 基本格式设置
 IndentWidth: 4
 TabWidth: 4
 UseTab: Never
-ColumnLimit: 80 # 进一步减小列限制，强制触发换行
+ColumnLimit: 72 # 适配嵌入式窄屏环境
 
-# 大括号换行风格
+# 大括号风格
 BreakBeforeBraces: Attach
+BraceWrapping:
+  AfterFunction: false
 
 # 函数和语句格式
 AllowShortFunctionsOnASingleLine: None
@@ -20,15 +19,15 @@ AllowShortLoopsOnASingleLine: false
 AllowShortCaseLabelsOnASingleLine: false
 AllowShortBlocksOnASingleLine: Never
 
-# 关键设置：函数参数换行
+# 函数参数换行
 BinPackArguments: false
 BinPackParameters: false
 BreakConstructorInitializers: BeforeComma
 AlignAfterOpenBracket: Align
 
-# 关键设置：强制二元运算符换行（兼容旧版本）
-BreakBeforeBinaryOperators: All # 在所有二元运算符前换行
-AlignOperands: true # 对齐操作数
+# 二元运算符换行
+BreakBeforeBinaryOperators: All
+AlignOperands: true
 
 # 指针对齐
 DerivePointerAlignment: false
@@ -38,15 +37,17 @@ PointerAlignment: Left
 SortIncludes: true
 IncludeBlocks: Preserve
 IncludeCategories:
-  - Regex: '^<.*\.h>'
+  - Regex: '^<stdint\.h>|<stdbool\.h>|<string\.h>|<stddef\.h>'
     Priority: 1
-  - Regex: "^<.*"
+  - Regex: "^<driver/.*>|<hal/.*>|<cmsis/.*>"
     Priority: 2
-  - Regex: ".*"
+  - Regex: '^"project/.*"|".*_priv\.h"'
     Priority: 3
+  - Regex: ".*"
+    Priority: 4
 
 # 空格设置
-SpaceAfterCStyleCast: true
+SpaceAfterCStyleCast: false
 SpaceBeforeParens: ControlStatements
 SpaceInEmptyParentheses: false
 SpacesInCStyleCastParentheses: false
@@ -56,22 +57,23 @@ SpacesInSquareBrackets: false
 # 对齐设置
 AlignConsecutiveAssignments: true
 AlignConsecutiveDeclarations: true
+AlignConsecutiveMacros: true # 对齐连续宏定义（关键保留项）
 AlignTrailingComments: true
+
+# 预处理指令缩进
+IndentPPDirectives: AfterHash
 
 # 换行设置
 BreakBeforeTernaryOperators: true
 BreakStringLiterals: true
+BreakAfterJavaFieldAnnotations: false
 
 # 缩进设置
 IndentCaseLabels: false
 IndentGotoLabels: false
-IndentPPDirectives: AfterHash
 IndentWrappedFunctionNames: false
 
-# 其他设置
+# 其他优化
 KeepEmptyLinesAtTheStartOfBlocks: false
 MaxEmptyLinesToKeep: 1
-ReflowComments: true
-DisableFormat: false
-NamespaceIndentation: All
-AllowShortEnumsOnASingleLine: false
+ReflowComments: false
