@@ -45,6 +45,11 @@
 
 #endif
 
+typedef struct {
+    float_t theta; /*!< 当前角度（弧度） */
+    float_t speed;
+} AngleResult_t;
+
 /**
  * @brief 将角度限制在 [-π, π) 区间
  * @param theta 输入角度（弧度）
@@ -113,6 +118,23 @@ static inline float_t rpm2radps(float_t rpm) {
  */
 static inline float_t radps2rpm(float_t radps) {
     return radps * (60.0F / M_2PI);
+}
+
+/**
+ * @brief 计算角速度（单位：每分钟转数，RPM），并返回角度和速度结果结构体。
+ *
+ * 此函数根据当前角度和上一角度，以及时间间隔，计算转速并封装为结果结构体。
+ *
+ * @param new 当前角度值（弧度）
+ * @param old 上一次角度值（弧度）
+ * @param ts 两次角度采样之间的时间间隔（秒）
+ * @return AngleResult_t 结构体，包含归一化后的角度和计算得到的转速（RPM）
+ */
+static inline AngleResult_t calc_speed(float_t new, float_t old, float_t ts) {
+    AngleResult_t result;
+    result.theta = wrap_theta_2pi(new);
+    result.speed = rpm2radps((result.theta - old) / ts);
+    return result;
 }
 
 #endif /* _THETA_CALC_H_ */
