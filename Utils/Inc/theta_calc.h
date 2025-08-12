@@ -127,14 +127,13 @@ static inline float_t radps2rpm(float_t radps) {
  *
  * @param new 当前角度值（弧度）
  * @param old 上一次角度值（弧度）
- * @param ts 两次角度采样之间的时间间隔（秒）
- * @return AngleResult_t 结构体，包含归一化后的角度和计算得到的转速（RPM）
+ * @param freq 两次角度采样之间的频率（Hz）
+ * @return speed 计算得到的转速（RPM）
  */
-static inline AngleResult_t calc_speed(float_t new, float_t old, float_t ts) {
-    AngleResult_t result;
-    result.theta = wrap_theta_2pi(new);
-    result.speed = rpm2radps((result.theta - old) / ts);
-    return result;
+static inline float calc_speed(float_t new, float_t old, float_t freq) {
+    new         = wrap_theta_2pi(new);
+    float speed = radps2rpm((new - old) * freq);
+    return speed;
 }
 
 #endif /* _THETA_CALC_H_ */

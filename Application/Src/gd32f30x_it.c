@@ -40,9 +40,8 @@ OF SUCH DAMAGE.
 #include "hardware_interface.h"
 #include "justfloat.h"
 #include "main_int.h"
+#include "protect.h"
 #include "systick.h"
-
-extern volatile uint16_t Device_Stop;
 
 /*!
     \brief      this function handles NMI exception
@@ -50,7 +49,8 @@ extern volatile uint16_t Device_Stop;
     \param[out] none
     \retval     none
 */
-void NMI_Handler(void) {}
+void NMI_Handler(void) {
+}
 
 /*!
     \brief      this function handles HardFault exception
@@ -58,12 +58,10 @@ void NMI_Handler(void) {}
     \param[out] none
     \retval     none
 */
-void HardFault_Handler(void)
-{
-  /* if Hard Fault exception occurs, go to infinite loop */
-  while (1)
-  {
-  }
+void HardFault_Handler(void) {
+    /* if Hard Fault exception occurs, go to infinite loop */
+    while (1) {
+    }
 }
 
 /*!
@@ -72,12 +70,10 @@ void HardFault_Handler(void)
     \param[out] none
     \retval     none
 */
-void MemManage_Handler(void)
-{
-  /* if Memory Manage exception occurs, go to infinite loop */
-  while (1)
-  {
-  }
+void MemManage_Handler(void) {
+    /* if Memory Manage exception occurs, go to infinite loop */
+    while (1) {
+    }
 }
 
 /*!
@@ -86,12 +82,10 @@ void MemManage_Handler(void)
     \param[out] none
     \retval     none
 */
-void BusFault_Handler(void)
-{
-  /* if Bus Fault exception occurs, go to infinite loop */
-  while (1)
-  {
-  }
+void BusFault_Handler(void) {
+    /* if Bus Fault exception occurs, go to infinite loop */
+    while (1) {
+    }
 }
 
 /*!
@@ -100,14 +94,11 @@ void BusFault_Handler(void)
     \param[out] none
     \retval     none
 */
-void UsageFault_Handler(void)
-{
-  /* if Usage Fault exception occurs, go to infinite loop */
-  while (1)
-  {
-  }
+void UsageFault_Handler(void) {
+    /* if Usage Fault exception occurs, go to infinite loop */
+    while (1) {
+    }
 }
-
 
 /*!
     \brief      this function handles DebugMon exception
@@ -115,8 +106,8 @@ void UsageFault_Handler(void)
     \param[out] none
     \retval     none
 */
-void DebugMon_Handler(void) {}
-
+void DebugMon_Handler(void) {
+}
 
 /*!
     \brief      this function handles SysTick exception
@@ -124,70 +115,61 @@ void DebugMon_Handler(void) {}
     \param[out] none
     \retval     none
 */
-void SysTick_Handler(void)
-{
-  delay_decrement();
-  systick_ms++;
+void SysTick_Handler(void) {
+    delay_decrement();
+    systick_ms++;
 }
 
-void DMA0_Channel3_IRQHandler(void)
-{
-  if (dma_interrupt_flag_get(DMA0, DMA_CH3, DMA_INT_FLAG_FTF))
-  {
-    dma_interrupt_flag_clear(DMA0, DMA_CH3, DMA_INT_FLAG_FTF);
-    Peripheral_SCISendCallback();
-  }
-}
-
-void USBD_LP_CAN0_RX0_IRQHandler(void)
-{
-  can_receive_message_struct rx_msg;
-  can_message_receive(CAN0, CAN_FIFO0, &rx_msg);
-  CAN_Buffer_Put(&rx_msg);
-}
-
-void ADC0_1_IRQHandler(void)
-{
-  Main_Int_Handler();
-}
-
-void EXTI5_9_IRQHandler(void)
-{
-  if (RESET != exti_interrupt_flag_get(EXTI_7))
-  {
-    TIMER_SWEVG(TIMER0) |= TIMER_SWEVG_BRKG;
-    Device_Stop = 1;
-    exti_interrupt_flag_clear(EXTI_7);
-  }
-}
-
-extern Protect_Flags_t Protect_Flag;
-extern bool Software_BRK;
-
-void TIMER0_BRK_IRQHandler(void)
-{
-  if (timer_interrupt_flag_get(TIMER0, TIMER_INT_FLAG_BRK))
-  {
-    // 清除 Break 中断标志
-    timer_interrupt_flag_clear(TIMER0, TIMER_INT_FLAG_BRK);
-    Device_Stop = 1;
-    if (Software_BRK == false)
-    {
-      Protect.Flag |= Hardware_Fault;
-      timer_interrupt_disable(TIMER0, TIMER_INT_BRK);  // 禁用BRK中断
-      timer_primary_output_config(TIMER0, DISABLE);
+void DMA0_Channel3_IRQHandler(void) {
+    if (dma_interrupt_flag_get(DMA0, DMA_CH3, DMA_INT_FLAG_FTF)) {
+        dma_interrupt_flag_clear(DMA0, DMA_CH3, DMA_INT_FLAG_FTF);
+        Peripheral_SCISendCallback();
     }
-  }
+}
+
+void USBD_LP_CAN0_RX0_IRQHandler(void) {
+    can_receive_message_struct rx_msg;
+    can_message_receive(CAN0, CAN_FIFO0, &rx_msg);
+    CAN_Buffer_Put(&rx_msg);
+}
+
+void ADC0_1_IRQHandler(void) {
+    if (!adc_interrupt_flag_get(ADC0, ADC_INT_FLAG_EOIC)) {
+        return;
+    }
+    adc_interrupt_flag_clear(ADC0, ADC_INT_FLAG_EOIC);
+
+    Main_Int_Handler();
+}
+
+void EXTI5_9_IRQHandler(void) {
+    if (RESET != exti_interrupt_flag_get(EXTI_7)) {
+        TIMER_SWEVG(TIMER0) |= TIMER_SWEVG_BRKG;
+        Peripheral_Set_Stop(true);
+        exti_interrupt_flag_clear(EXTI_7);
+    }
+}
+
+void TIMER0_BRK_IRQHandler(void) {
+    if (timer_interrupt_flag_get(TIMER0, TIMER_INT_FLAG_BRK)) {
+        // 清除 Break 中断标志
+        timer_interrupt_flag_clear(TIMER0, TIMER_INT_FLAG_BRK);
+        Peripheral_Set_Stop(true);
+        if (Peripheral_Get_SoftwareBrk()) {
+            Protect_HardWareFault(false);
+            timer_interrupt_disable(TIMER0,
+                                    TIMER_INT_BRK);  // 禁用BRK中断
+            timer_primary_output_config(TIMER0, DISABLE);
+        }
+    }
 }
 
 /* */
-void TIMER3_IRQHandler(void)
-{
-  if (timer_interrupt_flag_get(TIMER3, TIMER_INT_FLAG_CH2))
-  {
-    // 清除 CH2 中断标志
-    timer_interrupt_flag_clear(TIMER3, TIMER_INT_FLAG_CH2);
+void TIMER3_IRQHandler(void) {
+    if (timer_interrupt_flag_get(TIMER3, TIMER_INT_FLAG_CH2)) {
+        // 清除 CH2 中断标志
+        timer_interrupt_flag_clear(TIMER3, TIMER_INT_FLAG_CH2);
 
-    TIMER_CNT(TIMER3) = 0;
-  }
+        TIMER_CNT(TIMER3) = 0;
+    }
 }

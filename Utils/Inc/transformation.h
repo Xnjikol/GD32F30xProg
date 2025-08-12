@@ -13,8 +13,10 @@
 #    endif
 #endif
 
-#if !defined(TWO_PHASE_CURRENT_SENSING) && !defined(THREE_PHASE_CURRENT_SENSING)
-#    error "Please define TWO_PHASE_CURRENT_SENSING or THREE_PHASE_CURRENT_SENSING in foc.h"
+#if !defined(TWO_PHASE_CURRENT_SENSING) \
+    && !defined(THREE_PHASE_CURRENT_SENSING)
+#    error \
+        "Please define TWO_PHASE_CURRENT_SENSING or THREE_PHASE_CURRENT_SENSING in foc.h"
 #endif
 
 #ifndef SQRT3
@@ -73,32 +75,38 @@ typedef struct {
     float q;
 } Park_t;
 
-static inline void ClarkeTransform(Phase_t* in, Clark_t* out) {
+static inline void ClarkeTransform(const Phase_t* in, Clark_t* out) {
 #if (defined(TWO_PHASE_CURRENT_SENSING))
     out->a = in->a;
-    out->b = 0.57735026919F * (in->a + 2.0F * in->b);  // 0.57735026919F 1/√3
+    out->b = 0.57735026919F
+             * (in->a + 2.0F * in->b);  // 0.57735026919F 1/√3
 #elif (defined(THREE_PHASE_CURRENT_SENSING))
     out->a = 0.66666666667F * in->a - 0.33333333333F * (in->b + in->c);
     out->b = 0.57735026919F * (in->b - in->c);  // 0.57735026919F 1/√3
 #endif
 }
-static inline void ParkTransform(Clark_t* in, float theta, Park_t* out) {
+static inline void ParkTransform(const Clark_t* in,
+                                 float          theta,
+                                 Park_t*        out) {
     float_t cos_theta = COS(theta);
     float_t sin_theta = SIN(theta);
     out->d            = in->a * cos_theta + in->b * sin_theta;
     out->q            = -in->a * sin_theta + in->b * cos_theta;
 }
-static inline void InvParkTransform(Park_t* in, float theta, Clark_t* out) {
+static inline void InvParkTransform(const Park_t* in,
+                                    float         theta,
+                                    Clark_t*      out) {
     float_t cos_theta = COS(theta);
     float_t sin_theta = SIN(theta);
     out->a            = in->d * cos_theta - in->q * sin_theta;
     out->b            = in->d * sin_theta + in->q * cos_theta;
 }
-static inline void InvClarkeTransform(Clark_t* in, Phase_t* out) {
+static inline void InvClarkeTransform(const Clark_t* in, Phase_t* out) {
 #if (defined(TWO_PHASE_CURRENT_SENSING))
     // For two-phase current sensing, Ic is calculated as -(Ia + Ib)
     out->a = in->a;
-    out->b = (-0.5F) * in->a + 0.86602540378F * in->b;  // 0.86602540378F = sqrt(3)/2
+    out->b = (-0.5F) * in->a
+             + 0.86602540378F * in->b;  // 0.86602540378F = sqrt(3)/2
     out->c = (-0.5F) * in->a - 0.86602540378F * in->b;
 #elif (defined(THREE_PHASE_CURRENT_SENSING))
     // For three-phase current sensing

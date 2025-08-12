@@ -1,33 +1,23 @@
 #include "hardware_interface.h"
-
+#include <stdbool.h>
 #include <stddef.h>
-
 #include "adc.h"
 #include "can.h"
 #include "filter.h"
 #include "gpio.h"
-#include "main_int.h"
+#include "motor.h"
 #include "position_sensor.h"
-#include "stdbool.h"
+#include "protect.h"
+#include "reciprocal.h"
 #include "theta_calc.h"
 #include "tim.h"
+#include "transformation.h"
 #include "usart.h"
 
-volatile uint16_t Device_Stop = 1;
+static volatile uint16_t Stop           = 0x0001U;
+static bool              Software_BRK   = false;
+static volatile bool     usart_dma_busy = false;
 
-bool                Software_BRK = false;
-Protect_Parameter_t Protect      = {.Udc_rate        = Voltage_Rate,
-                                    .Udc_fluctuation = Voltage_Fluctuation,
-                                    .I_Max           = Current_Threshold,
-                                    .Temperature     = Temperature_Threshold,
-                                    .Flag            = No_Protect};
-
-static volatile bool usart_dma_busy = false;
-
-static inline void CurrentProtect(float Ia, float Ib, float Ic, float I_Max);
-static inline void VoltageProtect(float Udc,
-                                  float Udc_rate,
-                                  float Udc_fluctuation);
 static inline bool can_receive_to_frame(
     const can_receive_message_struct* hw_msg, can_frame_t* frame);
 
@@ -76,24 +66,37 @@ void Peripheral_SCISendCallback(void) {
     usart_dma_busy = false;
 }
 
-void Peripheral_GateState(void) {
-    if (Protect.Flag != No_Protect) {
-        Device_Stop = 1;
+bool Peripheral_Get_SoftwareBrk() {
+    return Software_BRK;
+}
+
+void Peripheral_Set_Stop(bool stop) {
+    Stop = stop ? 0x0001U : 0x0000U;
+}
+
+bool Peripheral_Get_Stop() {
+    return Stop != 0x0000U ? true : false;
+}
+
+bool Peripheral_Update_Break() {
+    if (Protect_Validate_Flag()) {
+        Stop = 0x0001U;
     }
-    if (Device_Stop) {
+    if (Stop) {
         // 软件触发 BRK
         Software_BRK = true;
         TIMER_SWEVG(TIMER0) |= TIMER_SWEVG_BRKG;
     } else {
-        // Device_Stop = 0，尝试恢复
+        // Stop = 0，尝试恢复
         if (gpio_input_bit_get(GPIOE, GPIO_PIN_15) == SET) {
             Software_BRK = false;
             timer_primary_output_config(TIMER0, ENABLE);  // 恢复 MOE
-            Device_Stop = 0;
+            Stop = 0;
         } else {
-            Device_Stop = 1;
+            Stop = 1;
         }
     }
+    return Stop != 0 ? true : false;
 }
 
 void Peripheral_EnableHardwareProtect(void) {
@@ -104,138 +107,62 @@ void Peripheral_DisableHardwareProtect(void) {
     timer_interrupt_disable(TIMER0, TIMER_INT_BRK);  // 禁用BRK中断
 }
 
-void Peripheral_InitProtectParameter(void) {
-    Protect.Udc_rate        = Voltage_Rate;
-    Protect.Udc_fluctuation = Voltage_Fluctuation;
-    Protect.Flag            = No_Protect;
-    // Protect.I_Max = Current_Threshold; Current limit may change during
-    // operation
-    Protect.Temperature = Temperature_Threshold;
-    FOC_UpdateMaxCurrent(Protect.I_Max);
-}
-
 // recommended to operate register if possible //
-void Peripheral_SetPWMChangePoint(void) {
-    float Tcm1 = 0.0F;
-    float Tcm2 = 0.0F;
-    float Tcm3 = 0.0F;
-    FOC_OutputCompare(&Tcm1, &Tcm2, &Tcm3);
-    Set_PWM_Compare(Tcm1, Tcm2, Tcm3);
+void Peripheral_Set_PWMChangePoint(Phase_t tcm) {
+    Set_PWM_Compare(tcm.a, tcm.b, tcm.c);
 }
 
-void Peripheral_UpdateUdc(void) {
-    float Udc     = 0.0F;
-    float inv_Udc = 0.0F;
-    ADC_Read_Regular(&Udc, &inv_Udc);
-    VoltageProtect(Udc, Protect.Udc_rate, Protect.Udc_fluctuation);
-    FOC_UpdateVoltage(Udc, inv_Udc);
+FloatWithInv_t Peripheral_UpdateUdc(void) {
+    float voltage_bus     = Adc_Get_VoltageBus();
+    float voltage_bus_inv = Adc_Get_VoltageBusInv();
+    if (Protect_BusVoltage(voltage_bus)) {
+        Stop = 0x0001U;
+    }
+
+    FloatWithInv_t result;
+    result.val = voltage_bus;
+    result.inv = voltage_bus_inv;
+    return result;
 }
 
-void Peripheral_UpdateCurrent(void) {
-    float Ia = 0.0F;
-    float Ib = 0.0F;
-    float Ic = 0.0F;
-    ADC_Read_Injection(&Ia, &Ib, &Ic);
-    CurrentProtect(Ia, Ib, Ic, Protect.I_Max);
-    FOC_UpdateCurrent(Ia, Ib, Ic);
+Phase_t Peripheral_Get_PhaseCurrent(void) {
+    Phase_t current_phase;
+    Adc_Get_ThreePhaseCurrent(
+        &current_phase.a, &current_phase.b, &current_phase.c);
+    Protect_OverCurrent(current_phase);
+    return current_phase;
 }
 
-void Peripheral_UpdatePosition(Motor_Parameter_t* motor) {
+AngleResult_t Peripheral_UpdatePosition() {
     uint16_t position_data = 0;
     ReadPositionSensor(&position_data);
 
-    // 更新位置数据
-    motor->Position = (float) position_data;
+    Motor_Set_Position(position_data);
 
-    // 位置传感器数据处理
-    float delta = motor->Position - motor->Position_Offset;
-    if (delta < 0) {
-        delta += (float) (motor->Position_Scale + 1);
+    AngleResult_t result;
+    result.theta = Motor_Get_Theta_Elec();
+    result.speed = Motor_Get_Speed();
+    return result;
+}
+
+void Peripheral_Update_Temperature(void) {
+    float temp = Adc_Get_Temperature();
+    if (Protect_Get_FanState(temp)) {
+        gpio_bit_set(FAN_OPEN_PORT, FAN_OPEN_PIN);
+    } else {
+        gpio_bit_reset(FAN_OPEN_PORT, FAN_OPEN_PIN);
     }
-
-    motor->Mech_Theta = delta * motor->theta_factor;
-
-    motor->Elec_Theta = motor->Mech_Theta * motor->Pn;
-    motor->Elec_Theta = wrap_theta_2pi(motor->Elec_Theta);
-
-    // 速度计算 - 通过指针访问转速环频率
-    if (motor->speed_Freq_ptr != NULL) {
-        static uint16_t cnt_speed = 0;
-        cnt_speed++;
-        if (cnt_speed >= SPEED_LOOP_PRESCALER) {
-            cnt_speed = 0;
-
-            static float last_theta  = 0.0F;
-            float        delta_theta = motor->Mech_Theta - last_theta;
-
-            delta_theta = wrap_theta_pi(delta_theta);
-
-            last_theta = motor->Mech_Theta;
-
-            motor->Speed = radps2rpm(delta_theta * (*motor->speed_Freq_ptr));
-
-            static LowPassFilter_t hLPF_speed = {.initialized = false};
-            if (!hLPF_speed.initialized) {  // 初始化低通滤波器
-                LowPassFilter_Init(&hLPF_speed, 10.0F, *motor->speed_Freq_ptr);
-                hLPF_speed.initialized = true;
-            }
-            motor->Speed = LowPassFilter_Update(&hLPF_speed, motor->Speed);
-        }
+    if (Protect_Temperature(temp)) {
+        Stop = 0x0001U;
     }
 }
 
 void Peripheral_CalibrateADC(void) {
-    ADC_Calibration();
+    Adc_Calibrate_CurrentOffset();
 }
 
-void Peripheral_GetSystemFrequency(void) {
-    float f       = 0.0F;
-    float Ts      = 0.0F;
-    float PWM_ARR = 0.0F;
-    cal_fmain(&f, &Ts, &PWM_ARR);
-    FOC_UpdateMainFrequency(f, Ts, PWM_ARR);
-}
-
-void Peripheral_TemperatureProtect(void) {
-    if (Temperature > 0.35 * Protect.Temperature) {
-        gpio_bit_set(FAN_OPEN_PORT, FAN_OPEN_PIN);
-    }
-    if (Temperature > Protect.Temperature) {
-        Device_Stop = 1;
-        Protect.Flag |= Over_Heat;
-    }
-}
-
-static inline void CurrentProtect(float Ia, float Ib, float Ic, float I_Max) {
-    if ((Ia > 0.9 * I_Max || Ia < -0.9 * I_Max)
-        || (Ib > 0.9 * I_Max || Ib < -0.9 * I_Max)
-        || (Ic > 0.9 * I_Max || Ic < -0.9 * I_Max)) {
-        static uint16_t Current_Count = 0;
-        Current_Count++;
-        if (Current_Count > 10) {
-            Device_Stop = 1;
-            Protect.Flag |= Over_Current;
-            Current_Count = 0;
-        }
-    }
-    if ((Ia > I_Max || Ia < -1 * I_Max) || (Ib > I_Max || Ib < -1 * I_Max)
-        || (Ic > I_Max || Ic < -1 * I_Max)) {
-        Device_Stop = 1;
-        Protect.Flag |= Over_Maximum_Current;
-    }
-}
-
-static inline void VoltageProtect(float Udc,
-                                  float Udc_rate,
-                                  float Udc_fluctuation) {
-    if ((Udc > Udc_rate + Udc_fluctuation)) {
-        Device_Stop = 1;
-        Protect.Flag |= Over_Voltage;
-    }
-    if ((Udc < Udc_rate - Udc_fluctuation)) {
-        Device_Stop = 1;
-        Protect.Flag |= Low_Voltage;
-    }
+void Peripheral_Reset_ProtectFlag(void) {
+    Protect_Reset_Flag();
 }
 
 static inline bool can_receive_to_frame(

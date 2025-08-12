@@ -1,13 +1,18 @@
 #ifndef _ADC_H
 #define _ADC_H
 
-// Udc, inverse Udc, Temperature is readed in main loop
-extern float Temperature;
+// Udc, inverse Udc, Adc_Temperature is readed in main loop
+extern float Adc_Temperature;
 
-void ADC_Init(void);
-void ADC_DMA_Init(void);
-void ADC_Calibration(void);
-void ADC_Read_Injection(float *Ia, float *Ib, float *Ic);
-void ADC_Read_Regular(float *Udc, float *inv_Udc);
+void Adc_Init_GPIO(void);
+void Adc_Init_DMA(void);
+void Adc_Initialization(void);
+void Adc_Calibrate_CurrentOffset(void);
+void Adc_Read_Regular(float* Udc, float* inv_Udc);
+
+float Adc_Get_Temperature(void);
+float Adc_Get_VoltageBus(void);
+float Adc_Get_VoltageBusInv(void);
+void  Adc_Get_ThreePhaseCurrent(float* Ia, float* Ib, float* Ic);
 
 #endif
