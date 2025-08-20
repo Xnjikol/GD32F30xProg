@@ -3,7 +3,6 @@
 #include "foc.h"
 #include "hardware_interface.h"
 #include "reciprocal.h"
-#include "theta_calc.h"
 #include "transformation.h"
 
 #include <stdlib.h>
@@ -20,6 +19,8 @@ static inline void MainInt_Update_FocCurrent(void) {
 static inline void MainInt_Check_ProtectFlag(void) {
     bool stop = Peripheral_Update_Break();
     Foc_Set_ResetFlag(stop);
+    stop = Foc_Get_ResetFlag();
+    Peripheral_Set_Stop(stop);
 }
 
 static inline void MainInt_Update_BusVoltage(void) {
@@ -44,6 +45,23 @@ static inline void MainInt_Initialization(void) {
     Foc_Set_Mode(IDLE);
 }
 
+static inline void MainInt_Run_Foc(void) {
+    Foc_Update_Main();
+}
+
+static inline void MainInt_Exit(void) {
+    Peripheral_Set_Stop(true);       // 停止所有操作
+    Foc_Set_ResetFlag(true);         // 设置复位标志
+    Foc_Set_Mode(IDLE);              // 切换到IDLE模式
+    Peripheral_Reset_ProtectFlag();  // 重置保护标志
+    Peripheral_DisableHardwareProtect();
+}
+
+static inline void MainInt_SVPWM(void) {
+    Phase_t tcm = Foc_Get_Tcm();  // 获取三相PWM时间
+    Peripheral_Set_PWMChangePoint(tcm);
+}
+
 /*!
     \brief      主中断函数
     \param[in]  none
@@ -51,13 +69,11 @@ static inline void MainInt_Initialization(void) {
     \retval     none
 */
 void Main_Int_Handler(void) {
-    // 基础外设更新（无论初始化状态如何都要执行）
     MainInt_Update_FocCurrent();
     MainInt_Check_ProtectFlag();
     MainInt_Update_BusVoltage();
     MainInt_Update_Angle_and_Speed();
 
-    // todo: 这里需要根据实际情况更新FOC相关参数
     switch (MainInt_State) {
     case INIT: {
         MainInt_Initialization();
@@ -66,14 +82,16 @@ void Main_Int_Handler(void) {
 
     case RUNNING: {
         // 运行状态：正常FOC控制
-
-        Foc_Update_UdqRef();
-        Phase_t tcm = Foc_Get_Tcm();  // 获取三相PWM时间
-        Peripheral_Set_PWMChangePoint(tcm);
+        MainInt_Run_Foc();
         break;
     }
 
-    default:
+    case EXIT: {
+        // 退出状态：进行必要的清理
+        MainInt_Exit();
         break;
     }
+    }
+
+    MainInt_SVPWM();
 }

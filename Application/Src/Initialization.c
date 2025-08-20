@@ -15,6 +15,8 @@
 #include "tim.h"
 #include "usart.h"
 
+volatile uint32_t DWT_Count = 0;
+
 bool Init_Foc_Parameters(void) {
     SystemTimeConfig_t sys_time_cfg
         = {.current = {.val = MAIN_LOOP_FREQ, .inv = MAIN_LOOP_TIME},
@@ -80,7 +82,7 @@ bool Init_Protect_Parameters(void) {
            .I_Max           = PROTECT_CURRENT_MAX,
            .Temperature     = PROTECT_TEMPERATURE,
            .Flag            = No_Protect};
-    return Protect_Init(&protect_param);
+    return Protect_Initialization(&protect_param);
 }
 
 bool Initialization_Variables(void) {
@@ -90,15 +92,48 @@ bool Initialization_Variables(void) {
 }
 
 /* open fan and relay */
-void Init_Relay_Fan(void) {
+static inline void Init_Relay_Fan(void) {
     gpio_bit_set(SOFT_OPEN_PORT, SOFT_OPEN_PIN);
     // gpio_bit_set(FAN_OPEN_PORT, FAN_OPEN_PIN);
 }
 
-bool Initialization_Execute(void) {
+static inline void Init_Dwt(void) {
+    CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;  // 使能DWT模块
+    DWT->CYCCNT = 0;                                 // 清零
+    DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;             // 启用CYCCNT
+}
+
+/*!
+    \brief      configure the nested vectored interrupt controller
+    \param[in]  none
+    \param[out] none
+    \retval     none
+*/
+static inline void Init_Nvic(void) {
+    // 设置中断优先级分组
+    nvic_priority_group_set(NVIC_PRIGROUP_PRE2_SUB2);
+    nvic_irq_enable(TIMER0_BRK_IRQn, 0, 0);
+    nvic_irq_enable(EXTI5_9_IRQn, 1U, 0U);
+    nvic_irq_enable(USBD_LP_CAN0_RX0_IRQn, 2, 0);
+    nvic_irq_enable(ADC0_1_IRQn, 3, 0);
+    nvic_irq_enable(TIMER3_IRQn, 4, 0);
+
+    nvic_irq_enable(DMA0_Channel3_IRQn, 5, 0);
+    /* SysTick_IRQn 009U */
+
+    adc_interrupt_enable(ADC0, ADC_INT_EOIC);
+}
+
+static inline void Init_Exti(void) {
+    gpio_exti_source_select(GPIO_PORT_SOURCE_GPIOB, GPIO_PIN_SOURCE_7);
+    exti_init(EXTI_7, EXTI_INTERRUPT, EXTI_TRIG_FALLING);
+    exti_interrupt_flag_clear(EXTI_7);
+}
+
+bool Initialization_System(void) {
     systick_config();  // systick provides delay_ms
     TIM1_Init();       // TIM1 provides delay_us
-    Main_Dwt_Init();
+    Init_Dwt();
     /* initialize Serial port */
     //< For USART DMA, USART must be initialized before DMA >//
     USART_Init(&husart0);
@@ -115,12 +150,12 @@ bool Initialization_Execute(void) {
     /* initialize ADC */
     Adc_Initialization();
     /* initialize CAN and CCP */
-    CAN_Init();
+    Can_Initialization();
     /* open fan and relay */
     Init_Relay_Fan();
     /* configure NVIC and enable interrupt */
-    Main_Config_Exti();
-    Main_Nvic_config();
-    COM_ProtocolInit();
+    Init_Exti();
+    Init_Nvic();
+    Com_Initialization();
     return true;
 }

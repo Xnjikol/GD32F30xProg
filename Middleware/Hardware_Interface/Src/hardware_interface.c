@@ -66,7 +66,7 @@ void Peripheral_SCISendCallback(void) {
     usart_dma_busy = false;
 }
 
-bool Peripheral_Get_SoftwareBrk() {
+bool Peripheral_Get_SoftwareBrk(void) {
     return Software_BRK;
 }
 
@@ -74,11 +74,11 @@ void Peripheral_Set_Stop(bool stop) {
     Stop = stop ? 0x0001U : 0x0000U;
 }
 
-bool Peripheral_Get_Stop() {
+bool Peripheral_Get_Stop(void) {
     return Stop != 0x0000U ? true : false;
 }
 
-bool Peripheral_Update_Break() {
+bool Peripheral_Update_Break(void) {
     if (Protect_Validate_Flag()) {
         Stop = 0x0001U;
     }
@@ -97,6 +97,10 @@ bool Peripheral_Update_Break() {
         }
     }
     return Stop != 0 ? true : false;
+}
+
+bool Peripheral_Get_HardwareBrk(void) {
+    return gpio_input_bit_get(GPIOE, GPIO_PIN_15) == SET;
 }
 
 void Peripheral_EnableHardwareProtect(void) {
@@ -119,9 +123,8 @@ FloatWithInv_t Peripheral_UpdateUdc(void) {
         Stop = 0x0001U;
     }
 
-    FloatWithInv_t result;
-    result.val = voltage_bus;
-    result.inv = voltage_bus_inv;
+    FloatWithInv_t result
+        = {.val = voltage_bus, .inv = voltage_bus_inv};
     return result;
 }
 
@@ -129,7 +132,7 @@ Phase_t Peripheral_Get_PhaseCurrent(void) {
     Phase_t current_phase;
     Adc_Get_ThreePhaseCurrent(
         &current_phase.a, &current_phase.b, &current_phase.c);
-    Protect_OverCurrent(current_phase);
+    Protect_PhaseCurrent(current_phase);
     return current_phase;
 }
 

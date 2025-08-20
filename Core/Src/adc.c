@@ -40,14 +40,6 @@ void Adc_Get_ThreePhaseCurrent(float* Ia, float* Ib, float* Ic) {
     *Ic = 0.025832277036754f * (adc_value_ch2 - adc_ch2_offset);
 }
 
-void Adc_Read_Regular(float* Udc, float* inv_Udc) {
-    // //< 916 for 224V 58 for 0V >//
-    dc_raw          = adc_value[0] & 0xFFFF;
-    *Udc            = 0.2686202686202686f * ((float)dc_raw - 88.0f);
-    *inv_Udc        = (1.0f / *Udc) > 0.01f ? 0.0f : (1.0f / *Udc);
-    Adc_Temperature = adc_to_temp(adc_value[1] & 0xFFFF);
-}
-
 void Adc_Init_DMA(void) {
     /* ADC_DMA_channel configuration */
     dma_parameter_struct dma_data_parameter;
@@ -153,14 +145,14 @@ float Adc_Get_Temperature(void) {
 }
 
 float Adc_Get_VoltageBus(void) {
-    dc_raw            = adc_value[0] & 0xFFFF;
-    Adc_VoltageBus    = 0.2686202686202686f * ((float)dc_raw - 88.0f);
-    Adc_VoltageBusInv = (1.0f / Adc_VoltageBus) > 0.01f
-                            ? 0.0f
-                            : (1.0f / Adc_VoltageBus);
+    dc_raw         = adc_value[0] & 0xFFFF;
+    Adc_VoltageBus = 0.2686202686202686f * ((float)dc_raw - 88.0f);
     return Adc_VoltageBus;
 }
 
 float Adc_Get_VoltageBusInv(void) {
+    float bus_voltage_inv = 1.0F / Adc_VoltageBus;
+    Adc_VoltageBusInv
+        = bus_voltage_inv > 0.01F ? 0.0F : bus_voltage_inv;
     return Adc_VoltageBusInv;
 }

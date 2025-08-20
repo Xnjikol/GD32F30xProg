@@ -61,7 +61,7 @@ bool CAN_Buffer_Get(can_receive_message_struct *msg)
     \param[out] none
     \retval     none
 */
-bool CAN_Init(void)
+bool Can_Initialization(void)
 {
     CAN_HandleTypeDef* hcan = &hcan0;
   if (hcan == NULL || hcan->Instance == 0)

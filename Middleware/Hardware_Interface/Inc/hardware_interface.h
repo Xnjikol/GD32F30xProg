@@ -8,10 +8,11 @@
 #include "theta_calc.h"
 #include "transformation.h"
 
-bool Peripheral_Get_SoftwareBrk();
+bool Peripheral_Get_SoftwareBrk(void);
+bool Peripheral_Get_HardwareBrk(void);
 void Peripheral_Set_Stop(bool stop);
-bool Peripheral_Get_Stop();
-bool Peripheral_Update_Break();
+bool Peripheral_Get_Stop(void);
+bool Peripheral_Update_Break(void);
 void Peripheral_Set_PWMChangePoint(Phase_t tcm);
 
 bool Peripheral_CANSend(const can_frame_t* frame);

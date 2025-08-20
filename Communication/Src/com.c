@@ -10,7 +10,7 @@ static inline bool CAN_to_CCP(const can_frame_t* msg, ccp_message_t* ccp_msg);
 static inline void COM_CANProtocolDispatcher(can_rx_message_t* msg, const can_frame_t* frame);
 static inline void COM_CANProtocolProcess(can_rx_message_t* msg);
 
-void COM_ProtocolInit(void)
+void Com_Initialization(void)
 {
   ccpInit();
 }

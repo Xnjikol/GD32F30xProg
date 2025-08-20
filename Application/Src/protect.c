@@ -8,7 +8,7 @@ static float          Protect_CurrentMax = 0.0F;
 static float          Protect_TempMax    = 0.0F;
 static Protect_Flag_t Flag               = {0};
 
-bool Protect_Init(const Protect_Parameter_t* param) {
+bool Protect_Initialization(const Protect_Parameter_t* param) {
     if (param == NULL) {
         return false;
     }
@@ -20,23 +20,24 @@ bool Protect_Init(const Protect_Parameter_t* param) {
     return true;
 }
 
-void Protect_OverCurrent(Phase_t current) {
+bool Protect_PhaseCurrent(Phase_t current) {
     float max = Protect_CurrentMax;
     if ((current.a > 0.9 * max || current.a < -0.9 * max)
         || (current.b > 0.9 * max || current.b < -0.9 * max)
         || (current.c > 0.9 * max || current.c < -0.9 * max)) {
-        static uint16_t Current_Count = 0;
-        Current_Count++;
-        if (Current_Count > 10) {
-            Flag |= Over_Current;
-            Current_Count = 0;
+        static uint16_t cnt = 0;
+        cnt++;
+        if (cnt > 10) {
+            Flag |= Over_Avg_Current;
+            cnt = 0;
         }
     }
     if ((current.a > max || current.a < -1 * max)
         || (current.b > max || current.b < -1 * max)
         || (current.c > max || current.c < -1 * max)) {
-        Flag |= Over_Maximum_Current;
+        Flag |= Over_Max_Current;
     }
+    return Flag & (Over_Avg_Current | Over_Max_Current);
 }
 
 bool Protect_BusVoltage(float bus_voltage) {

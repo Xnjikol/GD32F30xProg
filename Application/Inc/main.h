@@ -34,10 +34,5 @@ OF SUCH DAMAGE.
 
 #ifndef MAIN_H
 #define MAIN_H
-#include <stdbool.h>
-
-void Main_Config_Exti(void);
-void Main_Dwt_Init(void);
-void Main_Nvic_config(void);
 
 #endif /* MAIN_H */

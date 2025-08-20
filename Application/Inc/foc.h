@@ -35,7 +35,7 @@ typedef struct {
     bool   use_sensor;  // 是否使用传感器
 } IF_Parameter_t;
 
-void      Foc_Set_SampleTime(SystemTimeConfig_t* config);
+void      Foc_Set_SampleTime(const SystemTimeConfig_t* config);
 void      Foc_Set_Mode(FocMode_t mode);
 FocMode_t Foc_Get_Mode(void);
 void      Foc_Set_ResetFlag(bool reset);
@@ -64,6 +64,6 @@ void      Foc_Set_Pid_CurD_Handler(PID_Handler_t* handler);
 void      Foc_Set_Pid_CurQ_Handler(PID_Handler_t* handler);
 void      Foc_Set_Ramp_Speed_Handler(RampGenerator_t* handler);
 
-Park_t Foc_Update_UdqRef(void);
+Park_t Foc_Update_Main(void);
 
 #endif /* _FOC_H_ */

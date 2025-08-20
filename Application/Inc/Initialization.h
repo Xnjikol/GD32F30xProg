@@ -27,6 +27,6 @@ bool Initialization_Variables(void);
  * @retval true  - 初始化成功
  * @retval false - 初始化失败
  */
-bool Initialization_Execute(void);
+bool Initialization_System(void);
 
 #endif /* INITIALIZATION_H */

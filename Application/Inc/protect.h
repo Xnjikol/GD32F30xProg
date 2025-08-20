@@ -25,13 +25,13 @@
  * @note   使用位域方式定义，便于进行位操作和状态合并
  */
 typedef enum {
-    No_Protect           = 0,      /* 无保护标志 */
-    Over_Current         = 1 << 0, /* 过流保护 */
-    Over_Maximum_Current = 1 << 1, /* 超过最大允许电流 */
-    Over_Voltage         = 1 << 2, /* 过压保护 */
-    Low_Voltage          = 1 << 3, /* 欠压保护 */
-    Hardware_Fault       = 1 << 4, /* 硬件故障 */
-    Over_Heat            = 1 << 5  /* 过热保护 */
+    No_Protect       = 0,      /* 无保护标志 */
+    Over_Avg_Current = 1 << 0, /* 过流保护 */
+    Over_Max_Current = 1 << 1, /* 超过最大允许电流 */
+    Over_Voltage     = 1 << 2, /* 过压保护 */
+    Low_Voltage      = 1 << 3, /* 欠压保护 */
+    Hardware_Fault   = 1 << 4, /* 硬件故障 */
+    Over_Heat        = 1 << 5  /* 过热保护 */
 } Protect_Flag_t;
 
 /*-------------------- 保护参数结构体定义 --------------------*/
@@ -54,13 +54,15 @@ typedef struct {
  * @retval true   初始化成功
  * @retval false  初始化失败
  */
-bool Protect_Init(const Protect_Parameter_t* param);
+bool Protect_Initialization(const Protect_Parameter_t* param);
 
 /**
  * @brief  电流保护处理函数
- * @param  current 三相电流值结构体
+ * @param  current 三相电流值结构体（Phase_t 类型，包含各相电流）
+ * @retval true   检测到过流
+ * @retval false  电流正常
  */
-void Protect_OverCurrent(Phase_t current);
+bool Protect_PhaseCurrent(Phase_t current);
 
 /**
  * @brief  母线电压保护处理函数

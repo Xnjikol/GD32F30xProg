@@ -8,7 +8,6 @@ void Adc_Init_GPIO(void);
 void Adc_Init_DMA(void);
 void Adc_Initialization(void);
 void Adc_Calibrate_CurrentOffset(void);
-void Adc_Read_Regular(float* Udc, float* inv_Udc);
 
 float Adc_Get_Temperature(void);
 float Adc_Get_VoltageBus(void);

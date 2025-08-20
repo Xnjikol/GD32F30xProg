@@ -31,7 +31,7 @@ static PID_Handler_t   Foc_Pid_CurQ_Handler   = {0};
 static RampGenerator_t Foc_Ramp_Speed_Handler = {0};
 static SineWave_t      Foc_SineWave_Handler   = {0};
 
-void Foc_Set_SampleTime(SystemTimeConfig_t* config) {
+void Foc_Set_SampleTime(const SystemTimeConfig_t* config) {
     Foc_Current_Ts      = config->current.val;  // 电流环采样周期
     Foc_Current_Freq    = config->current.inv;  // 电流环频率
     Foc_Speed_Ts        = config->speed.val;    // 转速环采样周期
@@ -52,7 +52,17 @@ void Foc_Set_ResetFlag(bool reset) {
 }
 
 bool Foc_Get_ResetFlag(void) {
-    return Foc_Reset;  // 获取复位标志状态
+    static FocMode_t last_mode = IDLE;
+    if (last_mode != Foc_Mode) {
+        // 防止意外切换模式
+        last_mode = Foc_Mode;
+        return true;
+    }
+    if (Foc_Mode == VF_MODE || Foc_Mode == IF_MODE
+        || Foc_Mode == Speed) {
+        return Foc_Reset;  // 获取复位标志状态
+    }
+    return true;  // 在IDLE模式下始终返回true
 }
 
 void Foc_Set_Angle(float angle) {
@@ -146,7 +156,7 @@ void Foc_Set_Ramp_Speed_Handler(RampGenerator_t* handler) {
     Foc_Ramp_Speed_Handler = *handler;  // 设置速度环斜坡生成器
 }
 
-static inline Phase_t SVPWM_Generate(Clark_t u_ref, float inv_Vdc) {
+static inline Phase_t Foc_Calc_SVPWM(Clark_t u_ref, float inv_Vdc) {
     float   alpha  = u_ref.a;
     float   beta   = u_ref.b;
     uint8_t sector = 0;
@@ -258,8 +268,12 @@ static inline Phase_t SVPWM_Generate(Clark_t u_ref, float inv_Vdc) {
 }
 
 Phase_t Foc_Get_Tcm(void) {
+    Phase_t tcm = {.a = 0.5F, .b = 0.5F, .c = 0.5F};
+    if (Foc_Reset) {
+        return tcm;  // 如果复位标志为真，直接返回零值
+    }
     // 生成三相PWM时间
-    Phase_t tcm = SVPWM_Generate(Foc_Uclark_Ref, Foc_BusVoltage_Inv);
+    tcm = Foc_Calc_SVPWM(Foc_Uclark_Ref, Foc_BusVoltage_Inv);
     return tcm;  // 返回三相PWM时间
 }
 
@@ -306,9 +320,9 @@ static inline Park_t Foc_Update_VfMode(bool reset) {
                       Foc_VfParam.theta,
                       Foc_Current_Ts);
     }
-    output            = Foc_VfParam.vol_ref;  // 获取电压参考
-    Foc_VfParam.theta = SineWaveGenerator(&Foc_SineWave_Handler,
-                                          reset);  // 更新电压环角度
+    output    = Foc_VfParam.vol_ref;  // 获取电压参考
+    Foc_Theta = SineWaveGenerator(&Foc_SineWave_Handler,
+                                  reset);  // 更新电压环角度
 
     reset_prev = reset;
     return output;
@@ -319,7 +333,7 @@ static inline Park_t Foc_Update_IfMode(bool reset) {
     Park_t      output     = {0};
     // 如果传感器状态为启用，则直接使用参考值，否则使用正弦波生成器
     if (Foc_IfParam.use_sensor == true) {
-        Foc_VfParam.theta = Foc_VfParam.theta;
+        Foc_Theta = Foc_VfParam.theta;
     } else {
         if (reset_prev && !reset) {
             SineWave_Init(&Foc_SineWave_Handler,
@@ -328,8 +342,7 @@ static inline Park_t Foc_Update_IfMode(bool reset) {
                           Foc_IfParam.theta,
                           Foc_Current_Ts);
         }
-        Foc_VfParam.theta
-            = SineWaveGenerator(&Foc_SineWave_Handler, reset);
+        Foc_Theta = SineWaveGenerator(&Foc_SineWave_Handler, reset);
     }
 
     output = Foc_Update_CurrentLoop(
@@ -349,7 +362,7 @@ static inline Park_t Foc_Update_SpeedMode(bool reset) {
     return output;
 }
 
-Park_t Foc_Update_UdqRef(void) {
+Park_t Foc_Update_Main(void) {
     Park_t output = {0};
 
     switch (Foc_Mode) {
@@ -371,6 +384,6 @@ Park_t Foc_Update_UdqRef(void) {
         break;
     }
     }
-
+    Foc_Udq_Ref = output;
     return output;  // 返回DQ轴电压参考
 }

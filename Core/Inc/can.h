@@ -6,7 +6,7 @@
 #include "gd32f30x_can.h"
 #include "stdbool.h"
 
-bool CAN_Init(void);
+bool Can_Initialization(void);
 bool CAN_Buffer_Put(const can_receive_message_struct* msg);
 bool CAN_Buffer_Get(can_receive_message_struct *msg);
 
