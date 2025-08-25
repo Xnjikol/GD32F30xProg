@@ -13,6 +13,11 @@
     "cmake.generator": "Ninja",
     "files.associations": {
         "*.h": "c",
-        "random": "c"
+        "random": "c",
+        "cmath": "c",
+        "complex": "c",
+        "numbers": "c",
+        "compare": "c",
+        "cstdint": "c"
     }
 }

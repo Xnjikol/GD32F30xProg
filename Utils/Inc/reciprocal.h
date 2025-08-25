@@ -18,8 +18,14 @@
  *         预先计算并存储可以提高运行效率
  */
 typedef struct {
-    float val;  /* 原始浮点数值 */
-    float inv;  /* 对应的倒数值(1/val) */
+    float val; /* 原始浮点数值 */
+    float inv; /* 对应的倒数值(1/val) */
 } FloatWithInv_t;
+
+typedef struct {
+    FloatWithInv_t current;
+    FloatWithInv_t speed;
+    float          prescaler;  // 转速环分频数
+} SystemTimeConfig_t;
 
 #endif /* UTILS_RECIPROCAL_H */

@@ -17,12 +17,6 @@ typedef enum {
 } FocMode_t;
 
 typedef struct {
-    FloatWithInv_t current;
-    FloatWithInv_t speed;
-    float          prescaler;  // 转速环分频数
-} SystemTimeConfig_t;
-
-typedef struct {
     Park_t vol_ref;  // 电压参考
     float  freq;
     float  theta;

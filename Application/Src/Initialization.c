@@ -8,6 +8,7 @@
 #include "gpio.h"
 #include "hardware_interface.h"
 #include "main.h"
+#include "motor.h"
 #include "parameters.h"
 #include "position_sensor.h"
 #include "protect.h"
@@ -15,13 +16,13 @@
 #include "tim.h"
 #include "usart.h"
 
-volatile uint32_t DWT_Count = 0;
+volatile uint32_t  DWT_Count = 0;
+SystemTimeConfig_t sys_time_cfg
+    = {.current   = {.val = MAIN_LOOP_TIME, .inv = MAIN_LOOP_FREQ},
+       .speed     = {.val = SPEED_LOOP_TIME, .inv = SPEED_LOOP_FREQ},
+       .prescaler = SPEED_LOOP_PRESCALER};
 
 bool Init_Foc_Parameters(void) {
-    SystemTimeConfig_t sys_time_cfg
-        = {.current = {.val = MAIN_LOOP_FREQ, .inv = MAIN_LOOP_TIME},
-           .speed   = {.val = SPEED_LOOP_FREQ, .inv = SPEED_LOOP_TIME},
-           .prescaler = SPEED_LOOP_PRESCALER};
     Foc_Set_SampleTime(&sys_time_cfg);
 
     Foc_Set_ResetFlag(true);  // 初始为复位状态
@@ -73,6 +74,24 @@ bool Init_Foc_Parameters(void) {
     Foc_Set_Ramp_Speed_Handler(&ramp_cfg);
 
     return true;
+}
+
+bool Init_Motor_Parameters(void) {
+    Motor_Parameter_t motor_param
+        = {.Rs              = MOTOR_RS,
+           .Ld              = MOTOR_LD,
+           .Lq              = MOTOR_LQ,
+           .Flux            = MOTOR_FLUX,
+           .Pn              = MOTOR_PN,
+           .inv_MotorPn     = 1.0F / MOTOR_PN,
+           .Resolver_Pn     = MOTOR_RESOLVER_PN,
+           .Position_Offset = MOTOR_POSITION_OFFSET,
+           .Position_Scale  = MOTOR_POSITION_SCALE,
+           .theta_factor    = MOTOR_THETA_FACTOR};
+    Motor_Initialization(&motor_param);
+    Motor_Set_SampleTime(&sys_time_cfg);
+    Motor_Set_SpeedPrescaler(SPEED_LOOP_PRESCALER);
+    Motor_Set_Filter(10.0F, SPEED_LOOP_FREQ);
 }
 
 bool Init_Protect_Parameters(void) {

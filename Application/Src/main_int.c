@@ -3,6 +3,7 @@
 #include "foc.h"
 #include "hardware_interface.h"
 #include "reciprocal.h"
+#include "sensorless_interface.h"
 #include "transformation.h"
 
 #include <stdlib.h>

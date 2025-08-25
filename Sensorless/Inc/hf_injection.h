@@ -1,7 +1,7 @@
 /**
  * @file hf_injection.h
  * @brief 脉振高频注入无传感器控制头文件
- * @author FRECON
+ * @author ZFY
  * @date 2025年7月25日
  * @version 1.0
  *
@@ -16,16 +16,10 @@
 extern "C" {
 #endif
 
-#include <math.h>
-#include <stdlib.h>
-
-
-#include "filter.h"
+#include <stdbool.h>
 #include "pll.h"
-#include "signal.h"
-#include "theta_calc.h"
+#include "reciprocal.h"
 #include "transformation.h"
-
 
 /**
  * @brief 高频注入参数结构体
@@ -33,157 +27,79 @@ extern "C" {
 typedef struct {
     float injection_freq;    /*!< 高频注入频率 (Hz) */
     float injection_voltage; /*!< 注入电压幅值 (V) */
-    float Ts;                /*!< 采样周期 (s) */
     float Ld;                /*!< d轴电感 (H) */
     float Lq;                /*!< q轴电感 (H) */
-    float delta_L;           /*!< 电感差值 Ld-Lq (H) */
-    float cutoff_freq_hf;    /*!< 高频滤波器截止频率 (Hz) */
-    float cutoff_freq_lf;    /*!< 低频滤波器截止频率 (Hz) */
-    float speed_threshold;   /*!< 切换到高频注入的速度阈值 (rad/s) */
-
-    /* PLL位置跟踪参数 */
-    float pll_kp;             /*!< PLL比例增益 */
-    float pll_ki;             /*!< PLL积分增益 */
-    float pll_kd;             /*!< PLL微分增益 */
-    float pll_max_speed;      /*!< PLL最大速度输出 (rad/s) */
-    float pll_min_speed;      /*!< PLL最小速度输出 (rad/s) */
-    float pll_integral_limit; /*!< PLL积分限幅 (rad/s) */
+    float delta_L;           /*!< 电感变化量 (H) */
 } hf_injection_params_t;
-
-/**
- * @brief 高频注入状态结构体
- */
-typedef struct {
-    /* 输入量 */
-    Clark_t* current_ab; /*!< αβ轴电流 (A) */
-    float    theta_est;  /*!< 估计的转子位置 (rad) */
-
-    /* 高频注入信号 */
-    Park_t  v_hf_dq; /*!< dq轴高频注入电压 (V) */
-    Clark_t v_hf_ab; /*!< αβ轴高频注入电压 (V) */
-
-    /* 高频电流响应 */
-    Park_t  i_hf_dq; /*!< dq轴高频电流 (A) */
-    Clark_t i_hf_ab; /*!< αβ轴高频电流 (A) */
-
-    /* 位置误差信号 */
-    float epsilon;          /*!< 位置误差信号 */
-    float epsilon_filtered; /*!< 滤波后的位置误差信号 */
-
-    /* 估计输出 */
-    float theta_hf; /*!< 高频注入估计位置 (rad) */
-    float omega_hf; /*!< 高频注入估计速度 (rad/s) */
-
-    /* 内部状态 */
-    SineWave_t hf_sin_gen;       /*!< 高频正弦波生成器 */
-    SineWave_t hf_cos_gen;       /*!< 高频正弦波生成器 */
-    float      hf_current_phase; /*!< 当前高频相位值 (rad) */
-    float      theta_integral;   /*!< 位置积分值 (rad) */
-    float      theta_prev;       /*!< 前一次位置估计值 (rad) */
-
-    /* 滤波器 */
-    LowPassFilter_t*  lpf_epsilon; /*!< 位置误差低通滤波器 */
-    BandPassFilter_t* bpf_current; /*!< 电流带通滤波器 */
-    HighPassFilter_t* hpf_current; /*!< 电流高通滤波器 */
-
-    /* PLL位置跟踪控制器 */
-    pll_t position_pll; /*!< PLL位置跟踪控制器 */
-
-    /* 状态标志 */
-    uint8_t is_enabled;   /*!< 高频注入使能标志 */
-    uint8_t is_converged; /*!< 收敛标志 */
-
-} hf_injection_state_t;
-
-/**
- * @brief 高频注入控制器结构体
- */
-typedef struct {
-    hf_injection_params_t params; /*!< 参数 */
-    hf_injection_state_t  state;  /*!< 状态 */
-} hf_injection_t;
 
 /* 函数声明 */
 
 /**
- * @brief 初始化高频注入观测器
- * @param hf_inj 高频注入观测器指针
- * @param params 参数结构体指针
- * @retval 0: 成功, -1: 失败
+ * @brief 设置高频注入采样时间配置
+ *
+ * 此函数根据提供的系统时间配置结构体，设置高频注入操作的采样时间。
+ *
+ * @param[in] time_config 指向 SystemTimeConfig_t 结构体的指针，包含所需的采样时间设置。
+ * @return 设置成功返回 true，否则返回 false。
  */
-int HF_Injection_Init(hf_injection_t*              hf_inj,
-                      const hf_injection_params_t* params);
+bool Hfi_Set_SampleTime(const SystemTimeConfig_t* time_config);
 
 /**
- * @brief 反初始化高频注入观测器
- * @param hf_inj 高频注入观测器指针
+ * @brief 设置高频注入观测器的参数
+ * 
+ * 此函数用于初始化高频注入观测器的相关参数，包括注入频率、注入电压、d轴电感、q轴电感以及电感差值。
+ * 
+ * @param params 指向高频注入参数结构体的指针，包含所需的各项参数。
+ * @return 无返回值。如果参数指针为NULL，则函数直接返回。
  */
-void HF_Injection_DeInit(hf_injection_t* hf_inj);
+bool Hfi_Initialization(const hf_injection_params_t* params);
 
 /**
- * @brief 生成高频注入信号
- * @param hf_inj 高频注入观测器指针
- * @param v_inj_ab 输出的αβ轴注入电压指针
+ * @brief 设置带通滤波器参数
+ * @param center_freq 中心频率 (Hz)
+ * @param band_width 带宽 (Hz)
+ * @param sample_freq 采样频率 (Hz)
  */
-void HF_Injection_GenerateSignal(hf_injection_t* hf_inj, Clark_t* v_inj_ab);
+void Hfi_Set_BandPassFilter(float center_freq,
+                            float band_width,
+                            float sample_freq);
 
 /**
- * @brief 处理高频电流响应并估计位置
- * @param hf_inj 高频注入观测器指针
- * @param current_ab αβ轴电流
+ * @brief 设置低通滤波器的参数。
+ * 
+ * 此函数用于配置低通滤波器的截止频率和采样频率。
+ * 
+ * @param cutoff_freq 低通滤波器的截止频率（单位：Hz）。
+ * @param sample_freq 信号的采样频率（单位：Hz）。
  */
-void HF_Injection_ProcessResponse(hf_injection_t* hf_inj,
-                                  const Clark_t*  current_ab);
+void Hfi_Set_LowPassFilter(float cutoff_freq, float sample_freq);
 
 /**
- * @brief 获取估计的转子位置
- * @param hf_inj 高频注入观测器指针
- * @retval 估计的转子位置 (rad)
+ * @brief 设置高频注入锁相环（PLL）参数
+ *
+ * 此函数用于配置高频注入算法中的锁相环（PLL）相关参数。
+ *
+ * @param pll_params 指向PLL参数结构体的指针，包含所需的配置参数。
  */
-float HF_Injection_GetPosition(const hf_injection_t* hf_inj);
+void Hfi_Set_PLL(const pll_params_t* pll_params);
 
-/**
- * @brief 获取估计的转子速度
- * @param hf_inj 高频注入观测器指针
- * @retval 估计的转子速度 (rad/s)
- */
-float HF_Injection_GetSpeed(const hf_injection_t* hf_inj);
+void Hfi_Set_Current(Clark_t current);
 
-/**
- * @brief 使能/禁用高频注入
- * @param hf_inj 高频注入观测器指针
- * @param enable 使能标志 (1: 使能, 0: 禁用)
- */
-void HF_Injection_Enable(hf_injection_t* hf_inj, uint8_t enable);
+void Hfi_Set_Enabled(bool enabled);
 
-/**
- * @brief 检查高频注入是否收敛
- * @param hf_inj 高频注入观测器指针
- * @retval 1: 已收敛, 0: 未收敛
- */
-uint8_t HF_Injection_IsConverged(const hf_injection_t* hf_inj);
+bool Hfi_Get_Enabled(void);
 
-/**
- * @brief 重置高频注入观测器状态
- * @param hf_inj 高频注入观测器指针
- */
-void HF_Injection_Reset(hf_injection_t* hf_inj);
+Park_t Hfi_Get_FilteredCurrent(void);
 
-/**
- * @brief 设置初始位置
- * @param hf_inj 高频注入观测器指针
- * @param initial_theta 初始位置 (rad)
- */
-void HF_Injection_SetInitialPosition(hf_injection_t* hf_inj,
-                                     float           initial_theta);
+Park_t Hfi_Get_Injection(void);
 
-/**
- * @brief 更新控制器参数
- * @param hf_inj 高频注入观测器指针
- * @param params 新的参数结构体指针
- */
-void HF_Injection_UpdateParams(hf_injection_t*              hf_inj,
-                               const hf_injection_params_t* params);
+Clark_t Hfi_Apply_Injection(Park_t vol);
+
+void Hfi_Update(void);
+
+void Hfi_Set_InitialPosition(float theta);
+
+AngleResult_t Hfi_Get_Result(void);
 
 #ifdef __cplusplus
 }

@@ -19,7 +19,7 @@
 /**
  * @brief 初始化PLL控制器
  */
-int PLL_Init(pll_t* pll, const pll_params_t* params) {
+int PLL_Init(Pll_Handler_t* pll, const pll_params_t* params) {
     if (pll == NULL || params == NULL) {
         return -1;
     }
@@ -54,7 +54,7 @@ int PLL_Init(pll_t* pll, const pll_params_t* params) {
 /**
  * @brief 反初始化PLL控制器
  */
-void PLL_DeInit(pll_t* pll) {
+void PLL_DeInit(Pll_Handler_t* pll) {
     if (pll == NULL) {
         return;
     }
@@ -66,7 +66,7 @@ void PLL_DeInit(pll_t* pll) {
 /**
  * @brief 更新PLL控制器
  */
-float PLL_Update(pll_t* pll, float error) {
+float PLL_Update(Pll_Handler_t* pll, float error) {
     if (pll == NULL || !pll->state.is_initialized || !pll->state.is_enabled) {
         return pll ? pll->state.theta : 0.0f;
     }
@@ -90,7 +90,7 @@ float PLL_Update(pll_t* pll, float error) {
 /**
  * @brief 获取估计的位置
  */
-float PLL_GetPosition(const pll_t* pll) {
+float PLL_GetPosition(const Pll_Handler_t* pll) {
     if (pll == NULL) {
         return 0.0f;
     }
@@ -101,7 +101,7 @@ float PLL_GetPosition(const pll_t* pll) {
 /**
  * @brief 获取估计的速度
  */
-float PLL_GetSpeed(const pll_t* pll) {
+float PLL_GetSpeed(const Pll_Handler_t* pll) {
     if (pll == NULL) {
         return 0.0f;
     }
@@ -112,7 +112,7 @@ float PLL_GetSpeed(const pll_t* pll) {
 /**
  * @brief 使能/禁用PLL控制器
  */
-void PLL_Enable(pll_t* pll, bool enable) {
+void PLL_Enable(Pll_Handler_t* pll, bool enable) {
     if (pll == NULL || !pll->state.is_initialized) {
         return;
     }
@@ -128,7 +128,7 @@ void PLL_Enable(pll_t* pll, bool enable) {
 /**
  * @brief 重置PLL控制器状态
  */
-void PLL_Reset(pll_t* pll) {
+void PLL_Reset(Pll_Handler_t* pll) {
     if (pll == NULL || !pll->state.is_initialized) {
         return;
     }
@@ -146,7 +146,7 @@ void PLL_Reset(pll_t* pll) {
 /**
  * @brief 设置初始位置
  */
-void PLL_SetInitialPosition(pll_t* pll, float initial_theta) {
+void PLL_SetInitialPosition(Pll_Handler_t* pll, float initial_theta) {
     if (pll == NULL || !pll->state.is_initialized) {
         return;
     }
@@ -158,7 +158,7 @@ void PLL_SetInitialPosition(pll_t* pll, float initial_theta) {
 /**
  * @brief 更新PLL参数
  */
-void PLL_UpdateParams(pll_t* pll, const pll_params_t* params) {
+void PLL_UpdateParams(Pll_Handler_t* pll, const pll_params_t* params) {
     if (pll == NULL || params == NULL || !pll->state.is_initialized) {
         return;
     }
@@ -184,7 +184,7 @@ void PLL_UpdateParams(pll_t* pll, const pll_params_t* params) {
 /**
  * @brief 检查PLL是否已初始化
  */
-bool PLL_IsInitialized(const pll_t* pll) {
+bool PLL_IsInitialized(const Pll_Handler_t* pll) {
     if (pll == NULL) {
         return false;
     }
@@ -195,7 +195,7 @@ bool PLL_IsInitialized(const pll_t* pll) {
 /**
  * @brief 检查PLL是否已使能
  */
-bool PLL_IsEnabled(const pll_t* pll) {
+bool PLL_IsEnabled(const Pll_Handler_t* pll) {
     if (pll == NULL) {
         return false;
     }

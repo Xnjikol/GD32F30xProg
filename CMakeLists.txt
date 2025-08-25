@@ -76,7 +76,7 @@ add_subdirectory(Communication)
 add_subdirectory(Middleware)
 add_subdirectory(Application)
 add_subdirectory(Utils)
-# add_subdirectory(Sensorless)
+add_subdirectory(Sensorless)
 
 # ==============================================================================
 # CMSIS-DSP 数学库配置

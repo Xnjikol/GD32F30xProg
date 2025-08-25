@@ -55,7 +55,7 @@ typedef struct
   pll_params_t params;  /**< PLL参数 */
   pll_state_t state;    /**< PLL状态 */
   PID_Handler_t pid;    /**< PID控制器 */
-} pll_t;
+} Pll_Handler_t;
 
 /**
  * @brief 初始化PLL控制器
@@ -64,14 +64,14 @@ typedef struct
  * @param params PLL参数指针
  * @return int 0:成功 -1:失败
  */
-int PLL_Init(pll_t* pll, const pll_params_t* params);
+int PLL_Init(Pll_Handler_t* pll, const pll_params_t* params);
 
 /**
  * @brief 反初始化PLL控制器
  * 
  * @param pll PLL控制器指针
  */
-void PLL_DeInit(pll_t* pll);
+void PLL_DeInit(Pll_Handler_t* pll);
 
 /**
  * @brief 更新PLL控制器
@@ -80,7 +80,7 @@ void PLL_DeInit(pll_t* pll);
  * @param error 位置误差输入 (rad)
  * @return float 估计的位置 (rad)
  */
-float PLL_Update(pll_t* pll, float error);
+float PLL_Update(Pll_Handler_t* pll, float error);
 
 /**
  * @brief 获取估计的位置
@@ -88,7 +88,7 @@ float PLL_Update(pll_t* pll, float error);
  * @param pll PLL控制器指针
  * @return float 估计位置 (rad)
  */
-float PLL_GetPosition(const pll_t* pll);
+float PLL_GetPosition(const Pll_Handler_t* pll);
 
 /**
  * @brief 获取估计的速度
@@ -96,7 +96,7 @@ float PLL_GetPosition(const pll_t* pll);
  * @param pll PLL控制器指针
  * @return float 估计速度 (rad/s)
  */
-float PLL_GetSpeed(const pll_t* pll);
+float PLL_GetSpeed(const Pll_Handler_t* pll);
 
 /**
  * @brief 使能/禁用PLL控制器
@@ -104,14 +104,14 @@ float PLL_GetSpeed(const pll_t* pll);
  * @param pll PLL控制器指针
  * @param enable 使能标志 (true:使能 false:禁用)
  */
-void PLL_Enable(pll_t* pll, bool enable);
+void PLL_Enable(Pll_Handler_t* pll, bool enable);
 
 /**
  * @brief 重置PLL控制器状态
  * 
  * @param pll PLL控制器指针
  */
-void PLL_Reset(pll_t* pll);
+void PLL_Reset(Pll_Handler_t* pll);
 
 /**
  * @brief 设置初始位置
@@ -119,7 +119,7 @@ void PLL_Reset(pll_t* pll);
  * @param pll PLL控制器指针
  * @param initial_theta 初始位置 (rad)
  */
-void PLL_SetInitialPosition(pll_t* pll, float initial_theta);
+void PLL_SetInitialPosition(Pll_Handler_t* pll, float initial_theta);
 
 /**
  * @brief 更新PLL参数
@@ -127,7 +127,7 @@ void PLL_SetInitialPosition(pll_t* pll, float initial_theta);
  * @param pll PLL控制器指针
  * @param params 新的PLL参数
  */
-void PLL_UpdateParams(pll_t* pll, const pll_params_t* params);
+void PLL_UpdateParams(Pll_Handler_t* pll, const pll_params_t* params);
 
 /**
  * @brief 检查PLL是否已初始化
@@ -135,7 +135,7 @@ void PLL_UpdateParams(pll_t* pll, const pll_params_t* params);
  * @param pll PLL控制器指针
  * @return bool true:已初始化 false:未初始化
  */
-bool PLL_IsInitialized(const pll_t* pll);
+bool PLL_IsInitialized(const Pll_Handler_t* pll);
 
 /**
  * @brief 检查PLL是否已使能
@@ -143,7 +143,7 @@ bool PLL_IsInitialized(const pll_t* pll);
  * @param pll PLL控制器指针
  * @return bool true:已使能 false:未使能
  */
-bool PLL_IsEnabled(const pll_t* pll);
+bool PLL_IsEnabled(const Pll_Handler_t* pll);
 
 #ifdef __cplusplus
 }

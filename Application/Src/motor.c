@@ -1,6 +1,7 @@
 #include "motor.h"
 #include <stdbool.h>
 #include "filter.h"
+#include "reciprocal.h"
 #include "theta_calc.h"
 
 #define MOTOR_DEFAULT_PRESCALER 10U
@@ -17,7 +18,7 @@ static float Motor_Position_Scale  = 0.0F;
 static float Motor_Position_Offset = 0.0F;
 static float Motor_Theta_Factor    = 0.0F;
 
-static float    Motor_Sampling_Freq   = 0.0F;
+static float    Motor_SampleFreq      = 0.0F;
 static uint16_t Motor_Speed_Prescaler = 0.0F;
 static uint16_t Motor_Position        = 0.0F;
 static float    Motor_Theta_Elec      = 0.0F;
@@ -47,12 +48,20 @@ static inline void Motor_Update_Speed(void) {
         return;
     }
     Motor_Speed
-        = calc_speed(Motor_Theta_Elec, last_theta, Motor_Sampling_Freq);
+        = calc_speed(Motor_Theta_Elec, last_theta, Motor_SampleFreq);
     Motor_Speed
         = LowPassFilter_Update(&Motor_Speed_Filter, Motor_Speed);
 }
 
-bool Motor_Set_Parameters(const Motor_Parameter_t* motor_params) {
+bool Motor_Set_SampleTime(const SystemTimeConfig_t* time_config) {
+    if (time_config == NULL) {
+        return false;
+    }
+    Motor_SampleFreq = time_config->speed.inv;
+    return true;
+}
+
+bool Motor_Initialization(const Motor_Parameter_t* motor_params) {
     Motor_Rs              = motor_params->Rs;
     Motor_Ld              = motor_params->Ld;
     Motor_Lq              = motor_params->Lq;
@@ -77,8 +86,7 @@ bool Motor_Set_SpeedPrescaler(uint16_t prescaler) {
     return true;
 }
 
-bool Motor_Set_Filter(float sample_freq, float cutoff_freq) {
-    Motor_Sampling_Freq = sample_freq;
+bool Motor_Set_Filter(float cutoff_freq, float sample_freq) {
     LowPassFilter_Init(&Motor_Speed_Filter, cutoff_freq, sample_freq);
     return true;
 }
