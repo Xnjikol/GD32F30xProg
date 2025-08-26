@@ -29,7 +29,7 @@ static PID_Handler_t   Foc_Pid_Speed_Handler  = {0};
 static PID_Handler_t   Foc_Pid_CurD_Handler   = {0};
 static PID_Handler_t   Foc_Pid_CurQ_Handler   = {0};
 static RampGenerator_t Foc_Ramp_Speed_Handler = {0};
-static SineWave_t      Foc_SineWave_Handler   = {0};
+static SawtoothWave_t  Foc_Sawtooth_Handler   = {0};
 
 void Foc_Set_SampleTime(const SystemTimeConfig_t* config) {
     Foc_Current_Ts      = config->current.val;  // 电流环采样周期
@@ -314,15 +314,16 @@ static inline Park_t Foc_Update_VfMode(bool reset) {
     static bool reset_prev = true;
     Park_t      output     = {0};
     if (reset_prev && !reset) {
-        SineWave_Init(&Foc_SineWave_Handler,
-                      1.0F,
-                      Foc_VfParam.freq,
-                      Foc_VfParam.theta,
-                      Foc_Current_Ts);
+        SawtoothWave_Init(&Foc_Sawtooth_Handler,
+                          M_2PI,
+                          Foc_VfParam.freq,
+                          0.0F,
+                          Foc_Current_Ts);
     }
+    Foc_Sawtooth_Handler.frequency = Foc_VfParam.freq;
     output    = Foc_VfParam.vol_ref;  // 获取电压参考
-    Foc_Theta = SineWaveGenerator(&Foc_SineWave_Handler,
-                                  reset);  // 更新电压环角度
+    Foc_Theta = SawtoothWaveGenerator(&Foc_Sawtooth_Handler,
+                                      reset);  // 更新电压环角度
 
     reset_prev = reset;
     return output;
@@ -333,16 +334,16 @@ static inline Park_t Foc_Update_IfMode(bool reset) {
     Park_t      output     = {0};
     // 如果传感器状态为启用，则直接使用参考值，否则使用正弦波生成器
     if (Foc_IfParam.use_sensor == true) {
-        Foc_Theta = Foc_VfParam.theta;
+        Foc_Theta = Foc_IfParam.theta;
     } else {
         if (reset_prev && !reset) {
-            SineWave_Init(&Foc_SineWave_Handler,
-                          1.0F,
-                          Foc_IfParam.freq,
-                          Foc_IfParam.theta,
-                          Foc_Current_Ts);
+            SawtoothWave_Init(&Foc_Sawtooth_Handler,
+                              M_2PI,
+                              Foc_IfParam.freq,
+                              0.0F,
+                              Foc_Current_Ts);
         }
-        Foc_Theta = SineWaveGenerator(&Foc_SineWave_Handler, reset);
+        Foc_Theta = SawtoothWaveGenerator(&Foc_Sawtooth_Handler, reset);
     }
 
     output = Foc_Update_CurrentLoop(

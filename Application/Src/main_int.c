@@ -78,6 +78,7 @@ void Main_Int_Handler(void) {
     switch (MainInt_State) {
     case INIT: {
         MainInt_Initialization();
+        MainInt_State = RUNNING;
         break;
     }
 
