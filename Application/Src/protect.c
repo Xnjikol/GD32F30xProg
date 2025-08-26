@@ -66,10 +66,10 @@ bool Protect_Temperature(float temperature) {
 
 bool Protect_Get_FanState(float temperature) {
     static bool fan = false;
-    if (temperature > 0.36 * Protect_TempMax) {
+    if (temperature > 0.40F * Protect_TempMax) {
         fan = true;
     }
-    if (temperature <= 0.32 * Protect_TempMax) {
+    if (temperature < 0.36F * Protect_TempMax) {
         fan = false;
     }
     return fan;
