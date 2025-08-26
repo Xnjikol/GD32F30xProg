@@ -131,8 +131,13 @@ static inline float_t radps2rpm(float_t radps) {
  * @return speed 计算得到的转速（RPM）
  */
 static inline float calc_speed(float_t new, float_t old, float_t freq) {
-    new         = wrap_theta_2pi(new);
-    float speed = radps2rpm((new - old) * freq);
+    float err = new - old;
+    if (err > M_PI) {
+        err -= M_2PI;  // 处理正向跨越0点的情况
+    } else if (err < -M_PI) {
+        err += M_2PI;  // 处理反向跨越0点的情况
+    }
+    float speed = radps2rpm(err * freq);
     return speed;
 }
 

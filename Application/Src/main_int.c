@@ -47,7 +47,8 @@ static inline void MainInt_Initialization(void) {
 }
 
 static inline void MainInt_Run_Foc(void) {
-    Foc_Update_Main();
+    Park_t u_dq_ref = Foc_Update_Main();
+    Foc_Set_Udq_Ref(u_dq_ref);
 }
 
 static inline void MainInt_Exit(void) {

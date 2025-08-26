@@ -41,16 +41,19 @@ static inline void Motor_Update_Theta(void) {
 }
 
 static inline void Motor_Update_Speed(void) {
-    static uint16_t cnt_speed  = 0;
+    static uint16_t cnt_speed  = 0x0000;
     static float    last_theta = 0.0F;
     cnt_speed++;
     if (cnt_speed < Motor_Speed_Prescaler) {
         return;
     }
+    cnt_speed = 0x0000;
+
     Motor_Speed
         = calc_speed(Motor_Theta_Elec, last_theta, Motor_SampleFreq);
     Motor_Speed
         = LowPassFilter_Update(&Motor_Speed_Filter, Motor_Speed);
+    last_theta = Motor_Theta_Elec;
 }
 
 bool Motor_Set_SampleTime(const SystemTimeConfig_t* time_config) {

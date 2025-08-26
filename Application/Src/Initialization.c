@@ -92,6 +92,7 @@ bool Init_Motor_Parameters(void) {
     Motor_Set_SampleTime(&sys_time_cfg);
     Motor_Set_SpeedPrescaler(SPEED_LOOP_PRESCALER);
     Motor_Set_Filter(10.0F, SPEED_LOOP_FREQ);
+    return true;
 }
 
 bool Init_Protect_Parameters(void) {
@@ -107,6 +108,7 @@ bool Init_Protect_Parameters(void) {
 bool Initialization_Variables(void) {
     Init_Foc_Parameters();
     Init_Protect_Parameters();
+    Init_Motor_Parameters();
     return true;
 }
 
