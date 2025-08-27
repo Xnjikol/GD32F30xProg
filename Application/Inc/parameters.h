@@ -1,7 +1,7 @@
 /*********************************************************************/
 /*                        初始化参数头文件                              */
 /*                                                                   */
-/* 文件名: parameters.h                                           */
+/* 文件名: parameters.h                                               */
 /* 描述: 包含电机控制所需的所有初始化参数和常量定义                          */
 /*********************************************************************/
 
@@ -114,8 +114,8 @@
 #define RAMP_SPEED_TIME      (SPEED_LOOP_TIME) /* 转速环采样周期 */
 
 /* 转速环PID参数配置 */
-#define PID_SPEED_LOOP_KP 0.005F /* 转速环比例系数 */
-#define PID_SPEED_LOOP_KI 0.03F  /* 转速环积分系数 */
+#define PID_SPEED_LOOP_KP 0.004F /* 转速环比例系数 */
+#define PID_SPEED_LOOP_KI 0.01F  /* 转速环积分系数 */
 #define PID_SPEED_LOOP_KD 0.0F   /* 转速环微分系数 */
 
 /* 转速环输出限制 */

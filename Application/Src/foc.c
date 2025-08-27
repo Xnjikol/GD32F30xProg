@@ -13,7 +13,7 @@ static uint16_t        Foc_Speed_Prescaler    = 0U;    // 电流环分频数
 static float           Foc_Speed_Ts           = 0.0F;  // 转速环采样周期
 static float           Foc_Speed_Freq         = 0.0F;  // 转速环频率
 static float           Foc_Speed_Ref          = 0.0F;  // 参考速度
-static float           Foc_Speed_Ramp         = 0.0F;  // 实际指令转速
+static volatile float  Foc_Speed_Ramp         = 0.0F;  // 实际指令转速
 static float           Foc_Speed_Fdbk         = 0.0F;  // 实际转速反馈
 static float           Foc_Theta              = 0.0F;
 static float           Foc_BusVoltage         = 0.0F;
@@ -280,12 +280,12 @@ Phase_t Foc_Get_Tcm(void) {
 static inline Park_t Foc_Update_SpeedLoop(float ref,
                                           float fdbk,
                                           bool  reset) {
-    static uint16_t counter = 0;
+    static uint16_t counter = 0x0000U;
     counter++;
     if (counter < Foc_Speed_Prescaler) {
         return Foc_Idq_Ref;  // 如果未到达分频点，直接返回参考值
     }
-    counter                       = 0;
+    counter                       = 0x0000U;
     Foc_Ramp_Speed_Handler.target = ref;  // 更新目标速度
     Park_t output                 = {0};
     float  ramp    = RampGenerator(&Foc_Ramp_Speed_Handler, reset);
@@ -359,6 +359,13 @@ static inline Park_t Foc_Update_IfMode(bool reset) {
 }
 
 static inline Park_t Foc_Update_SpeedMode(bool reset) {
+    if (reset) {
+        // 对Foc_Speed_Ref进行一次写入操作，防止变量被优化掉
+        Foc_Speed_Ref = 0.0F;
+    }
+
+    ParkTransform(&Foc_Iclark_Fdbk, Foc_Theta, &Foc_Idq_Fdbk);
+
     Park_t output = {0};
     // 更新转速环
     Foc_Idq_Ref
