@@ -134,7 +134,7 @@ static inline void Init_Nvic(void) {
     // 设置中断优先级分组
     nvic_priority_group_set(NVIC_PRIGROUP_PRE2_SUB2);
     nvic_irq_enable(TIMER0_BRK_IRQn, 0, 0);
-    nvic_irq_enable(EXTI5_9_IRQn, 1U, 0U);
+    nvic_irq_enable(EXTI4_IRQn, 1U, 0U);
     nvic_irq_enable(USBD_LP_CAN0_RX0_IRQn, 2, 0);
     nvic_irq_enable(ADC0_1_IRQn, 3, 0);
     nvic_irq_enable(TIMER3_IRQn, 4, 0);
@@ -146,9 +146,9 @@ static inline void Init_Nvic(void) {
 }
 
 static inline void Init_Exti(void) {
-    gpio_exti_source_select(GPIO_PORT_SOURCE_GPIOB, GPIO_PIN_SOURCE_7);
-    exti_init(EXTI_7, EXTI_INTERRUPT, EXTI_TRIG_FALLING);
-    exti_interrupt_flag_clear(EXTI_7);
+    gpio_exti_source_select(GPIO_PORT_SOURCE_GPIOE, GPIO_PIN_SOURCE_4);
+    exti_init(EXTI_4, EXTI_INTERRUPT, EXTI_TRIG_FALLING);
+    exti_interrupt_flag_clear(EXTI_4);
 }
 
 bool Initialization_System(void) {
