@@ -14,12 +14,27 @@
 #include "reciprocal.h"
 #include "smo.h"
 #include "transformation.h"
+#include <math.h>
 
-static bool                Sensorless_Enabled         = {0};
-static bool                Sensorless_Use_RealTheta   = {0};
-static float               Sensorless_Speed_Threshold = {0};
+static bool                Sensorless_Enabled    = {0};
+static float               Sensorless_Switch_Hfi = {0};
+static float               Sensorless_Switch_Smo = {0};
+static float               Sensorless_Speed_Ref  = {0};
+static float               Sensorless_Speed_Fdbk = {0};
+static float               Sensorless_Theta      = {0};
 static sensorless_method_t Sensorless_Method
     = SENSORLESS_METHOD_SM_OBSERVER;
+
+bool Sensorless_Initialization(const Sensorless_Param_t* param) {
+    if (param == NULL) {
+        return false;
+    }
+
+    Sensorless_Switch_Hfi = param->switch_speed + param->hysteresis;
+    Sensorless_Switch_Smo = param->switch_speed - param->hysteresis;
+
+    return true;
+}
 
 bool Sensorless_Set_Enabled(bool enabled) {
     Sensorless_Enabled = enabled;
@@ -31,10 +46,18 @@ bool Sensorless_Get_Enabled(void) {
 }
 
 bool Sensorless_Set_Method(sensorless_method_t method, bool enable) {
-    if (enable) {
-        Sensorless_Method |= method;
-    } else {
-        Sensorless_Method &= ~method;
+    switch (method) {
+    case SENSORLESS_METHOD_HF_INJECTION:
+        Hfi_Set_Enabled(enable);
+        break;
+
+    case SENSORLESS_METHOD_SM_OBSERVER:
+        Smo_Set_Enabled(enable);
+        break;
+
+    default:
+        return false;
+        break;
     }
     return true;
 }
@@ -48,10 +71,10 @@ bool Sensorless_Set_Voltage(Clark_t voltage) {
         return false;
     }
 
-    if (Sensorless_Method &= SENSORLESS_METHOD_HF_INJECTION) {
+    if (Hfi_Get_Enabled()) {
     }
 
-    if (Sensorless_Method &= SENSORLESS_METHOD_SM_OBSERVER) {
+    if (Smo_Get_Enabled()) {
         Smo_Set_Voltage(voltage);
     }
 
@@ -60,30 +83,99 @@ bool Sensorless_Set_Voltage(Clark_t voltage) {
 
 bool Sensorless_Set_Current(Clark_t current) {
     if (!Sensorless_Enabled) {
+        Hfi_Set_Current((Clark_t){0});
+        Smo_Set_Current((Clark_t){0});
         return false;
     }
 
-    if (Sensorless_Method &= SENSORLESS_METHOD_HF_INJECTION) {
+    if (Hfi_Get_Enabled()) {
         Hfi_Set_Current(current);
     }
 
-    if (Sensorless_Method &= SENSORLESS_METHOD_SM_OBSERVER) {
+    if (Smo_Get_Enabled()) {
         Smo_Set_Current(current);
     }
 
     return true;
 }
 
-bool Sensorless_Update(void) {
+void Sensorless_Set_SpeedFdbk(float fdbk) {
+    Sensorless_Speed_Fdbk = fdbk;
+}
+
+void Sensorless_Set_SpeedRef(float ref) {
+    Sensorless_Speed_Ref = ref;
+}
+
+void Sensorless_Set_Angle(float angle) {
+    Sensorless_Theta = angle;
+}
+
+AngleResult_t Sensorless_UpdatePosition(void) {
+    if (Smo_Get_Enabled()) {
+        return Smo_Get_Result();
+    } else {
+        return Hfi_Get_Result();
+    }
+}
+
+static inline void enable_smo(bool enable) {
+    if (enable) {
+        if (!Smo_Get_Enabled()) {
+            Smo_Set_Enabled(true);
+        }
+    } else {
+        if (Smo_Get_Enabled()) {
+            Smo_Set_Enabled(false);
+        }
+    }
+}
+
+static inline void enable_hfi(bool enable) {
+    if (enable) {
+        if (!Hfi_Get_Enabled()) {
+            Hfi_Set_Enabled(true);
+        }
+    } else {
+        if (Hfi_Get_Enabled()) {
+            Hfi_Set_Enabled(false);
+        }
+    }
+}
+
+static inline void judge_strategy(float ref, float fdbk) {
+    if (fabsf(ref) >= Sensorless_Switch_Smo) {
+        if (fabsf(fdbk) >= Sensorless_Switch_Smo) {
+            enable_smo(true);
+        }
+    } else {
+        if (fabsf(fdbk) < Sensorless_Switch_Smo) {
+            enable_smo(false);
+        }
+    }
+    if (fabsf(ref) <= Sensorless_Switch_Hfi) {
+        if (fabsf(fdbk) <= Sensorless_Switch_Hfi) {
+            enable_hfi(true);
+        }
+    } else {
+        if (fabsf(fdbk) > Sensorless_Switch_Hfi) {
+            enable_hfi(false);
+        }
+    }
+}
+
+bool Sensorless_Calculate(void) {
     if (!Sensorless_Enabled) {
         return false;
     }
 
-    if (Sensorless_Method &= SENSORLESS_METHOD_HF_INJECTION) {
-        Hfi_Update();
+    judge_strategy(Sensorless_Speed_Ref, Sensorless_Speed_Fdbk);
+
+    if (Hfi_Get_Enabled()) {
+        // Hfi_Update();
     }
 
-    if (Sensorless_Method &= SENSORLESS_METHOD_SM_OBSERVER) {
+    if (Smo_Get_Enabled()) {
         Smo_Update_EmfEst();
         Smo_Update_Angle();
     }
@@ -91,29 +183,16 @@ bool Sensorless_Update(void) {
     return true;
 }
 
-/**
- * @brief 获取经过滤波处理的电流（Park坐标系）。
- *
- * 此函数用于在传感器无刷控制中获取经过滤波的电流值。仅当Sensorless_Enabled为真且采用高频注入（SENSORLESS_METHOD_HF_INJECTION）方法时，
- * 才会返回实际的滤波电流，否则返回零值。
- *
- * 注意：本函数必须在Hfi_Update函数执行之后调用，否则滤波电流参数未更新，可能导致获取到的值不正确。
- *
- * @return Park_t 经过滤波处理的电流（Park坐标系）。
- */
-bool Sensorless_Get_FilteredCurrent(Park_t* filtered_current) {
+// todo: 高频注入的逻辑还需要修改
+// todo: 应使该函数无关与执行顺序
+Clark_t Sensorless_FilterCurrent(Clark_t current) {
     if (!Sensorless_Enabled) {
-        return false;
+        return current;
     }
 
-    if (!(Sensorless_Method & SENSORLESS_METHOD_HF_INJECTION)) {
-        return false;
+    if (!Hfi_Get_Enabled()) {
+        return current;
     }
 
-    if (filtered_current == NULL) {
-        return false;
-    }
-
-    *filtered_current = Hfi_Get_FilteredCurrent();
-    return true;
+    return Hfi_Get_FilteredCurrent();
 }

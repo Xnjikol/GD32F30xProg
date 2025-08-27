@@ -19,7 +19,7 @@
  * @retval true  - 初始化成功
  * @retval false - 初始化失败
  */
-bool Initialization_Variables(void);
+bool Initialization_Modules(void);
 
 /**
  * @brief  执行所有初始化过程
@@ -27,6 +27,6 @@ bool Initialization_Variables(void);
  * @retval true  - 初始化成功
  * @retval false - 初始化失败
  */
-bool Initialization_System(void);
+bool Initialization_Drivers(void);
 
 #endif /* INITIALIZATION_H */

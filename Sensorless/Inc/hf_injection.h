@@ -89,7 +89,7 @@ void Hfi_Set_Enabled(bool enabled);
 
 bool Hfi_Get_Enabled(void);
 
-Park_t Hfi_Get_FilteredCurrent(void);
+Clark_t Hfi_Get_FilteredCurrent(void);
 
 Park_t Hfi_Get_Injection(void);
 

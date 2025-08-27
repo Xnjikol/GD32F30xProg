@@ -34,15 +34,19 @@ static bool            Smo_Enabled          = false;
 
 /**
  * @brief 设置SMO采样时间相关参数
- * @note 该函数应在 Smo_Set_Parameters 之前调用，因为部分参数依赖采样时间进行计算。
+ * @note 该函数应在 Smo_Initialization 之前调用，因为部分参数依赖采样时间进行计算。
  * @param config 指向 SystemTimeConfig_t 结构体的指针，包含采样时间、速度频率和预分频参数
  */
-void Smo_Set_SampleTime(const SystemTimeConfig_t* config) {
-    if (config != NULL) {
-        Smo_SampleTime       = config->current.val;  // 采样时间
-        Smo_SampleFreq_Speed = config->speed.inv;    // 速度频率倒数
-        Smo_Prescaler        = config->prescaler;    // 预分频系数
+bool Smo_Set_SampleTime(const SystemTimeConfig_t* config) {
+    if (config == NULL) {
+        return false;
     }
+
+    Smo_SampleTime       = config->current.val;  // 采样时间
+    Smo_SampleFreq_Speed = config->speed.inv;    // 速度频率倒数
+    Smo_Prescaler        = config->prescaler;    // 预分频系数
+
+    return true;
 }
 
 /**
@@ -50,17 +54,21 @@ void Smo_Set_SampleTime(const SystemTimeConfig_t* config) {
  * @note 需要先调用 Smo_Set_SampleTime 函数，再调用本函数进行参数设置。
  * @param param 指向 SMO_Param_t 结构体的指针，包含所需参数
  */
-void Smo_Set_Parameters(const SMO_Param_t* param) {
-    if (param != NULL) {
-        Smo_Gain  = param->smo_gain;
-        Smo_Rs    = param->Rs;
-        Smo_Ld    = param->Ld;
-        Smo_Lq    = param->Lq;
-        Smo_InvLd = 1.0F / Smo_Ld;
-        Smo_InvLq = 1.0F / Smo_Lq;
-        Smo_A     = 1 - (Smo_Rs * Smo_InvLd * Smo_SampleTime);
-        Smo_B     = Smo_SampleTime * Smo_InvLd;
+bool Smo_Initialization(const SMO_Param_t* param) {
+    if (param == NULL) {
+        return false;
     }
+
+    Smo_Gain  = param->smo_gain;
+    Smo_Rs    = param->Rs;
+    Smo_Ld    = param->Ld;
+    Smo_Lq    = param->Lq;
+    Smo_InvLd = 1.0F / Smo_Ld;
+    Smo_InvLq = 1.0F / Smo_Lq;
+    Smo_A     = 1 - (Smo_Rs * Smo_InvLd * Smo_SampleTime);
+    Smo_B     = Smo_SampleTime * Smo_InvLd;
+
+    return true;
 }
 
 void Smo_Set_InvPn(float inv_Pn) {
@@ -71,11 +79,12 @@ void Smo_Set_EmfFilter(float cutoff_freq, float sample_freq) {
     LowPassFilter_Init(&Smo_Emf_A_Filter, cutoff_freq, sample_freq);
     LowPassFilter_Init(&Smo_Emf_B_Filter, cutoff_freq, sample_freq);
 }
+
 void Smo_Set_SpeedFilter(float cutoff_freq, float sample_freq) {
     LowPassFilter_Init(&Smo_Speed_Filter, cutoff_freq, sample_freq);
 }
 
-void Smo_Set_Pid(PID_Handler_t config) {
+void Smo_Set_Pid_Handler(PID_Handler_t config) {
     Smo_Theta_PID = config;
 }
 
@@ -130,26 +139,28 @@ static inline float Pll_Update(float error, bool reset) {
     // 更新锁相环
     float omega = Pid_Update(error, reset, &Smo_Theta_PID);
     Smo_Theta += omega * Smo_SampleTime;
+    Smo_Theta = wrap_theta_2pi(Smo_Theta);
     return omega;
 }
 
 static inline float Calc_Error(Clark_t emf, float limit) {
-    double norm = sqrt(emf.a * emf.a + emf.b * emf.b);
-    double diff = emf.a * cos(Smo_Theta) + emf.b * sin(Smo_Theta);
+    float norm = emf.a * emf.a + emf.b * emf.b;
+    float diff = -1 * (emf.a * COS(Smo_Theta) + emf.b * SIN(Smo_Theta));
+    diff *= diff;
     return (norm > limit) ? (diff / norm) : (diff / limit);
 }
 
 void Smo_Update_Angle(void) {
-    Clark_t emf_filtered = {0};
-    emf_filtered.a
+    Clark_t Smo_Emf_Filtered = {0};
+    Smo_Emf_Filtered.a
         = LowPassFilter_Update(&Smo_Emf_A_Filter, Smo_EmfEst.a);
-    emf_filtered.b
+    Smo_Emf_Filtered.b
         = LowPassFilter_Update(&Smo_Emf_B_Filter, Smo_EmfEst.b);
 
-    float error = Calc_Error(emf_filtered, 1e-4F);
+    float error = Calc_Error(Smo_Emf_Filtered, 1e-4F);
 
     // 计算电动势的相位角
-    float omega = Pll_Update(error, Smo_Enabled);
+    float omega = Pll_Update(error, !Smo_Enabled);
     float n     = radps2rpm(omega) * Smo_InvPn;
     Smo_Speed   = LowPassFilter_Update(&Smo_Speed_Filter, n);
 }

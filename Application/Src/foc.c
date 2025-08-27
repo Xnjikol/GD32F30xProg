@@ -85,6 +85,10 @@ void Foc_Set_Speed(float speed) {
     Foc_Speed_Fdbk = speed;  // 设置参考速度
 }
 
+float Foc_Get_SpeedRamp(void) {
+    return Foc_Speed_Ramp;
+}
+
 void Foc_Set_Speed_and_Angle(AngleResult_t* angle_speed) {
     Foc_Theta      = wrap_theta_2pi(angle_speed->theta);
     Foc_Speed_Fdbk = angle_speed->speed;
@@ -399,5 +403,6 @@ Park_t Foc_Update_Main(void) {
     }
     }
     Foc_Udq_Ref = output;
+    InvParkTransform(&Foc_Udq_Ref, Foc_Theta, &Foc_Uclark_Ref);
     return output;  // 返回DQ轴电压参考
 }

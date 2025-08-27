@@ -39,6 +39,7 @@ float     Foc_Get_BusVoltage(void);
 void      Foc_Set_BusVoltageInv(float voltage);
 void      Foc_Set_Angle(float angle);
 void      Foc_Set_Speed(float speed);
+float     Foc_Get_SpeedRamp(void);
 void      Foc_Set_Speed_and_Angle(AngleResult_t* angle_speed);
 void      Foc_Set_Iclark_Fdbk(Clark_t current);
 Clark_t   Foc_Get_Iclark_Fdbk(void);

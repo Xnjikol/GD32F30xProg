@@ -19,12 +19,12 @@ typedef struct {
 /**
  * @brief SMO参数设置与获取接口
  */
-void          Smo_Set_SampleTime(const SystemTimeConfig_t* config);
-void          Smo_Set_Parameters(const SMO_Param_t* param);
+bool          Smo_Set_SampleTime(const SystemTimeConfig_t* config);
+bool          Smo_Initialization(const SMO_Param_t* param);
 void          Smo_Set_InvPn(float inv_Pn);
 void          Smo_Set_EmfFilter(float cutoff_freq, float sample_time);
 void          Smo_Set_SpeedFilter(float cutoff_freq, float sample_freq);
-void          Smo_Set_Pid(PID_Handler_t config);
+void          Smo_Set_Pid_Handler(PID_Handler_t config);
 void          Smo_Set_Voltage(Clark_t voltage);
 void          Smo_Set_Current(Clark_t current);
 void          Smo_Set_Theta(float theta);

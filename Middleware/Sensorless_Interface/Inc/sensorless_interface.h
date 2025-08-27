@@ -15,6 +15,11 @@
 extern "C" {
 #endif
 
+#include <stdbool.h>
+#include "reciprocal.h"
+#include "theta_calc.h"
+#include "transformation.h"
+
 /**
  * @brief 无传感器控制方法枚举
  */
@@ -34,6 +39,29 @@ typedef enum {
     SENSORLESS_STATE_RUNNING,     /*!< 运行状态 */
     SENSORLESS_STATE_ERROR        /*!< 错误状态 */
 } sensorless_state_t;
+
+typedef struct {
+    float hysteresis;    // 滞环宽度
+    float switch_speed;  // 切换速度
+} Sensorless_Param_t;
+
+bool Sensorless_Initialization(const Sensorless_Param_t* param);
+
+bool Sensorless_Set_Voltage(Clark_t voltage);
+
+bool Sensorless_Set_Current(Clark_t current);
+
+void Sensorless_Set_SpeedFdbk(float fdbk);
+
+void Sensorless_Set_SpeedRef(float ref);
+
+void Sensorless_Set_Angle(float angle);
+
+AngleResult_t Sensorless_UpdatePosition(void);
+
+bool Sensorless_Calculate(void);
+
+Clark_t Sensorless_FilterCurrent(Clark_t current);
 
 #ifdef __cplusplus
 }

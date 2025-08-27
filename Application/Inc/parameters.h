@@ -155,19 +155,37 @@
 /*********************************************************************/
 /*                        无位置运行参数配置                            */
 /*********************************************************************/
+/* 无位置传感器策略控制 */
+#define SENSORLESS_HYSTERESIS   50.0F  /* 无传感器滞环宽度：50rpm */
+#define SENSORLESS_SWITCH_SPEED 200.0F /* 无传感器切换速度：200rpm */
+
 /* 高频信号注入参数 */
 #define HF_INJECTION_FREQ 1000.0F /* 注入信号频率：1000Hz */
 #define HF_INJECTION_AMP  15.0F   /* 注入信号幅值：15V */
 
-/* 高频PLL跟踪器参数 */
-#define HF_PLL_KP 0.1F  /* PLL比例系数 */
-#define HF_PLL_KI 0.01F /* PLL积分系数 */
-#define HF_PLL_KD 0.0F  /* PLL微分系数 */
+/* 高频注入PLL跟踪器参数 */
+#define HF_PLL_KP 500.0F /* PLL比例系数 */
+#define HF_PLL_KI 4E4F   /* PLL积分系数 */
+#define HF_PLL_KD 0.0F   /* PLL微分系数 */
 
 /* 滑模观测器参数 */
-#define SMO_SIGMOID_AMPLITUDE 0.1F  /* S函数幅值 */
-#define SMO_SIGMOID_FACTOR    0.1F  /* S函数因子 */
-#define SMO_GAIN_K1           0.1F  /* 观测器增益K1 */
-#define SMO_GAIN_K2           0.01F /* 观测器增益K2 */
+#define SMO_SIGMOID_AMPLITUDE 0.1F   /* S函数幅值 */
+#define SMO_SIGMOID_FACTOR    0.1F   /* S函数因子 */
+#define SMO_GAIN_K1           200.0F /* 观测器增益K1 */
+#define SMO_GAIN_K2           0.01F  /* 观测器增益K2 */
+
+/* 滑模观测器PLL跟踪器参数 */
+#define SMO_PLL_KP             500.0F  /* PLL比例系数 */
+#define SMO_PLL_KI             4E4F    /* PLL积分系数 */
+#define SMO_PLL_KD             0.0F    /* PLL微分系数 */
+#define SMO_PLL_MAX_OUTPUT     4000.0F /* PLL最大输出 */
+#define SMO_PLL_MIN_OUTPUT     -1 * (SMO_PLL_MAX_OUTPUT) /* PLL最小输出 */
+#define SMO_PLL_INTEGRAL_LIMIT SMO_PLL_MAX_OUTPUT /* PLL积分限幅值 */
+
+/* 滑模观测器低通滤波器参数 */
+#define SMO_LPF_CUTOFF_FREQ 500.0F /* 低通滤波器截止频率：500Hz */
+#define SMO_LPF_ORDER       2      /* 低通滤波器阶数：2 */
+#define SMO_SAMPLING_FREQ \
+    MAIN_LOOP_FREQ /* 采样频率：与主循环频率相同 */
 
 #endif

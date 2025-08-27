@@ -103,8 +103,8 @@ bool Hfi_Get_Enabled(void) {
     return Hfi_Enabled;
 }
 
-Park_t Hfi_Get_FilteredCurrent(void) {
-    return Hfi_IParkFilt;
+Clark_t Hfi_Get_FilteredCurrent(void) {
+    return Hfi_IClarkFilt;
 }
 
 /**

@@ -18,6 +18,7 @@
         "complex": "c",
         "numbers": "c",
         "compare": "c",
-        "cstdint": "c"
+        "cstdint": "c",
+        "cstdlib": "c"
     }
 }

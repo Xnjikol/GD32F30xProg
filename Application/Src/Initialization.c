@@ -12,6 +12,8 @@
 #include "parameters.h"
 #include "position_sensor.h"
 #include "protect.h"
+#include "sensorless_interface.h"
+#include "smo.h"
 #include "systick.h"
 #include "tim.h"
 #include "usart.h"
@@ -22,7 +24,7 @@ SystemTimeConfig_t sys_time_cfg
        .speed     = {.val = SPEED_LOOP_TIME, .inv = SPEED_LOOP_FREQ},
        .prescaler = SPEED_LOOP_PRESCALER};
 
-bool Init_Foc_Parameters(void) {
+bool init_module_foc(void) {
     Foc_Set_SampleTime(&sys_time_cfg);
 
     Foc_Set_ResetFlag(true);  // 初始为复位状态
@@ -76,7 +78,7 @@ bool Init_Foc_Parameters(void) {
     return true;
 }
 
-bool Init_Motor_Parameters(void) {
+bool init_module_motor(void) {
     Motor_Parameter_t motor_param
         = {.Rs              = MOTOR_RS,
            .Ld              = MOTOR_LD,
@@ -95,7 +97,7 @@ bool Init_Motor_Parameters(void) {
     return true;
 }
 
-bool Init_Protect_Parameters(void) {
+bool init_module_protect(void) {
     Protect_Parameter_t protect_param
         = {.Udc_rate        = PROTECT_VOLTAGE_RATE,
            .Udc_fluctuation = PROTECT_VOLTAGE_FLUCTUATION,
@@ -105,20 +107,57 @@ bool Init_Protect_Parameters(void) {
     return Protect_Initialization(&protect_param);
 }
 
-bool Initialization_Variables(void) {
-    Init_Foc_Parameters();
-    Init_Protect_Parameters();
-    Init_Motor_Parameters();
+bool init_module_sensorless(void) {
+    Sensorless_Param_t sensorless_param
+        = {.switch_speed = SENSORLESS_SWITCH_SPEED,
+           .hysteresis   = SENSORLESS_HYSTERESIS};
+    Sensorless_Initialization(&sensorless_param);
+
+    return true;
+}
+
+bool init_module_smo(void) {
+    Smo_Set_SampleTime(&sys_time_cfg);
+
+    SMO_Param_t smo_param = {.Ld       = MOTOR_LD,
+                             .Lq       = MOTOR_LQ,
+                             .Rs       = MOTOR_RS,
+                             .smo_gain = SMO_GAIN_K1};
+    Smo_Initialization(&smo_param);
+
+    Smo_Set_InvPn(1.0F / MOTOR_PN);
+
+    PID_Handler_t smo_pid = {.Kp            = SMO_PLL_KP,
+                             .Ki            = SMO_PLL_KI,
+                             .Kd            = SMO_PLL_KD,
+                             .MaxOutput     = SMO_PLL_MAX_OUTPUT,
+                             .MinOutput     = SMO_PLL_MIN_OUTPUT,
+                             .IntegralLimit = SMO_PLL_INTEGRAL_LIMIT,
+                             .Ts            = MAIN_LOOP_TIME};
+    Smo_Set_Pid_Handler(smo_pid);
+
+    Smo_Set_EmfFilter(SMO_LPF_CUTOFF_FREQ * M_2PI, SMO_SAMPLING_FREQ);
+    Smo_Set_SpeedFilter(10.0F, SPEED_LOOP_FREQ);
+
+    return true;
+}
+
+bool Initialization_Modules(void) {
+    init_module_foc();
+    init_module_protect();
+    init_module_motor();
+    init_module_sensorless();
+    init_module_smo();
     return true;
 }
 
 /* open fan and relay */
-static inline void Init_Relay_Fan(void) {
+static inline void init_fan_relay(void) {
     gpio_bit_set(SOFT_OPEN_PORT, SOFT_OPEN_PIN);
     // gpio_bit_set(FAN_OPEN_PORT, FAN_OPEN_PIN);
 }
 
-static inline void Init_Dwt(void) {
+static inline void init_dwt(void) {
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;  // 使能DWT模块
     DWT->CYCCNT = 0;                                 // 清零
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;             // 启用CYCCNT
@@ -130,7 +169,7 @@ static inline void Init_Dwt(void) {
     \param[out] none
     \retval     none
 */
-static inline void Init_Nvic(void) {
+static inline void init_nvic(void) {
     // 设置中断优先级分组
     nvic_priority_group_set(NVIC_PRIGROUP_PRE2_SUB2);
     nvic_irq_enable(TIMER0_BRK_IRQn, 0, 0);
@@ -145,16 +184,16 @@ static inline void Init_Nvic(void) {
     adc_interrupt_enable(ADC0, ADC_INT_EOIC);
 }
 
-static inline void Init_Exti(void) {
+static inline void init_exti(void) {
     gpio_exti_source_select(GPIO_PORT_SOURCE_GPIOE, GPIO_PIN_SOURCE_4);
     exti_init(EXTI_4, EXTI_INTERRUPT, EXTI_TRIG_RISING);
     exti_interrupt_flag_clear(EXTI_4);
 }
 
-bool Initialization_System(void) {
+bool Initialization_Drivers(void) {
     systick_config();  // systick provides delay_ms
     TIM1_Init();       // TIM1 provides delay_us
-    Init_Dwt();
+    init_dwt();
     /* initialize Serial port */
     //< For USART DMA, USART must be initialized before DMA >//
     USART_Init(&husart0);
@@ -173,10 +212,10 @@ bool Initialization_System(void) {
     /* initialize CAN and CCP */
     Can_Initialization();
     /* open fan and relay */
-    Init_Relay_Fan();
+    init_fan_relay();
     /* configure NVIC and enable interrupt */
-    Init_Exti();
-    Init_Nvic();
+    init_exti();
+    init_nvic();
     Com_Initialization();
     return true;
 }

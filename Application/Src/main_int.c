@@ -8,12 +8,14 @@
 
 #include <stdlib.h>
 
-static DeviceStateEnum_t MainInt_State = RUNNING;
+static DeviceStateEnum_t MainInt_State        = RUNNING;
+static bool              MainInt_UseRealTheta = true;
 
 static inline void MainInt_Update_FocCurrent(void) {
     Phase_t current_phase = Peripheral_Get_PhaseCurrent();
     Clark_t current_clark = {0};
     ClarkeTransform(&current_phase, &current_clark);
+    current_clark = Sensorless_FilterCurrent(current_clark);
     Foc_Set_Iclark_Fdbk(current_clark);
 }
 
@@ -30,14 +32,39 @@ static inline void MainInt_Update_BusVoltage(void) {
     Foc_Set_BusVoltageInv(bus_voltage.inv);
 }
 
+static inline void MainInt_Update_Sensorless(void) {
+    Clark_t voltage = {0};
+    Clark_t current = {0};
+
+    voltage = Foc_Get_Uclark_Ref();
+    current = Foc_Get_Iclark_Fdbk();
+
+    Sensorless_Set_Voltage(voltage);
+    Sensorless_Set_Current(current);
+
+    Sensorless_Calculate();
+}
+
 static inline void MainInt_Update_Angle_and_Speed(void) {
-    AngleResult_t angle_result = Peripheral_UpdatePosition();
+    AngleResult_t angle_result = {0};
+    float         speed_ref    = Foc_Get_SpeedRamp();
+
+    if (MainInt_UseRealTheta) {
+        angle_result = Peripheral_UpdatePosition();
+    } else {
+        angle_result = Sensorless_UpdatePosition();
+    }
+
     Foc_Set_Speed(angle_result.speed);
     Foc_Set_Angle(angle_result.theta);
+
+    Sensorless_Set_SpeedRef(speed_ref);
+    Sensorless_Set_SpeedFdbk(angle_result.speed);
+    Sensorless_Set_Angle(angle_result.theta);
 }
 
 static inline void MainInt_Initialization(void) {
-    Initialization_Variables();
+    Initialization_Modules();
     Peripheral_CalibrateADC();
     if (Foc_Get_BusVoltage() > 200.0F) {
         Peripheral_EnableHardwareProtect();
@@ -72,9 +99,9 @@ static inline void MainInt_SVPWM(void) {
 */
 void Main_Int_Handler(void) {
     MainInt_Update_FocCurrent();
-    MainInt_Check_ProtectFlag();
-    MainInt_Update_BusVoltage();
     MainInt_Update_Angle_and_Speed();
+    MainInt_Update_BusVoltage();
+    MainInt_Check_ProtectFlag();
 
     switch (MainInt_State) {
     case INIT: {
@@ -86,6 +113,7 @@ void Main_Int_Handler(void) {
     case RUNNING: {
         // 运行状态：正常FOC控制
         MainInt_Run_Foc();
+        MainInt_Update_Sensorless();
         break;
     }
 

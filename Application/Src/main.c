@@ -10,7 +10,7 @@ bool pin = false;
     \brief      main function
 */
 int main(void) {
-    Initialization_System();
+    Initialization_Drivers();
     while (1) {
         COM_CANProtocol();
         COM_SCIProtocol();
