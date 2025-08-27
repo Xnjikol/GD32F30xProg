@@ -29,7 +29,7 @@ void GPIO_Init(void)
 
     GPIO_InitTypeDef GPIOE_InitStruct = {
         .Pin = GPIO_PIN_4,
-        .Mode = GPIO_MODE_IN_FLOATING,
+        .Mode = GPIO_MODE_IPD,
         .Speed = GPIO_OSPEED_50MHZ,
         .Alternate = 0
     };

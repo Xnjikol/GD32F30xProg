@@ -147,7 +147,7 @@ static inline void Init_Nvic(void) {
 
 static inline void Init_Exti(void) {
     gpio_exti_source_select(GPIO_PORT_SOURCE_GPIOE, GPIO_PIN_SOURCE_4);
-    exti_init(EXTI_4, EXTI_INTERRUPT, EXTI_TRIG_FALLING);
+    exti_init(EXTI_4, EXTI_INTERRUPT, EXTI_TRIG_RISING);
     exti_interrupt_flag_clear(EXTI_4);
 }
 
