@@ -116,7 +116,7 @@
 /* 转速环PID参数配置 */
 #define PID_SPEED_LOOP_KP 0.005F /* 转速环比例系数 */
 #define PID_SPEED_LOOP_KI 0.1F   /* 转速环积分系数 */
-#define PID_SPEED_LOOP_KD 0.0F    /* 转速环微分系数 */
+#define PID_SPEED_LOOP_KD 0.0F   /* 转速环微分系数 */
 
 /* 转速环输出限制 */
 #define PID_SPEED_LOOP_MAX_OUTPUT \
