@@ -146,7 +146,7 @@ static inline float Pll_Update(float error, bool reset) {
 static inline float Calc_Error(Clark_t emf, float limit) {
     float norm = emf.a * emf.a + emf.b * emf.b;
     float diff = -1 * (emf.a * COS(Smo_Theta) + emf.b * SIN(Smo_Theta));
-    diff *= diff;
+    diff       = diff * diff * sign(diff);
     return (norm > limit) ? (diff / norm) : (diff / limit);
 }
 
