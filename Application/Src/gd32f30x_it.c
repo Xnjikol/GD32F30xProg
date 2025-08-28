@@ -37,11 +37,14 @@ OF SUCH DAMAGE.
 #include "can.h"
 #include "foc.h"
 #include "gd32f30x.h"
+#include "gd32f30x_timer.h"
 #include "hardware_interface.h"
 #include "justfloat.h"
 #include "main_int.h"
 #include "protect.h"
 #include "systick.h"
+
+static volatile uint16_t systick_cnt = 0x0000U;
 
 /*!
     \brief      this function handles NMI exception
@@ -134,12 +137,17 @@ void USBD_LP_CAN0_RX0_IRQHandler(void) {
 }
 
 void ADC0_1_IRQHandler(void) {
+    uint32_t cnt_start = (TIMER_CNT(TIMER1));
     if (!adc_interrupt_flag_get(ADC0, ADC_INT_FLAG_EOIC)) {
         return;
     }
     adc_interrupt_flag_clear(ADC0, ADC_INT_FLAG_EOIC);
 
     Main_Int_Handler();
+    uint32_t cnt_stop = (TIMER_CNT(TIMER1));
+    // 计时，参考delay.h文件里的算法由tick数转为us
+    // 10kHz频率下1us=20tick
+    systick_cnt = cnt_stop - cnt_start;
 }
 
 void EXTI4_IRQHandler(void) {
