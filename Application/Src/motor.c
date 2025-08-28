@@ -50,10 +50,10 @@ static inline void Motor_Update_Speed(void) {
     cnt_speed = 0x0000;
 
     Motor_Speed
-        = calc_speed(Motor_Theta_Elec, last_theta, Motor_SampleFreq);
+        = calc_speed(Motor_Theta_Mech, last_theta, Motor_SampleFreq);
     Motor_Speed
         = LowPassFilter_Update(&Motor_Speed_Filter, Motor_Speed);
-    last_theta = Motor_Theta_Elec;
+    last_theta = Motor_Theta_Mech;
 }
 
 bool Motor_Set_SampleTime(const SystemTimeConfig_t* time_config) {
