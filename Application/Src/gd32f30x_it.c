@@ -147,7 +147,11 @@ void ADC0_1_IRQHandler(void) {
     uint32_t cnt_stop = (TIMER_CNT(TIMER1));
     // 计时，参考delay.h文件里的算法由tick数转为us
     // 10kHz频率下1us=20tick
-    systick_cnt = cnt_stop - cnt_start;
+    if (cnt_stop >= cnt_start) {
+        systick_cnt = cnt_stop - cnt_start;
+    } else {
+        systick_cnt = cnt_stop - cnt_start - 0xD8EFU;
+    }
 }
 
 void EXTI4_IRQHandler(void) {
