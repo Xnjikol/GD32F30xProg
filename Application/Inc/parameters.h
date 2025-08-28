@@ -114,8 +114,8 @@
 #define RAMP_SPEED_TIME      (SPEED_LOOP_TIME) /* 转速环采样周期 */
 
 /* 转速环PID参数配置 */
-#define PID_SPEED_LOOP_KP 0.0008F /* 转速环比例系数 */
-#define PID_SPEED_LOOP_KI 0.02F   /* 转速环积分系数 */
+#define PID_SPEED_LOOP_KP 0.005F /* 转速环比例系数 */
+#define PID_SPEED_LOOP_KI 0.1F   /* 转速环积分系数 */
 #define PID_SPEED_LOOP_KD 0.0F    /* 转速环微分系数 */
 
 /* 转速环输出限制 */
@@ -179,7 +179,7 @@
 #define SMO_PLL_KI             4E4F    /* PLL积分系数 */
 #define SMO_PLL_KD             0.0F    /* PLL微分系数 */
 #define SMO_PLL_MAX_OUTPUT     4000.0F /* PLL最大输出 */
-#define SMO_PLL_MIN_OUTPUT     -1 * (SMO_PLL_MAX_OUTPUT) /* PLL最小输出 */
+#define SMO_PLL_MIN_OUTPUT     (-1 * SMO_PLL_MAX_OUTPUT) /* PLL最小输出 */
 #define SMO_PLL_INTEGRAL_LIMIT SMO_PLL_MAX_OUTPUT /* PLL积分限幅值 */
 
 /* 滑模观测器低通滤波器参数 */
