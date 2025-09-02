@@ -26,6 +26,14 @@
 #    define M_PI_2 1.57079632679489661923F /* π/2 */
 #endif
 
+#ifndef M_1_2PI
+#    define M_1_2PI 0.159154943091895F /* 1/2π */
+#endif
+
+// #ifndef P_DEG
+// #    define P_DEG 0.0027777777777777777777777777777F /* 1/360 */
+// #endif
+
 /*  DSP math function    */
 #ifndef ARM_DSP
 #    define ARM_DSP
@@ -99,7 +107,7 @@ static inline float_t deg2rad(float_t deg) {
  * @return 角度值
  */
 static inline float_t rad2deg(float_t rad) {
-    return rad * (360.0F / M_2PI);
+    return rad * (360.0F * M_1_2PI);
 }
 
 /**
@@ -117,7 +125,7 @@ static inline float_t rpm2radps(float_t rpm) {
  * @return 转速（每分钟转数）
  */
 static inline float_t radps2rpm(float_t radps) {
-    return radps * (60.0F / M_2PI);
+    return radps * (60.0F * M_1_2PI);
 }
 
 /**

@@ -89,6 +89,10 @@ void Hfi_Set_Enabled(bool enabled);
 
 bool Hfi_Get_Enabled(void);
 
+void Hfi_Set_Theta_Err(float ref);
+
+void Hfi_Set_Speed_Err(float ref);
+
 Clark_t Hfi_Get_FilteredCurrent(void);
 
 Park_t Hfi_Get_Injection(void);

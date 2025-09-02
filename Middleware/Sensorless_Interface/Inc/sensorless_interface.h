@@ -57,6 +57,8 @@ void Sensorless_Set_SpeedRef(float ref);
 
 void Sensorless_Set_Angle(float angle);
 
+bool Sensorless_Update_Err(AngleResult_t result);
+
 AngleResult_t Sensorless_UpdatePosition(void);
 
 bool Sensorless_Calculate(void);

@@ -46,21 +46,28 @@ static inline void MainInt_Update_Sensorless(void) {
 }
 
 static inline void MainInt_Update_Angle_and_Speed(void) {
-    AngleResult_t angle_result = {0};
-    float         speed_ref    = Foc_Get_SpeedRamp();
+    AngleResult_t res       = {0};
+    AngleResult_t est       = {0};
+    AngleResult_t real      = {0};
+    float         speed_ref = Foc_Get_SpeedRamp();
+
+    real = Peripheral_UpdatePosition();
+    est  = Sensorless_UpdatePosition();
+
+    Sensorless_Update_Err(real);
 
     if (MainInt_UseRealTheta) {
-        angle_result = Peripheral_UpdatePosition();
+        res = real;
     } else {
-        angle_result = Sensorless_UpdatePosition();
+        res = est;
     }
 
-    Foc_Set_Speed(angle_result.speed);
-    Foc_Set_Angle(angle_result.theta);
+    Foc_Set_Speed(res.speed);
+    Foc_Set_Angle(res.theta);
 
     Sensorless_Set_SpeedRef(speed_ref);
-    Sensorless_Set_SpeedFdbk(angle_result.speed);
-    Sensorless_Set_Angle(angle_result.theta);
+    Sensorless_Set_SpeedFdbk(res.speed);
+    Sensorless_Set_Angle(res.theta);
 }
 
 static inline void MainInt_Initialization(void) {

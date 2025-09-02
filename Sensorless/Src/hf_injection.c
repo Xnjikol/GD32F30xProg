@@ -28,6 +28,9 @@ static float Hfi_Delta_L    = {0};
 static float Hfi_SampleTime = {0};
 static float Hfi_SampleFreq = {0};
 
+static volatile float Hfi_Theta_Err = {0};
+static volatile float Hfi_Speed_Err = {0};
+
 static float   Hfi_Theta      = {0};
 static float   Hfi_Omega      = {0};
 static float   Hfi_Speed      = {0};
@@ -103,6 +106,15 @@ bool Hfi_Get_Enabled(void) {
     return Hfi_Enabled;
 }
 
+void Hfi_Set_Theta_Err(float ref) {
+    float err     = wrap_theta_2pi(ref - Hfi_Theta + PI) - PI;
+    Hfi_Theta_Err = rad2deg(err);
+}
+
+void Hfi_Set_Speed_Err(float ref) {
+    Hfi_Speed_Err = ref - Hfi_Speed;
+}
+
 Clark_t Hfi_Get_FilteredCurrent(void) {
     return Hfi_IClarkFilt;
 }
@@ -163,7 +175,7 @@ static inline float calculate_position_error(void) {
     float sin_hf = SIN(Hfi_Phase);
 
     /* 计算位置误差 */
-    position_error = Hfi_IParkResp.d * 2 * sin_hf;
+    position_error = Hfi_IParkResp.q * 2 * sin_hf;
     position_error
         = LowPassFilter_Update(&Hfi_Error_Filter, position_error);
 

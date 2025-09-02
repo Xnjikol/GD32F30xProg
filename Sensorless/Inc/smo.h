@@ -28,6 +28,8 @@ void          Smo_Set_Pid_Handler(PID_Handler_t config);
 void          Smo_Set_Voltage(Clark_t voltage);
 void          Smo_Set_Current(Clark_t current);
 void          Smo_Set_Theta(float theta);
+void          Smo_Set_Theta_Err(float ref);
+void          Smo_Set_Speed_Err(float ref);
 void          Smo_Set_Enabled(bool enabled);
 bool          Smo_Get_Enabled(void);
 AngleResult_t Smo_Get_Result(void);

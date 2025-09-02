@@ -8,29 +8,34 @@
 
 // Smo_A 和 Smo_B 是为了减少运行时计算时间而预先计算好的系数，用于后续算法中直接使用。
 
-static float           Smo_Gain             = {0};
-static float           Smo_Rs               = {0};
-static float           Smo_Ld               = {0};
-static float           Smo_Lq               = {0};
-static float           Smo_InvLd            = {0};
-static float           Smo_InvLq            = {0};
-static float           Smo_A                = {0};
-static float           Smo_B                = {0};
-static float           Smo_SampleTime       = {0};
-static float           Smo_SampleFreq_Speed = {0};
-static float           Smo_Prescaler        = {0};
-static float           Smo_InvPn            = {0};
-static float           Smo_Theta            = {0};
-static float           Smo_Speed            = {0};
-static Clark_t         Smo_Voltage          = {0};
-static Clark_t         Smo_Current          = {0};
-static Clark_t         Smo_CurEst           = {0};
-static Clark_t         Smo_EmfEst           = {0};
-static LowPassFilter_t Smo_Emf_A_Filter     = {0};
-static LowPassFilter_t Smo_Emf_B_Filter     = {0};
-static LowPassFilter_t Smo_Speed_Filter     = {0};
-static PID_Handler_t   Smo_Theta_PID        = {0};
-static bool            Smo_Enabled          = false;
+static bool  Smo_Enabled          = {0};
+static float Smo_Gain             = {0};
+static float Smo_Rs               = {0};
+static float Smo_Ld               = {0};
+static float Smo_Lq               = {0};
+static float Smo_InvLd            = {0};
+static float Smo_InvLq            = {0};
+static float Smo_A                = {0};
+static float Smo_B                = {0};
+static float Smo_SampleTime       = {0};
+static float Smo_SampleFreq_Speed = {0};
+static float Smo_Prescaler        = {0};
+static float Smo_InvPn            = {0};
+static float Smo_Theta            = {0};
+static float Smo_Speed            = {0};
+
+static volatile float Smo_Theta_Err = {0};
+static volatile float Smo_Speed_Err = {0};
+
+static Clark_t Smo_Voltage = {0};
+static Clark_t Smo_Current = {0};
+static Clark_t Smo_CurEst  = {0};
+static Clark_t Smo_EmfEst  = {0};
+
+static LowPassFilter_t Smo_Emf_A_Filter = {0};
+static LowPassFilter_t Smo_Emf_B_Filter = {0};
+static LowPassFilter_t Smo_Speed_Filter = {0};
+static PID_Handler_t   Smo_Theta_PID    = {0};
 
 /**
  * @brief 设置SMO采样时间相关参数
@@ -98,6 +103,15 @@ void Smo_Set_Current(Clark_t current) {
 
 void Smo_Set_Theta(float theta) {
     Smo_Theta = theta;
+}
+
+void Smo_Set_Theta_Err(float ref) {
+    float err     = wrap_theta_2pi(ref - Smo_Theta + PI) - PI;
+    Smo_Theta_Err = rad2deg(err);
+}
+
+void Smo_Set_Speed_Err(float ref) {
+    Smo_Speed_Err = ref - Smo_Speed;
 }
 
 void Smo_Set_Enabled(bool enabled) {

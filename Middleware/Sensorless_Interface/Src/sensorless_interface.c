@@ -111,6 +111,23 @@ void Sensorless_Set_Angle(float angle) {
     Sensorless_Theta = angle;
 }
 
+bool Sensorless_Update_Err(AngleResult_t result) {
+    if (!Sensorless_Enabled) {
+        return false;
+    }
+
+    float theta = result.theta;
+    float speed = result.speed;
+
+    Hfi_Set_Theta_Err(theta);
+    Hfi_Set_Speed_Err(speed);
+
+    Smo_Set_Theta_Err(theta);
+    Smo_Set_Speed_Err(speed);
+
+    return true;
+}
+
 AngleResult_t Sensorless_UpdatePosition(void) {
     if (Smo_Get_Enabled()) {
         return Smo_Get_Result();
