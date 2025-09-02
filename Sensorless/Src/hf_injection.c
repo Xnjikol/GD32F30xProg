@@ -40,10 +40,10 @@ static Clark_t Hfi_IClarkFdbk = {0};
 static Park_t  Hfi_IParkFdbk  = {0};
 static Park_t  Hfi_IParkResp  = {0};  // 提取的高频响应电流
 static Park_t  Hfi_IParkFilt  = {0};  // 高频滤波后的电流
-static Clark_t Hfi_IClarkFilt = {0};
-static Park_t  Hfi_VoltageInj = {0};  //将要注入的高频电压
+static Clark_t Hfi_IClarkFilt = {0};  // 滤波后的静止坐标系电流
+static Park_t  Hfi_VoltageInj = {0};  // 将要注入的高频电压
 
-static BandPassFilter_t Hfi_Current_Filter = {0};
+static BandStopFilter_t Hfi_Current_Filter = {0};
 static LowPassFilter_t  Hfi_Error_Filter   = {0};
 static Pll_Handler_t    Hfi_PLL            = {0};
 static SawtoothWave_t   Hfi_Phase_Gen      = {0};
@@ -78,18 +78,18 @@ bool Hfi_Initialization(const hf_injection_params_t* params) {
     return true;
 }
 
-void Hfi_Set_BandPassFilter(float center_freq,
-                            float band_width,
-                            float sample_freq) {
-    BandPassFilter_Init(
+void Hfi_Set_CurrentFilter(float center_freq,
+                           float band_width,
+                           float sample_freq) {
+    BandStopFilter_Init(
         &Hfi_Current_Filter, sample_freq, center_freq, band_width);
 }
 
-void Hfi_Set_LowPassFilter(float cutoff_freq, float sample_freq) {
+void Hfi_Set_ResponseFilter(float cutoff_freq, float sample_freq) {
     LowPassFilter_Init(&Hfi_Error_Filter, cutoff_freq, sample_freq);
 }
 
-void Hfi_Set_PLL(const pll_params_t* pll_params) {
+void Hfi_Set_PllParams(const pll_params_t* pll_params) {
     PLL_Init(&Hfi_PLL, pll_params);
 }
 
@@ -115,7 +115,25 @@ void Hfi_Set_Speed_Err(float ref) {
     Hfi_Speed_Err = ref - Hfi_Speed;
 }
 
-Clark_t Hfi_Get_FilteredCurrent(void) {
+Clark_t Hfi_Get_FilteredCurrent(Clark_t current) {
+    Park_t origin   = {0};
+    Park_t filtered = {0};
+    Park_t response = {0};
+    ParkTransform(&current, Hfi_Theta, &origin);
+
+    filtered.d = BandStopFilter_Update(&Hfi_Current_Filter, origin.d);
+    filtered.q = BandStopFilter_Update(&Hfi_Current_Filter, origin.q);
+
+    response.d = origin.d - filtered.d;
+    response.q = origin.q - filtered.q;
+
+    InvParkTransform(&filtered, Hfi_Theta, &Hfi_IClarkFilt);
+
+    Hfi_IClarkFdbk = current;
+    Hfi_IParkFdbk  = origin;
+    Hfi_IParkFilt  = filtered;
+    Hfi_IParkResp  = response;
+
     return Hfi_IClarkFilt;
 }
 
@@ -132,7 +150,8 @@ static inline void generate_signal() {
     Hfi_VoltageInj.q = 0.0f;
 }
 
-Park_t Hfi_Get_Injection(void) {
+Park_t Hfi_Get_Inject_Voltage(void) {
+    generate_signal();
     return Hfi_VoltageInj;
 }
 
@@ -142,26 +161,6 @@ Clark_t Hfi_Apply_Injection(Park_t vol) {
     vol.q += Hfi_VoltageInj.q;
     InvParkTransform(&vol, Hfi_Theta, &out);
     return out;
-}
-
-static inline Park_t extract_high_frequency_response(void) {
-    if (!Hfi_Enabled) {
-        Hfi_IParkResp = (Park_t){0};
-        return (Park_t){0};
-    }
-
-    Hfi_IParkResp.d
-        = BandPassFilter_Update(&Hfi_Current_Filter, Hfi_IParkFdbk.d);
-    Hfi_IParkResp.q
-        = BandPassFilter_Update(&Hfi_Current_Filter, Hfi_IParkFdbk.q);
-
-    Hfi_IParkFilt.d = Hfi_IParkFdbk.d - Hfi_IParkResp.d;
-    Hfi_IParkFilt.q = Hfi_IParkFdbk.q - Hfi_IParkResp.q;
-
-    /* 反Park变换得到αβ轴电流 */
-    InvParkTransform(&Hfi_IParkFilt, Hfi_Theta, &Hfi_IClarkFilt);
-
-    return Hfi_IParkResp;
 }
 
 static inline float calculate_position_error(void) {
@@ -192,7 +191,7 @@ static inline float calculate_speed(void) {
 }
 
 void Hfi_Update(void) {
-    extract_high_frequency_response();
+    // extract_high_frequency_response();
     calculate_position_error();
     calculate_speed();
 }

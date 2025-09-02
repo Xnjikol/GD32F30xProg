@@ -160,7 +160,8 @@ void Foc_Set_Ramp_Speed_Handler(RampGenerator_t* handler) {
     Foc_Ramp_Speed_Handler = *handler;  // 设置速度环斜坡生成器
 }
 
-static inline Phase_t Foc_Calc_SVPWM(Clark_t u_ref, float inv_Vdc) {
+static inline Phase_t calculate_SVPWM_Tcm(Clark_t u_ref,
+                                          float   inv_Vdc) {
     float   alpha  = u_ref.a;
     float   beta   = u_ref.b;
     uint8_t sector = 0;
@@ -277,7 +278,7 @@ Phase_t Foc_Get_Tcm(void) {
         return tcm;  // 如果复位标志为真，直接返回零值
     }
     // 生成三相PWM时间
-    tcm = Foc_Calc_SVPWM(Foc_Uclark_Ref, Foc_BusVoltage_Inv);
+    tcm = calculate_SVPWM_Tcm(Foc_Uclark_Ref, Foc_BusVoltage_Inv);
     return tcm;  // 返回三相PWM时间
 }
 

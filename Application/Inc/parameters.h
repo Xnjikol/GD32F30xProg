@@ -161,12 +161,23 @@
 
 /* 高频信号注入参数 */
 #define HF_INJECTION_FREQ 1000.0F /* 注入信号频率：1000Hz */
-#define HF_INJECTION_AMP  15.0F   /* 注入信号幅值：15V */
+#define HF_INJECTION_AMP  40.0F   /* 注入信号幅值：40V */
+
+/* 高频信号注入带通滤波器参数 */
+#define HFI_RESPONSE_FREQ      HF_INJECTION_FREQ /* 中心频率 */
+#define HFI_RESPONSE_BANDWIDTH 100.0F /* 滤波器频带宽度：100Hz */
+#define HFI_SAMPLE_FREQ        MAIN_LOOP_FREQ /* 采样周期：与主循环相同 */
+
+/* 高频信号注入法低通滤波器参数 */
+#define HFI_LOW_PASS_CUTOFF_FREQ 100.0F /* 误差信号截止频率：100Hz */
 
 /* 高频注入PLL跟踪器参数 */
-#define HF_PLL_KP 500.0F /* PLL比例系数 */
-#define HF_PLL_KI 4E4F   /* PLL积分系数 */
-#define HF_PLL_KD 0.0F   /* PLL微分系数 */
+#define HFI_PLL_KP             500.0F  /* PLL比例系数 */
+#define HFI_PLL_KI             4E4F    /* PLL积分系数 */
+#define HFI_PLL_KD             0.0F    /* PLL微分系数 */
+#define HFI_PLL_MAX_OUTPUT     4000.0F /* PLL最大输出 */
+#define HFI_PLL_MIN_OUTPUT     (-1 * HFI_PLL_MAX_OUTPUT) /* PLL最小输出 */
+#define HFI_PLL_INTEGRAL_LIMIT HFI_PLL_MAX_OUTPUT /* PLL积分限幅值 */
 
 /* 滑模观测器参数 */
 #define SMO_SIGMOID_AMPLITUDE 0.1F   /* S函数幅值 */

@@ -7,6 +7,7 @@
 #include "gd32f30x_gpio.h"
 #include "gpio.h"
 #include "hardware_interface.h"
+#include "hf_injection.h"
 #include "main.h"
 #include "motor.h"
 #include "parameters.h"
@@ -142,12 +143,42 @@ bool init_module_smo(void) {
     return true;
 }
 
+bool init_module_hfi() {
+    Hfi_Set_SampleTime(&sys_time_cfg);
+
+    hf_injection_params_t hfi_param
+        = {.injection_freq    = HF_INJECTION_FREQ,
+           .injection_voltage = HF_INJECTION_AMP,
+           .Ld                = MOTOR_LD,
+           .Lq                = MOTOR_LQ,
+           .delta_L           = MOTOR_LQ - MOTOR_LD};
+    Hfi_Initialization(&hfi_param);
+
+    Hfi_Set_CurrentFilter(
+        HFI_RESPONSE_FREQ, HFI_RESPONSE_BANDWIDTH, HFI_SAMPLE_FREQ);
+
+    Hfi_Set_ResponseFilter(HFI_LOW_PASS_CUTOFF_FREQ, HFI_SAMPLE_FREQ);
+
+    pll_params_t hfi_pll_param
+        = {.kp             = HFI_PLL_KP,
+           .ki             = HFI_PLL_KI,
+           .kd             = HFI_PLL_KD,
+           .max_output     = HFI_PLL_MAX_OUTPUT,
+           .min_output     = HFI_PLL_MIN_OUTPUT,
+           .integral_limit = HFI_PLL_INTEGRAL_LIMIT,
+           .ts             = HFI_SAMPLE_FREQ};
+    Hfi_Set_PllParams(&hfi_pll_param);
+
+    return true;
+}
+
 bool Initialization_Modules(void) {
     init_module_foc();
     init_module_protect();
     init_module_motor();
     init_module_sensorless();
     init_module_smo();
+    init_module_hfi();
     return true;
 }
 

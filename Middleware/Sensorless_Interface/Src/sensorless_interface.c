@@ -88,9 +88,9 @@ bool Sensorless_Set_Current(Clark_t current) {
         return false;
     }
 
-    if (Hfi_Get_Enabled()) {
-        Hfi_Set_Current(current);
-    }
+    // if (Hfi_Get_Enabled()) {
+    //     Hfi_Set_Current(current);
+    // }
 
     if (Smo_Get_Enabled()) {
         Smo_Set_Current(current);
@@ -128,7 +128,7 @@ bool Sensorless_Update_Err(AngleResult_t result) {
     return true;
 }
 
-AngleResult_t Sensorless_UpdatePosition(void) {
+AngleResult_t Sensorless_Update_Position(void) {
     if (Smo_Get_Enabled()) {
         return Smo_Get_Result();
     } else {
@@ -189,7 +189,7 @@ bool Sensorless_Calculate(void) {
     judge_strategy(Sensorless_Speed_Ref, Sensorless_Speed_Fdbk);
 
     if (Hfi_Get_Enabled()) {
-        // Hfi_Update();
+        Hfi_Update();
     }
 
     if (Smo_Get_Enabled()) {
@@ -200,8 +200,21 @@ bool Sensorless_Calculate(void) {
     return true;
 }
 
-// todo: 高频注入的逻辑还需要修改
-// todo: 应使该函数无关与执行顺序
+Park_t Sensorless_Inject_Voltage(Park_t voltage) {
+    if (!Sensorless_Enabled) {
+        return voltage;
+    }
+
+    if (Hfi_Get_Enabled()) {
+        Park_t inj = Hfi_Get_Inject_Voltage();
+        voltage.d += inj.d;
+        voltage.q += inj.q;
+        return voltage;
+    }
+
+    return voltage;
+}
+
 Clark_t Sensorless_FilterCurrent(Clark_t current) {
     if (!Sensorless_Enabled) {
         return current;
@@ -211,5 +224,5 @@ Clark_t Sensorless_FilterCurrent(Clark_t current) {
         return current;
     }
 
-    return Hfi_Get_FilteredCurrent();
+    return Hfi_Get_FilteredCurrent(current);
 }

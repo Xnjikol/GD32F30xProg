@@ -59,9 +59,11 @@ void Sensorless_Set_Angle(float angle);
 
 bool Sensorless_Update_Err(AngleResult_t result);
 
-AngleResult_t Sensorless_UpdatePosition(void);
+AngleResult_t Sensorless_Update_Position(void);
 
 bool Sensorless_Calculate(void);
+
+Park_t Sensorless_Inject_Voltage(Park_t voltage);
 
 Clark_t Sensorless_FilterCurrent(Clark_t current);
 

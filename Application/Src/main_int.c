@@ -32,19 +32,6 @@ static inline void MainInt_Update_BusVoltage(void) {
     Foc_Set_BusVoltageInv(bus_voltage.inv);
 }
 
-static inline void MainInt_Update_Sensorless(void) {
-    Clark_t voltage = {0};
-    Clark_t current = {0};
-
-    voltage = Foc_Get_Uclark_Ref();
-    current = Foc_Get_Iclark_Fdbk();
-
-    Sensorless_Set_Voltage(voltage);
-    Sensorless_Set_Current(current);
-
-    Sensorless_Calculate();
-}
-
 static inline void MainInt_Update_Angle_and_Speed(void) {
     AngleResult_t res       = {0};
     AngleResult_t est       = {0};
@@ -52,7 +39,7 @@ static inline void MainInt_Update_Angle_and_Speed(void) {
     float         speed_ref = Foc_Get_SpeedRamp();
 
     real = Peripheral_UpdatePosition();
-    est  = Sensorless_UpdatePosition();
+    est  = Sensorless_Update_Position();
 
     Sensorless_Update_Err(real);
 
@@ -80,8 +67,29 @@ static inline void MainInt_Initialization(void) {
     Foc_Set_Mode(IDLE);
 }
 
+static inline void MainInt_Update_Sensorless(void) {
+    Clark_t voltage    = {0};
+    Clark_t current    = {0};
+    Park_t  vol_dq_ref = {0};
+
+    voltage = Foc_Get_Uclark_Ref();
+    current = Foc_Get_Iclark_Fdbk();
+
+    Sensorless_Set_Voltage(voltage);
+    Sensorless_Set_Current(current);
+
+    Sensorless_Calculate();
+
+    vol_dq_ref = Foc_Get_Udq_Ref();
+    vol_dq_ref = Sensorless_Inject_Voltage(vol_dq_ref);
+    Foc_Set_Udq_Ref(vol_dq_ref);
+}
+
 static inline void MainInt_Run_Foc(void) {
-    Park_t u_dq_ref = Foc_Update_Main();
+    Park_t u_dq_ref = {0};
+
+    u_dq_ref = Foc_Update_Main();
+
     Foc_Set_Udq_Ref(u_dq_ref);
 }
 
