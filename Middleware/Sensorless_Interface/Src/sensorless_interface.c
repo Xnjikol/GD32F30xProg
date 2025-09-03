@@ -207,15 +207,15 @@ bool Sensorless_Calculate(void) {
     return true;
 }
 
-Clark_t Sensorless_Inject_Voltage(Clark_t voltage) {
+Park_t Sensorless_Inject_Voltage(Park_t voltage) {
     if (!Sensorless_Enabled) {
         return voltage;
     }
 
     if (Hfi_Get_Enabled()) {
-        Clark_t inj = Hfi_Get_Inject_Voltage();
-        voltage.a += inj.a;
-        voltage.b += inj.b;
+        Park_t inj = Hfi_Get_Inject_Voltage();
+        voltage.d += inj.d;
+        voltage.q += inj.q;
         return voltage;
     }
 

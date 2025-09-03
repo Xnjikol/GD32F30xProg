@@ -173,8 +173,8 @@
 #define HFI_LOW_PASS_CUTOFF_FREQ 100.0F /* 误差信号截止频率：100Hz */
 
 /* 高频注入PLL跟踪器参数 */
-#define HFI_PLL_KP             500.0F  /* PLL比例系数 */
-#define HFI_PLL_KI             0.0F    /* PLL积分系数 */
+#define HFI_PLL_KP             1200.0F /* PLL比例系数 */
+#define HFI_PLL_KI             18E3F   /* PLL积分系数 */
 #define HFI_PLL_KD             0.0F    /* PLL微分系数 */
 #define HFI_PLL_MAX_OUTPUT     4000.0F /* PLL最大输出 */
 #define HFI_PLL_MIN_OUTPUT     (-1 * HFI_PLL_MAX_OUTPUT) /* PLL最小输出 */

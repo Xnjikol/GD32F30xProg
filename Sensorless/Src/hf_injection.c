@@ -43,7 +43,7 @@ static Park_t  Hfi_IParkFdbk  = {0};
 static Park_t  Hfi_IParkResp  = {0};  // 提取的高频响应电流
 static Park_t  Hfi_IParkFilt  = {0};  // 高频滤波后的电流
 static Clark_t Hfi_IClarkFilt = {0};  // 滤波后的静止坐标系电流
-static Clark_t Hfi_VoltageInj = {0};  // 将要注入的高频电压
+static Park_t  Hfi_VoltageInj = {0};  // 将要注入的高频电压
 
 static volatile Park_t Hfi_IParkResp_Err = {0};  // 高频响应电流误差
 
@@ -156,12 +156,12 @@ static inline void generate_signal() {
     /* 生成脉振高频注入信号 (d轴注入) */
     cos_hf   = COS(Hfi_Phase);
     inj_dq.d = Hfi_InjVolt * cos_hf;
-    inj_dq.q = 0.0f;
+    inj_dq.q = 0.0F;
 
-    InvParkTransform(&inj_dq, Hfi_Theta, &Hfi_VoltageInj);
+    Hfi_VoltageInj = inj_dq;
 }
 
-Clark_t Hfi_Get_Inject_Voltage(void) {
+Park_t Hfi_Get_Inject_Voltage(void) {
     generate_signal();
     return Hfi_VoltageInj;
 }
@@ -197,7 +197,7 @@ static inline float calculate_position_error(void) {
 
 static inline float calculate_speed(void) {
     float omega = pll_update(Hfi_Error, !Hfi_Enabled);
-    float n     = radps2rpm(omega);
+    float n     = radps2rpm(omega) * Hfi_InvPn;
     Hfi_Speed   = n;
 
     // Hfi_Theta = PLL_Update(&Hfi_PLL, Hfi_Error);
