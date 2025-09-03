@@ -152,6 +152,13 @@ static inline void enable_hfi(bool enable) {
     if (enable) {
         if (!Hfi_Get_Enabled()) {
             Hfi_Set_Enabled(true);
+            float estimate, target, error;
+            estimate = Hfi_Get_Result().theta;
+            target   = Sensorless_Theta;
+            error    = wrap_theta_2pi(target - estimate + PI) - PI;
+            if (error >= M_PI_4 || error <= -M_PI_4) {
+                Hfi_Set_InitialPosition(target);
+            }
         }
     } else {
         if (Hfi_Get_Enabled()) {

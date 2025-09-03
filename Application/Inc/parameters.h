@@ -160,12 +160,12 @@
 #define SENSORLESS_SWITCH_SPEED 200.0F /* 无传感器切换速度：200rpm */
 
 /* 高频信号注入参数 */
-#define HF_INJECTION_FREQ 1000.0F /* 注入信号频率：1000Hz */
-#define HF_INJECTION_AMP  40.0F   /* 注入信号幅值：40V */
+#define HF_INJECTION_FREQ 500.0F /* 注入信号频率：500Hz */
+#define HF_INJECTION_AMP  40.0F  /* 注入信号幅值：40V */
 
 /* 高频信号注入带通滤波器参数 */
 #define HFI_RESPONSE_FREQ      HF_INJECTION_FREQ /* 中心频率 */
-#define HFI_RESPONSE_BANDWIDTH 100.0F /* 滤波器频带宽度：100Hz */
+#define HFI_RESPONSE_BANDWIDTH 40.0F          /* 滤波器频带宽度：40Hz */
 #define HFI_SAMPLE_TIME        MAIN_LOOP_TIME /* 采样周期：与主循环相同 */
 #define HFI_SAMPLE_FREQ        MAIN_LOOP_FREQ /* 采样周期：与主循环相同 */
 
@@ -174,7 +174,7 @@
 
 /* 高频注入PLL跟踪器参数 */
 #define HFI_PLL_KP             500.0F  /* PLL比例系数 */
-#define HFI_PLL_KI             4E4F    /* PLL积分系数 */
+#define HFI_PLL_KI             0.0F    /* PLL积分系数 */
 #define HFI_PLL_KD             0.0F    /* PLL微分系数 */
 #define HFI_PLL_MAX_OUTPUT     4000.0F /* PLL最大输出 */
 #define HFI_PLL_MIN_OUTPUT     (-1 * HFI_PLL_MAX_OUTPUT) /* PLL最小输出 */
