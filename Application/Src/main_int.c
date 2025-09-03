@@ -68,9 +68,9 @@ static inline void MainInt_Initialization(void) {
 }
 
 static inline void MainInt_Update_Sensorless(void) {
-    Clark_t voltage    = {0};
-    Clark_t current    = {0};
-    Park_t  vol_dq_ref = {0};
+    Clark_t voltage = {0};
+    Clark_t current = {0};
+    Clark_t ref     = {0};
 
     voltage = Foc_Get_Uclark_Ref();
     current = Foc_Get_Iclark_Fdbk();
@@ -80,9 +80,9 @@ static inline void MainInt_Update_Sensorless(void) {
 
     Sensorless_Calculate();
 
-    vol_dq_ref = Foc_Get_Udq_Ref();
-    vol_dq_ref = Sensorless_Inject_Voltage(vol_dq_ref);
-    Foc_Set_Udq_Ref(vol_dq_ref);
+    ref = Foc_Get_Uclark_Ref();
+    ref = Sensorless_Inject_Voltage(ref);
+    Foc_Set_Uclark_Ref(ref);
 }
 
 static inline void MainInt_Run_Foc(void) {

@@ -30,6 +30,7 @@ typedef struct {
     float Ld;                /*!< d轴电感 (H) */
     float Lq;                /*!< q轴电感 (H) */
     float delta_L;           /*!< 电感变化量 (H) */
+    float inv_Pn;            /*!< 极对数的倒数 (1/Pn) */
 } hf_injection_params_t;
 
 /* 函数声明 */
@@ -95,9 +96,7 @@ void Hfi_Set_Speed_Err(float ref);
 
 Clark_t Hfi_Get_FilteredCurrent(Clark_t current);
 
-Park_t Hfi_Get_Inject_Voltage(void);
-
-Clark_t Hfi_Apply_Injection(Park_t vol);
+Clark_t Hfi_Get_Inject_Voltage(void);
 
 void Hfi_Update(void);
 

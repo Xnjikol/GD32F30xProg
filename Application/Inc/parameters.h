@@ -166,6 +166,7 @@
 /* 高频信号注入带通滤波器参数 */
 #define HFI_RESPONSE_FREQ      HF_INJECTION_FREQ /* 中心频率 */
 #define HFI_RESPONSE_BANDWIDTH 100.0F /* 滤波器频带宽度：100Hz */
+#define HFI_SAMPLE_TIME        MAIN_LOOP_TIME /* 采样周期：与主循环相同 */
 #define HFI_SAMPLE_FREQ        MAIN_LOOP_FREQ /* 采样周期：与主循环相同 */
 
 /* 高频信号注入法低通滤波器参数 */

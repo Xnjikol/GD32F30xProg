@@ -16,6 +16,7 @@
 #include "pll.h"
 #include "reciprocal.h"
 #include "signal.h"
+#include "theta_calc.h"
 #include "transformation.h"
 
 static bool  Hfi_Enabled    = {0};
@@ -25,6 +26,7 @@ static float Hfi_InjVolt    = {0};
 static float Hfi_Ld         = {0};
 static float Hfi_Lq         = {0};
 static float Hfi_Delta_L    = {0};
+static float Hfi_InvPn      = {0};
 static float Hfi_SampleTime = {0};
 static float Hfi_SampleFreq = {0};
 
@@ -41,7 +43,7 @@ static Park_t  Hfi_IParkFdbk  = {0};
 static Park_t  Hfi_IParkResp  = {0};  // 提取的高频响应电流
 static Park_t  Hfi_IParkFilt  = {0};  // 高频滤波后的电流
 static Clark_t Hfi_IClarkFilt = {0};  // 滤波后的静止坐标系电流
-static Park_t  Hfi_VoltageInj = {0};  // 将要注入的高频电压
+static Clark_t Hfi_VoltageInj = {0};  // 将要注入的高频电压
 
 static BandStopFilter_t Hfi_Current_Filter = {0};
 static LowPassFilter_t  Hfi_Error_Filter   = {0};
@@ -71,6 +73,7 @@ bool Hfi_Initialization(const hf_injection_params_t* params) {
     Hfi_Ld      = params->Ld;
     Hfi_Lq      = params->Lq;
     Hfi_Delta_L = params->delta_L;
+    Hfi_InvPn   = params->inv_Pn;
 
     SawtoothWave_Init(
         &Hfi_Phase_Gen, 1, Hfi_InjFreq, 0.0F, Hfi_SampleTime);
@@ -99,7 +102,8 @@ void Hfi_Set_Current(Clark_t current) {
 }
 
 void Hfi_Set_Enabled(bool enabled) {
-    Hfi_Enabled = enabled;
+    Hfi_Enabled              = enabled;
+    Hfi_PLL.state.is_enabled = enabled;
 }
 
 bool Hfi_Get_Enabled(void) {
@@ -141,26 +145,31 @@ Clark_t Hfi_Get_FilteredCurrent(Clark_t current) {
  * @brief 生成高频注入信号
  */
 static inline void generate_signal() {
+    Park_t inj_dq = {0};
+    float  cos_hf = {0};
+
     /* 更新高频相位 */
     Hfi_Phase = SawtoothWaveGenerator(&Hfi_Phase_Gen, false) * M_2PI;
 
     /* 生成脉振高频注入信号 (d轴注入) */
-    float cos_hf     = COS(Hfi_Phase);
-    Hfi_VoltageInj.d = Hfi_InjVolt * cos_hf;
-    Hfi_VoltageInj.q = 0.0f;
+    cos_hf   = COS(Hfi_Phase);
+    inj_dq.d = Hfi_InjVolt * cos_hf;
+    inj_dq.q = 0.0f;
+
+    InvParkTransform(&inj_dq, Hfi_Theta, &Hfi_VoltageInj);
 }
 
-Park_t Hfi_Get_Inject_Voltage(void) {
+Clark_t Hfi_Get_Inject_Voltage(void) {
     generate_signal();
     return Hfi_VoltageInj;
 }
 
-Clark_t Hfi_Apply_Injection(Park_t vol) {
-    Clark_t out;
-    vol.d += Hfi_VoltageInj.d;
-    vol.q += Hfi_VoltageInj.q;
-    InvParkTransform(&vol, Hfi_Theta, &out);
-    return out;
+static inline float pll_update(float error, bool reset) {
+    // 更新锁相环
+    float omega = Pid_Update(error, reset, &Hfi_PLL.pid);
+    Hfi_Theta += omega * Hfi_SampleTime;
+    Hfi_Theta = wrap_theta_2pi(Hfi_Theta);
+    return omega;
 }
 
 static inline float calculate_position_error(void) {
@@ -183,9 +192,13 @@ static inline float calculate_position_error(void) {
 }
 
 static inline float calculate_speed(void) {
-    Hfi_Theta = PLL_Update(&Hfi_PLL, Hfi_Error);
-    Hfi_Omega = PLL_GetSpeed(&Hfi_PLL);
-    Hfi_Speed = radps2rpm(Hfi_Omega);
+    float omega = pll_update(Hfi_Error, !Hfi_Enabled);
+    float n     = radps2rpm(omega);
+    Hfi_Speed   = n;
+
+    // Hfi_Theta = PLL_Update(&Hfi_PLL, Hfi_Error);
+    // Hfi_Omega = PLL_GetSpeed(&Hfi_PLL);
+    // Hfi_Speed = radps2rpm(Hfi_Omega);
 
     return Hfi_Speed;
 }

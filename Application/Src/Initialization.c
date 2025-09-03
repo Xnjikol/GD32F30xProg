@@ -151,7 +151,8 @@ bool init_module_hfi() {
            .injection_voltage = HF_INJECTION_AMP,
            .Ld                = MOTOR_LD,
            .Lq                = MOTOR_LQ,
-           .delta_L           = MOTOR_LQ - MOTOR_LD};
+           .delta_L           = MOTOR_LQ - MOTOR_LD,
+           .inv_Pn            = 1.0F / MOTOR_PN};
     Hfi_Initialization(&hfi_param);
 
     Hfi_Set_CurrentFilter(
@@ -166,7 +167,7 @@ bool init_module_hfi() {
            .max_output     = HFI_PLL_MAX_OUTPUT,
            .min_output     = HFI_PLL_MIN_OUTPUT,
            .integral_limit = HFI_PLL_INTEGRAL_LIMIT,
-           .ts             = HFI_SAMPLE_FREQ};
+           .ts             = HFI_SAMPLE_TIME};
     Hfi_Set_PllParams(&hfi_pll_param);
 
     return true;

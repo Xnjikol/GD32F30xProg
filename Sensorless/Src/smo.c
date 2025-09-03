@@ -149,7 +149,7 @@ void Smo_Update_EmfEst(void) {
     Smo_EmfEst.b = Smo_Gain * sign(est_delta);
 }
 
-static inline float Pll_Update(float error, bool reset) {
+static inline float pll_update(float error, bool reset) {
     // 更新锁相环
     float omega = Pid_Update(error, reset, &Smo_Theta_PID);
     Smo_Theta += omega * Smo_SampleTime;
@@ -157,7 +157,7 @@ static inline float Pll_Update(float error, bool reset) {
     return omega;
 }
 
-static inline float Calc_Error(Clark_t emf, float limit) {
+static inline float calc_error(Clark_t emf, float limit) {
     float norm = emf.a * emf.a + emf.b * emf.b;
     float diff = -1 * (emf.a * COS(Smo_Theta) + emf.b * SIN(Smo_Theta));
     diff       = diff * diff * sign(diff);
@@ -165,16 +165,17 @@ static inline float Calc_Error(Clark_t emf, float limit) {
 }
 
 void Smo_Update_Angle(void) {
-    Clark_t Smo_Emf_Filtered = {0};
-    Smo_Emf_Filtered.a
-        = LowPassFilter_Update(&Smo_Emf_A_Filter, Smo_EmfEst.a);
-    Smo_Emf_Filtered.b
-        = LowPassFilter_Update(&Smo_Emf_B_Filter, Smo_EmfEst.b);
+    Clark_t filtered = {0};
+    filtered.a = LowPassFilter_Update(&Smo_Emf_A_Filter, Smo_EmfEst.a);
+    filtered.b = LowPassFilter_Update(&Smo_Emf_B_Filter, Smo_EmfEst.b);
 
-    float error = Calc_Error(Smo_Emf_Filtered, 1e-4F);
+    float error = calc_error(filtered, 1e-4F);
+
+    Smo_EmfEst.a = filtered.a;
+    Smo_EmfEst.b = filtered.b;
 
     // 计算电动势的相位角
-    float omega = Pll_Update(error, !Smo_Enabled);
+    float omega = pll_update(error, !Smo_Enabled);
     float n     = radps2rpm(omega) * Smo_InvPn;
     Smo_Speed   = LowPassFilter_Update(&Smo_Speed_Filter, n);
 }

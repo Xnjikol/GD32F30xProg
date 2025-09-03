@@ -18,8 +18,8 @@
       <rectangle top="0" left="335" width="782" height="831" />
     </window_attributes>
     <ordered_windows>
-      <window type="NS_Snoop.FrmWatch" title="Sensorless" />
       <window type="NS_Snoop.FrmWatch" title="Param" />
+      <window type="NS_Snoop.FrmWatch" title="Sensorless" />
       <window type="NS_Snoop.FrmEcuConfig" title="ECU1" />
       <window type="NS_Snoop.FrmWatch" title="OpenLoop" />
       <window type="NS_Snoop.FrmHardwareInterface" title="CAN1" />
@@ -48,7 +48,7 @@
     <hardware_channel>CAN1</hardware_channel>
     <calibration_area include_gaps="true" />
     <file path="E:\Doc\Work\FRECON\Prj\GD32F30xProg\build\GD32F30xProg.a2l" relative="build\GD32F30xProg.a2l" symbols="true" prompt_before_overwrite="true" enabled="true" load="false" download="false" flash="false" upload="false" save="false" percent_complete="0" operation_in_progress="false">
-      <properties load_memory_type="file_data" time_operation_started="2013-05-03T00:43:40.6800000+08:00" last_time_loaded="2013-05-03T00:43:40.6800000+08:00" disk_properties_error="" exists_on_disk="true" time_disk_modified="2025-08-28T15:39:40.3546030+08:00" size_bytes_on_disk="53875" last_time_downloaded="0001-01-01T00:00:00.0000000" last_time_flashed="0001-01-01T00:00:00.0000000" last_time_saved="0001-01-01T00:00:00.0000000">
+      <properties load_memory_type="file_data" time_operation_started="2013-05-01T07:39:10.7000000+08:00" last_time_loaded="2013-05-01T07:39:10.7000000+08:00" disk_properties_error="" exists_on_disk="true" time_disk_modified="2025-09-02T22:50:47.1797302+08:00" size_bytes_on_disk="54841" last_time_downloaded="0001-01-01T00:00:00.0000000" last_time_flashed="0001-01-01T00:00:00.0000000" last_time_saved="0001-01-01T00:00:00.0000000">
         <upload_area type="manually_defined" manual_regions_contiguous="true" const_regions_contiguous="false">
           <upload_region start_address="Calibration" byte_length="" />
           <upload_region start_address=".cal_sec" byte_length="" />
@@ -59,26 +59,26 @@
       </properties>
     </file>
     <window_attributes window_state="normal" details_shown="true">
-      <rectangle top="-38" left="-9" width="1934" height="977" />
+      <rectangle top="0" left="0" width="1934" height="977" />
     </window_attributes>
   </snoop_ecu>
   <snoop_asap3_config />
   <snoop_watch name="Param">
-    <window_attributes window_state="normal">
-      <rectangle top="63" left="79" width="1244" height="698" />
+    <window_attributes window_state="maximized">
+      <rectangle top="-38" left="-9" width="1934" height="977" />
     </window_attributes>
-    <display scope_showing="true" scope_horizontal="false" autohide_buttons="true" scope_split_vertical="0.277777777777778" scope_split_horizontal="0.5" enums="decimal_and_label" pointers="label_or_hex" scope_timebase_sec="1" scope_acq_period_ms="10" scope_exclude_cals_from_daq="true" scope_exclude_unselected_signals_from_daq="true" scope_black_background="false" scope_show_points="true" scope_use_steps="false" scope_autoscale_mode="stacked_separated" />
+    <display scope_showing="true" scope_horizontal="false" autohide_buttons="true" scope_split_vertical="0.27742946708464" scope_split_horizontal="0.5" enums="decimal_and_label" pointers="label_or_hex" scope_timebase_sec="1" scope_acq_period_ms="10" scope_exclude_cals_from_daq="true" scope_exclude_unselected_signals_from_daq="true" scope_black_background="false" scope_show_points="true" scope_use_steps="false" scope_autoscale_mode="stacked_separated" />
     <can_signals dbc_to_timeout_mult="10" no_dbc_period_timeout_ms="3000" />
     <logging target_period_ms="100" filename_style="date_time_sortable" format="compact" can_format="with_variables" enums="decimal" pointers="label_or_hex" logfile_absolute="E:\Doc\Work\FRECON\Prj\GD32F30xProg\" logfile_relative="" paused_loaded_from_file="false" />
     <columns>
       <column name="ColAddress" index="0" visible="false" visible_scope_on="false" width="40" width_scope_on="40" font_name="Courier New" font_size="8.25" />
-      <column name="ColHex" index="1" visible="false" visible_scope_on="true" width="130" width_scope_on="44" font_name="等距更纱黑体 SC" font_size="7.8" />
-      <column name="ColValue" index="2" visible="true" visible_scope_on="true" width="173" width_scope_on="86" font_name="等距更纱黑体 SC" font_size="7.8" />
-      <column name="ColName" index="3" visible="true" visible_scope_on="true" width="588" width_scope_on="150" font_name="等距更纱黑体 SC" font_size="7.8" />
+      <column name="ColHex" index="1" visible="false" visible_scope_on="true" width="130" width_scope_on="70" font_name="等距更纱黑体 SC" font_size="7.8" />
+      <column name="ColValue" index="2" visible="true" visible_scope_on="true" width="173" width_scope_on="138" font_name="等距更纱黑体 SC" font_size="7.8" />
+      <column name="ColName" index="3" visible="true" visible_scope_on="true" width="588" width_scope_on="241" font_name="等距更纱黑体 SC" font_size="7.8" />
       <column name="ColType" index="4" visible="false" visible_scope_on="false" width="66" width_scope_on="66" font_name="Arial Narrow" font_size="8.25" />
       <column name="ColUnits" index="5" visible="false" visible_scope_on="false" width="37" width_scope_on="37" font_name="Arial Narrow" font_size="8.25" />
       <column name="ColDescription" index="6" visible="false" visible_scope_on="false" width="105" width_scope_on="105" font_name="Arial Narrow" font_size="8.25" />
-      <column name="ColScope" index="7" visible="true" visible_scope_on="true" width="127" width_scope_on="36" font_name="Arial" font_size="8.25" />
+      <column name="ColScope" index="7" visible="true" visible_scope_on="true" width="127" width_scope_on="58" font_name="Arial" font_size="8.25" />
     </columns>
     <rows>
       <row displayed_name="adc_ch0_offset" nesting_depth="0" ecu="ECU1" scope_on="false" />
@@ -94,8 +94,8 @@
       <row displayed_name="Foc_Theta" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="6" scope_zero_divs="1" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
       <row displayed_name="Foc_Uclark_Ref.a" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="40" scope_zero_divs="14" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
       <row displayed_name="Foc_Uclark_Ref.b" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="40" scope_zero_divs="14" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
-      <row displayed_name="Foc_Udq_Ref.d" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="10" scope_zero_divs="12" scope_colour_set="true" scope_colour_user="false" scope_colour="-7722014" />
-      <row displayed_name="Foc_Udq_Ref.q" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="10" scope_zero_divs="12" scope_colour_set="true" scope_colour_user="false" scope_colour="-65281" />
+      <row displayed_name="Foc_Udq_Ref.d" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="50" scope_zero_divs="12" scope_colour_set="true" scope_colour_user="false" scope_colour="-7722014" />
+      <row displayed_name="Foc_Udq_Ref.q" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="50" scope_zero_divs="12" scope_colour_set="true" scope_colour_user="false" scope_colour="-65281" />
       <row displayed_name="Foc_BusVoltage" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Foc_Iclark_Fdbk.a" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
       <row displayed_name="Foc_Iclark_Fdbk.b" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10496" />
@@ -103,7 +103,7 @@
       <row displayed_name="Foc_Idq_Fdbk.q" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10185235" />
       <row displayed_name="Foc_Idq_Ref.d" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10496" />
       <row displayed_name="Foc_Idq_Ref.q" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-16711936" />
-      <row displayed_name="Stop" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
+      <row displayed_name="Stop" nesting_depth="0" ecu="ECU1" scope_on="false" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
       <row displayed_name="Motor_Speed" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10185235" />
       <row displayed_name="Motor_Theta_Elec" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="6" scope_zero_divs="4" scope_colour_set="true" scope_colour_user="false" scope_colour="-16711936" />
       <row displayed_name="Motor_Theta_Mech" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="6" scope_zero_divs="0" scope_colour_set="true" scope_colour_user="false" scope_colour="-10496" />
@@ -131,18 +131,18 @@
     <window_attributes window_state="normal">
       <rectangle top="128" left="128" width="1561" height="459" />
     </window_attributes>
-    <display scope_showing="true" scope_horizontal="false" autohide_buttons="true" scope_split_vertical="0.229720960415315" scope_split_horizontal="0.5" enums="decimal_and_label" pointers="label_or_hex" scope_timebase_sec="2" scope_acq_period_ms="10" scope_exclude_cals_from_daq="true" scope_exclude_unselected_signals_from_daq="true" scope_black_background="false" scope_show_points="true" scope_use_steps="false" scope_autoscale_mode="stacked_separated" />
+    <display scope_showing="true" scope_horizontal="false" autohide_buttons="true" scope_split_vertical="0.229072031148605" scope_split_horizontal="0.5" enums="decimal_and_label" pointers="label_or_hex" scope_timebase_sec="2" scope_acq_period_ms="10" scope_exclude_cals_from_daq="true" scope_exclude_unselected_signals_from_daq="true" scope_black_background="false" scope_show_points="true" scope_use_steps="false" scope_autoscale_mode="stacked_separated" />
     <can_signals dbc_to_timeout_mult="10" no_dbc_period_timeout_ms="3000" />
     <logging target_period_ms="100" filename_style="date_time_sortable" format="compact" can_format="with_variables" enums="decimal" pointers="label_or_hex" logfile_absolute="E:\Doc\Work\FRECON\Prj\GD32F30xProg\" logfile_relative="" paused_loaded_from_file="false" />
     <columns>
       <column name="ColAddress" index="0" visible="false" visible_scope_on="false" width="56" width_scope_on="56" font_name="Courier New" font_size="8.25" />
       <column name="ColHex" index="1" visible="false" visible_scope_on="true" width="179" width_scope_on="57" font_name="等距更纱黑体 SC" font_size="7.8" />
-      <column name="ColValue" index="2" visible="true" visible_scope_on="true" width="377" width_scope_on="80" font_name="等距更纱黑体 SC" font_size="7.8" />
-      <column name="ColName" index="3" visible="true" visible_scope_on="true" width="1257" width_scope_on="159" font_name="等距更纱黑体 SC" font_size="7.8" />
+      <column name="ColValue" index="2" visible="true" visible_scope_on="true" width="377" width_scope_on="79" font_name="等距更纱黑体 SC" font_size="7.8" />
+      <column name="ColName" index="3" visible="true" visible_scope_on="true" width="1257" width_scope_on="160" font_name="等距更纱黑体 SC" font_size="7.8" />
       <column name="ColType" index="4" visible="false" visible_scope_on="false" width="90" width_scope_on="90" font_name="Arial Narrow" font_size="8.25" />
       <column name="ColUnits" index="5" visible="false" visible_scope_on="false" width="51" width_scope_on="51" font_name="Arial Narrow" font_size="8.25" />
       <column name="ColDescription" index="6" visible="false" visible_scope_on="false" width="145" width_scope_on="145" font_name="Arial Narrow" font_size="8.25" />
-      <column name="ColScope" index="7" visible="true" visible_scope_on="true" width="276" width_scope_on="34" font_name="Arial" font_size="8.25" />
+      <column name="ColScope" index="7" visible="true" visible_scope_on="true" width="276" width_scope_on="33" font_name="Arial" font_size="8.25" />
     </columns>
     <rows>
       <row displayed_name="Foc_Mode" nesting_depth="0" ecu="ECU1" scope_on="false" />
@@ -171,67 +171,79 @@
       <row displayed_name="Foc_Idq_Fdbk.q" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="1" scope_zero_divs="2" scope_colour_set="true" scope_colour_user="false" scope_colour="-65281" />
       <row displayed_name="Foc_Idq_Ref.d" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="1" scope_zero_divs="1" scope_colour_set="true" scope_colour_user="false" scope_colour="-7722014" />
       <row displayed_name="Foc_Idq_Ref.q" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="1" scope_zero_divs="2" scope_colour_set="true" scope_colour_user="false" scope_colour="-10185235" />
+      <row displayed_name="Motor_SampleFreq" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Motor_Speed_Filter.prev_output" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
+      <row displayed_name="Motor_Speed_Prescaler" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Motor_Theta_Factor" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Motor_Theta_Err" nesting_depth="0" ecu="ECU1" scope_on="false" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
     </rows>
   </snoop_watch>
   <snoop_watch name="Sensorless">
-    <window_attributes window_state="maximized">
+    <window_attributes window_state="normal">
       <rectangle top="128" left="128" width="1140" height="341" />
     </window_attributes>
-    <display scope_showing="true" scope_horizontal="false" autohide_buttons="true" scope_split_vertical="0.25914315569488" scope_split_horizontal="0.5" enums="decimal_and_label" pointers="label_or_hex" scope_timebase_sec="1" scope_acq_period_ms="10" scope_exclude_cals_from_daq="true" scope_exclude_unselected_signals_from_daq="true" scope_black_background="false" scope_show_points="true" scope_use_steps="false" scope_autoscale_mode="stacked_separated" />
+    <display scope_showing="true" scope_horizontal="false" autohide_buttons="true" scope_split_vertical="0.258928571428571" scope_split_horizontal="0.5" enums="decimal_and_label" pointers="label_or_hex" scope_timebase_sec="1" scope_acq_period_ms="10" scope_exclude_cals_from_daq="true" scope_exclude_unselected_signals_from_daq="true" scope_black_background="false" scope_show_points="true" scope_use_steps="false" scope_autoscale_mode="stacked_separated" />
     <can_signals dbc_to_timeout_mult="10" no_dbc_period_timeout_ms="3000" />
-    <logging target_period_ms="100" filename_style="date_time_sortable" format="compact" can_format="with_variables" enums="decimal" pointers="label_or_hex" logfile_absolute="" logfile_relative="" paused_loaded_from_file="false" />
+    <logging target_period_ms="100" filename_style="date_time_sortable" format="compact" can_format="with_variables" enums="decimal" pointers="label_or_hex" logfile_absolute="E:\Doc\Work\FRECON\Prj\GD32F30xProg\" logfile_relative="" paused_loaded_from_file="false" />
     <columns>
       <column name="ColAddress" index="0" visible="false" visible_scope_on="false" width="40" width_scope_on="40" font_name="Courier New" font_size="8.25" />
-      <column name="ColHex" index="1" visible="false" visible_scope_on="true" width="130" width_scope_on="82" font_name="等距更纱黑体 SC" font_size="7.8" />
-      <column name="ColValue" index="2" visible="true" visible_scope_on="true" width="377" width_scope_on="100" font_name="等距更纱黑体 SC" font_size="7.8" />
-      <column name="ColName" index="3" visible="true" visible_scope_on="true" width="1257" width_scope_on="228" font_name="等距更纱黑体 SC" font_size="7.8" />
+      <column name="ColHex" index="1" visible="false" visible_scope_on="true" width="130" width_scope_on="46" font_name="等距更纱黑体 SC" font_size="7.8" />
+      <column name="ColValue" index="2" visible="true" visible_scope_on="true" width="377" width_scope_on="56" font_name="等距更纱黑体 SC" font_size="7.8" />
+      <column name="ColName" index="3" visible="true" visible_scope_on="true" width="1257" width_scope_on="129" font_name="等距更纱黑体 SC" font_size="7.8" />
       <column name="ColType" index="4" visible="false" visible_scope_on="false" width="66" width_scope_on="66" font_name="Arial Narrow" font_size="8.25" />
       <column name="ColUnits" index="5" visible="false" visible_scope_on="false" width="37" width_scope_on="37" font_name="Arial Narrow" font_size="8.25" />
       <column name="ColDescription" index="6" visible="false" visible_scope_on="false" width="105" width_scope_on="105" font_name="Arial Narrow" font_size="8.25" />
-      <column name="ColScope" index="7" visible="true" visible_scope_on="true" width="277" width_scope_on="62" font_name="Arial" font_size="8.25" />
+      <column name="ColScope" index="7" visible="true" visible_scope_on="true" width="277" width_scope_on="35" font_name="Arial" font_size="8.25" />
     </columns>
     <rows>
       <row displayed_name="Sensorless_Enabled" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Sensorless_Switch_Hfi" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Sensorless_Switch_Smo" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_A" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_B" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_CurEst.a" nesting_depth="0" ecu="ECU1" scope_on="false" scope_colour_set="true" scope_colour_user="false" scope_colour="-65281" />
-      <row displayed_name="Smo_CurEst.b" nesting_depth="0" ecu="ECU1" scope_on="false" scope_colour_set="true" scope_colour_user="false" scope_colour="-7722014" />
-      <row displayed_name="Smo_Current.a" nesting_depth="0" ecu="ECU1" scope_on="false" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
-      <row displayed_name="Smo_Current.b" nesting_depth="0" ecu="ECU1" scope_on="false" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
-      <row displayed_name="Smo_Emf_A_Filter.alpha" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_Emf_A_Filter.initialized" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_Emf_A_Filter.prev_output" nesting_depth="0" ecu="ECU1" scope_on="false" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
-      <row displayed_name="Smo_Emf_B_Filter.alpha" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_Emf_B_Filter.initialized" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_Emf_B_Filter.prev_output" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10496" />
-      <row displayed_name="Smo_EmfEst.a" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10496" />
-      <row displayed_name="Smo_EmfEst.b" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-16711936" />
+      <row displayed_name="systick_cnt" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="2000" scope_zero_divs="10" scope_colour_set="true" scope_colour_user="false" scope_colour="-10185235" />
       <row displayed_name="Smo_Enabled" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-7722014" />
       <row displayed_name="Hfi_Enabled" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-65281" />
-      <row displayed_name="Smo_Gain" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_InvPn" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_SampleTime" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Smo_Speed" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="1000" scope_zero_divs="6" scope_colour_set="true" scope_colour_user="false" scope_colour="-10185235" />
-      <row displayed_name="Smo_Speed_Filter.alpha" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_Speed_Filter.initialized" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_Speed_Filter.prev_output" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Smo_Theta" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="6" scope_zero_divs="4" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
-      <row displayed_name="Smo_Theta_PID.integral" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-16711936" />
-      <row displayed_name="Smo_Theta_PID.IntegralLimit" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_Theta_PID.Kd" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_Theta_PID.Ki" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_Theta_PID.Kp" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_Theta_PID.MaxOutput" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_Theta_PID.MinOutput" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_Theta_PID.output" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10185235" />
-      <row displayed_name="Smo_Theta_PID.previous_error" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
-      <row displayed_name="Smo_Theta_PID.Reset" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_Theta_PID.Ts" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_Voltage.a" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Smo_Voltage.b" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="systick_cnt" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="1000" scope_zero_divs="0" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
+      <row displayed_name="Smo_Speed_Err" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-7722014" />
+      <row displayed_name="Smo_Theta_Err" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
+      <row displayed_name="Hfi_Speed_Err" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10496" />
+      <row displayed_name="Hfi_Theta_Err" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-16711936" />
+      <row displayed_name="Hfi_VoltageInj.b" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_Error" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-7722014" />
+      <row displayed_name="Hfi_Error_Filter.prev_output" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_IClarkFilt.a" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
+      <row displayed_name="Hfi_IClarkFilt.b" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
+      <row displayed_name="Hfi_IParkResp.d" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10496" />
+      <row displayed_name="Hfi_IParkResp.q" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-16711936" />
+      <row displayed_name="Hfi_Phase" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-65281" />
+      <row displayed_name="Hfi_PLL.pid.output" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10185235" />
+      <row displayed_name="Hfi_PLL.state.error" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-65281" />
+      <row displayed_name="Hfi_PLL.state.omega" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.state.theta" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_Speed" nesting_depth="0" ecu="ECU1" scope_on="false" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
+      <row displayed_name="Hfi_Theta" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_VoltageInj.a" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.state.is_enabled" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.state.is_initialized" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.params.integral_limit" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.params.kd" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.params.ki" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.params.kp" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.params.max_output" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.params.min_output" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.params.ts" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.pid.integral" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
+      <row displayed_name="Hfi_PLL.pid.IntegralLimit" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.pid.Kd" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.pid.Ki" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.pid.Kp" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.pid.MaxOutput" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.pid.MinOutput" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.pid.previous_error" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.pid.Reset" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.pid.Ts" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_PLL.state.theta_prev" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Hfi_SampleTime" nesting_depth="0" ecu="ECU1" scope_on="false" />
     </rows>
   </snoop_watch>
 </snoop_workspace>
