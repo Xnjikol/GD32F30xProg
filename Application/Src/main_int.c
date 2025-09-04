@@ -6,8 +6,6 @@
 #include "sensorless_interface.h"
 #include "transformation.h"
 
-#include <stdlib.h>
-
 static DeviceStateEnum_t MainInt_State        = RUNNING;
 static bool              MainInt_UseRealTheta = true;
 
@@ -17,6 +15,7 @@ static inline void MainInt_Update_FocCurrent(void) {
 
     current_clark = ClarkeTransform(current_phase);
     current_clark = Sensorless_FilterCurrent(current_clark);
+    Sensorless_Set_Current(current_clark);
     Foc_Set_Iclark_Fdbk(current_clark);
 }
 
@@ -70,14 +69,11 @@ static inline void MainInt_Initialization(void) {
 
 static inline void MainInt_Update_Sensorless(void) {
     Clark_t voltage = {0};
-    Clark_t current = {0};
     Park_t  ref     = {0};
 
     voltage = Foc_Get_Uclark_Ref();
-    current = Foc_Get_Iclark_Fdbk();
 
     Sensorless_Set_Voltage(voltage);
-    Sensorless_Set_Current(current);
 
     Sensorless_Calculate();
 
@@ -87,11 +83,11 @@ static inline void MainInt_Update_Sensorless(void) {
 }
 
 static inline void MainInt_Run_Foc(void) {
-    Park_t u_dq_ref = {0};
+    Park_t vol_dq_ref = {0};
 
-    u_dq_ref = Foc_Update_Main();
+    vol_dq_ref = Foc_Update_Main();
 
-    Foc_Set_Udq_Ref(u_dq_ref);
+    Foc_Set_Udq_Ref(vol_dq_ref);
 }
 
 static inline void MainInt_Exit(void) {

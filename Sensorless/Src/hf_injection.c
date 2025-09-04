@@ -45,7 +45,7 @@ static Park_t  Hfi_IParkFilt  = {0};  // 高频滤波后的电流
 static Clark_t Hfi_IClarkFilt = {0};  // 滤波后的静止坐标系电流
 static Park_t  Hfi_VoltageInj = {0};  // 将要注入的高频电压
 
-static volatile Park_t Hfi_IParkResp_Err = {0};  // 高频响应电流误差
+// static volatile Park_t Hfi_IParkResp_Err = {0};  // 高频响应电流误差
 
 static BandPassFilter_t Hfi_Resp_Extractor = {0};
 static BandStopFilter_t Hfi_Current_Filter = {0};
@@ -153,6 +153,8 @@ static inline void generate_signal() {
     Park_t inj_dq = {0};
     float  cos_hf = {0};
 
+    /* 更新高频相位 */
+    Hfi_Phase = SawtoothWaveGenerator(&Hfi_Phase_Gen, false) * M_2PI;
     /* 生成脉振高频注入信号 (d轴注入) */
     cos_hf   = COS(Hfi_Phase);
     inj_dq.d = Hfi_InjVolt * cos_hf;
@@ -207,30 +209,28 @@ static inline float calculate_speed(void) {
     return Hfi_Speed;
 }
 
-static inline Park_t extract_high_freq_response(void) {
-    Park_t response = {0};
+// static inline Park_t extract_high_freq_response(void) {
+//     Park_t response = {0};
 
-    if (!Hfi_Enabled) {
-        return response;
-    }
+//     if (!Hfi_Enabled) {
+//         return response;
+//     }
 
-    response.d
-        = BandPassFilter_Update(&Hfi_Resp_Extractor, Hfi_IParkResp.d);
-    response.q
-        = BandPassFilter_Update(&Hfi_Resp_Extractor, Hfi_IParkResp.q);
+//     response.d
+//         = BandPassFilter_Update(&Hfi_Resp_Extractor, Hfi_IParkFdbk.d);
+//     response.q
+//         = BandPassFilter_Update(&Hfi_Resp_Extractor, Hfi_IParkFdbk.q);
 
-    Hfi_IParkResp_Err.d = Hfi_IParkResp.d - response.d;
-    Hfi_IParkResp_Err.q = Hfi_IParkResp.q - response.q;
+//     Hfi_IParkResp_Err.d = Hfi_IParkResp.d - response.d;
+//     Hfi_IParkResp_Err.q = Hfi_IParkResp.q - response.q;
 
-    Hfi_IParkResp = response;
+//     Hfi_IParkResp = response;
 
-    return response;
-}
+//     return response;
+// }
 
 void Hfi_Update(void) {
-    /* 更新高频相位 */
-    Hfi_Phase = SawtoothWaveGenerator(&Hfi_Phase_Gen, false) * M_2PI;
-    extract_high_freq_response();
+    // extract_high_freq_response();
     calculate_position_error();
     calculate_speed();
 }
