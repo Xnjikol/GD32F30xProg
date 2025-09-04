@@ -91,7 +91,7 @@
 #endif
 
 #define MOTOR_RESOLVER_PN     1.0F          /* 旋变极对数 */
-#define MOTOR_POSITION_OFFSET 39833.000000F /* 位置传感器零点偏置 */
+#define MOTOR_POSITION_OFFSET 38775.000000F /* 位置传感器零点偏置 */
 
 /*********************************************************************/
 /*                        保护参数配置                                 */

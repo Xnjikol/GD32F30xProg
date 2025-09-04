@@ -19,13 +19,13 @@ typedef enum {
 typedef struct {
     Park_t vol_ref;  // 电压参考
     float  freq;
-    float  theta;
+    float  offset;
 } VF_Parameter_t;
 
 typedef struct {
     Park_t cur_ref;  // DQ轴电流参考
     float  freq;
-    float  theta;
+    float  offset;
     bool   use_sensor;  // 是否使用传感器
 } IF_Parameter_t;
 
