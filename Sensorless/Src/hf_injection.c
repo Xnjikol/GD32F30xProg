@@ -19,6 +19,8 @@
 #include "theta_calc.h"
 #include "transformation.h"
 
+#define THETA_COMPENSATION 2.356194490192345F
+
 static bool  Hfi_Enabled    = {0};
 static bool  Hfi_ParamError = {0};
 static float Hfi_InjFreq    = {0};
@@ -33,6 +35,8 @@ static float Hfi_SampleFreq = {0};
 static volatile float Hfi_Theta_Err = {0};
 static volatile float Hfi_Speed_Err = {0};
 
+static float volatile Hfi_RealTheta = {0};
+
 static float   Hfi_Theta      = {0};
 static float   Hfi_Omega      = {0};
 static float   Hfi_Speed      = {0};
@@ -45,9 +49,9 @@ static Park_t  Hfi_IParkFilt  = {0};  // 高频滤波后的电流
 static Clark_t Hfi_IClarkFilt = {0};  // 滤波后的静止坐标系电流
 static Park_t  Hfi_VoltageInj = {0};  // 将要注入的高频电压
 
-static BandPassFilter_t Hfi_Resp_Extractor = {0};
 static BandStopFilter_t Hfi_Current_Filter = {0};
 static LowPassFilter_t  Hfi_Error_Filter   = {0};
+static LowPassFilter_t  Hfi_Speed_Filter   = {0};
 static Pll_Handler_t    Hfi_PLL            = {0};
 static SawtoothWave_t   Hfi_Phase_Gen      = {0};
 
@@ -78,6 +82,8 @@ bool Hfi_Initialization(const hf_injection_params_t* params) {
 
     SawtoothWave_Init(
         &Hfi_Phase_Gen, 1, Hfi_InjFreq, 0.0F, Hfi_SampleTime);
+    LowPassFilter_Init(
+        &Hfi_Speed_Filter, 10.0F, Hfi_SampleFreq / 10.0F);
 
     return true;
 }
@@ -87,8 +93,6 @@ void Hfi_Set_CurrentFilter(float center_freq,
                            float sample_freq) {
     BandStopFilter_Init(
         &Hfi_Current_Filter, sample_freq, center_freq, band_width);
-    BandPassFilter_Init(
-        &Hfi_Resp_Extractor, sample_freq, center_freq, band_width);
 }
 
 void Hfi_Set_ResponseFilter(float cutoff_freq, float sample_freq) {
@@ -170,43 +174,56 @@ static inline float pll_update(float error, bool reset) {
     // 更新锁相环
     float omega = Pid_Update(error, reset, &Hfi_PLL.pid);
     Hfi_Theta += omega * Hfi_SampleTime;
-    Hfi_Theta = wrap_theta_2pi(Hfi_Theta);
+    Hfi_Theta     = wrap_theta_2pi(Hfi_Theta);
+    Hfi_RealTheta = wrap_theta_2pi(Hfi_Theta + THETA_COMPENSATION);
 
     Hfi_Omega = omega;
     return omega;
 }
 
-static inline float calculate_position_error(void) {
+static inline float calculate_error(float response) {
     float position_error = 0.0F;
 
     if (!Hfi_Enabled) {
-        Hfi_Error = 0.0F;
-        return Hfi_Error;
+        return position_error;
     }
 
     float sin_hf = SIN(Hfi_Phase);
 
     /* 计算位置误差 */
-    position_error = Hfi_IParkResp.q * 2 * sin_hf;
+    position_error = response * 2 * sin_hf;
     position_error
         = LowPassFilter_Update(&Hfi_Error_Filter, position_error);
 
-    Hfi_Error = position_error;
     return position_error;
 }
 
-static inline float calculate_speed(void) {
-    float omega = pll_update(Hfi_Error, !Hfi_Enabled);
-    float n     = radps2rpm(omega) * Hfi_InvPn;
-    Hfi_Speed   = n;
+static inline float calculate_omega(float error) {
+    float omega = pll_update(error, !Hfi_Enabled);
 
-    return Hfi_Speed;
+    return omega;
+}
+
+static inline float calculate_speed(float omega) {
+    static uint16_t hfi_count = 0x0000U;
+    static float    hfi_integ = 0.0F;
+    float           speed     = 0.0F;
+    hfi_integ += radps2rpm(omega) * Hfi_InvPn * 0.1F;
+    hfi_count++;
+    if (hfi_count < 0x000AU) {
+        return Hfi_Speed;
+    }
+    hfi_count = 0x0000U;
+    speed     = LowPassFilter_Update(&Hfi_Speed_Filter, hfi_integ);
+    hfi_integ = 0.0F;
+    return speed;
 }
 
 void Hfi_Update(void) {
-    // extract_high_freq_response();
-    calculate_position_error();
-    calculate_speed();
+    float omega = 0;
+    Hfi_Error   = calculate_error(Hfi_IParkResp.q);
+    omega       = calculate_omega(Hfi_Error);
+    Hfi_Speed   = calculate_speed(omega);
 }
 
 void Hfi_Set_InitialPosition(float theta) {
@@ -216,7 +233,7 @@ void Hfi_Set_InitialPosition(float theta) {
 
 AngleResult_t Hfi_Get_Result(void) {
     AngleResult_t angle_result;
-    angle_result.theta = Hfi_Theta;
+    angle_result.theta = Hfi_RealTheta;
     angle_result.speed = Hfi_Speed;
     return angle_result;
 }

@@ -7,7 +7,7 @@
 #include "transformation.h"
 
 static DeviceStateEnum_t MainInt_State        = RUNNING;
-static bool              MainInt_UseRealTheta = true;
+static volatile bool     MainInt_UseRealTheta = true;
 
 static inline void MainInt_Update_FocCurrent(void) {
     Phase_t current_phase = Peripheral_Get_PhaseCurrent();
