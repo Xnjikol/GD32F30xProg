@@ -153,6 +153,8 @@ static inline void generate_signal() {
     Park_t inj_dq = {0};
     float  cos_hf = {0};
 
+    /* 更新高频相位 */
+    Hfi_Phase = SawtoothWaveGenerator(&Hfi_Phase_Gen, false) * M_2PI;
     /* 生成脉振高频注入信号 (d轴注入) */
     cos_hf   = COS(Hfi_Phase);
     inj_dq.d = Hfi_InjVolt * cos_hf;
@@ -228,8 +230,6 @@ static inline Park_t extract_high_freq_response(void) {
 }
 
 void Hfi_Update(void) {
-    /* 更新高频相位 */
-    Hfi_Phase = SawtoothWaveGenerator(&Hfi_Phase_Gen, false) * M_2PI;
     extract_high_freq_response();
     calculate_position_error();
     calculate_speed();
