@@ -120,8 +120,9 @@ Park_t Foc_Get_Idq_Fdbk(void) {
 
 void Foc_Set_Udq_Ref(Park_t udq_ref) {
     Foc_Udq_Ref = udq_ref;  // 设置DQ轴电压参考
+
     // 将DQ轴电压参考转换为αβ轴电压参考
-    InvParkTransform(&Foc_Udq_Ref, Foc_Theta, &Foc_Uclark_Ref);
+    Foc_Uclark_Ref = InvParkTransform(Foc_Udq_Ref, Foc_Theta);
 }
 
 Park_t Foc_Get_Udq_Ref(void) {
@@ -301,13 +302,13 @@ static inline Park_t Foc_Update_SpeedLoop(float ref,
     return output;  // 返回DQ轴电流参考
 }
 
-static inline Park_t Foc_Update_CurrentLoop(Park_t* ref,
-                                            Park_t* fdbk,
-                                            bool    reset) {
+static inline Park_t Foc_Update_CurrentLoop(Park_t ref,
+                                            Park_t fdbk,
+                                            bool   reset) {
     Park_t output = {0};
 
-    Pid_Update(ref->d - fdbk->d, reset, &Foc_Pid_CurD_Handler);
-    Pid_Update(ref->q - fdbk->q, reset, &Foc_Pid_CurQ_Handler);
+    Pid_Update(ref.d - fdbk.d, reset, &Foc_Pid_CurD_Handler);
+    Pid_Update(ref.q - fdbk.q, reset, &Foc_Pid_CurQ_Handler);
 
     output.d = Foc_Pid_CurD_Handler.output;
     output.q = Foc_Pid_CurQ_Handler.output;
@@ -333,8 +334,8 @@ static inline Park_t Foc_Update_VfMode(bool reset) {
                                   reset);  // 更新电压环角度
     Foc_Theta   = wrap_theta_2pi(phase + Foc_VfParam.offset);
 
-    ParkTransform(&Foc_Iclark_Fdbk, Foc_Theta, &Foc_Idq_Fdbk);
-    reset_prev = reset;
+    Foc_Idq_Fdbk = ParkTransform(Foc_Iclark_Fdbk, Foc_Theta);
+    reset_prev   = reset;
     return output;
 }
 
@@ -360,10 +361,10 @@ static inline Park_t Foc_Update_IfMode(bool reset) {
         Foc_Theta   = wrap_theta_2pi(phase + Foc_IfParam.offset);
     }
 
-    ParkTransform(&Foc_Iclark_Fdbk, Foc_Theta, &Foc_Idq_Fdbk);
+    Foc_Idq_Fdbk = ParkTransform(Foc_Iclark_Fdbk, Foc_Theta);
 
     output = Foc_Update_CurrentLoop(
-        &Foc_IfParam.cur_ref, &Foc_Idq_Fdbk, reset);
+        Foc_IfParam.cur_ref, Foc_Idq_Fdbk, reset);
 
     reset_prev = reset;
     return output;
@@ -375,14 +376,14 @@ static inline Park_t Foc_Update_SpeedMode(bool reset) {
         Foc_Speed_Ref = 0.0F;
     }
 
-    ParkTransform(&Foc_Iclark_Fdbk, Foc_Theta, &Foc_Idq_Fdbk);
+    Foc_Idq_Fdbk = ParkTransform(Foc_Iclark_Fdbk, Foc_Theta);
 
     Park_t output = {0};
     // 更新转速环
     Foc_Idq_Ref
         = Foc_Update_SpeedLoop(Foc_Speed_Ref, Foc_Speed_Fdbk, reset);
     // 更新电流环
-    output = Foc_Update_CurrentLoop(&Foc_Idq_Ref, &Foc_Idq_Fdbk, reset);
+    output = Foc_Update_CurrentLoop(Foc_Idq_Ref, Foc_Idq_Fdbk, reset);
 
     return output;
 }
@@ -409,7 +410,7 @@ Park_t Foc_Update_Main(void) {
         break;
     }
     }
-    Foc_Udq_Ref = output;
-    InvParkTransform(&Foc_Udq_Ref, Foc_Theta, &Foc_Uclark_Ref);
+    Foc_Udq_Ref    = output;
+    Foc_Uclark_Ref = InvParkTransform(Foc_Udq_Ref, Foc_Theta);
     return output;  // 返回DQ轴电压参考
 }

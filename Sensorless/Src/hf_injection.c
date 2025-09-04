@@ -95,7 +95,7 @@ void Hfi_Set_PllParams(const pll_params_t* pll_params) {
 
 void Hfi_Set_Current(Clark_t current) {
     Hfi_IClarkFdbk = current;
-    ParkTransform(&current, Hfi_Theta, &Hfi_IParkFdbk);
+    Hfi_IParkFdbk  = ParkTransform(current, Hfi_Theta);
 }
 
 void Hfi_Set_Enabled(bool enabled) {
@@ -119,7 +119,7 @@ Clark_t Hfi_Get_FilteredCurrent(Clark_t current) {
     Park_t origin   = {0};
     Park_t filtered = {0};
     Park_t response = {0};
-    ParkTransform(&current, Hfi_Theta, &origin);
+    origin          = ParkTransform(current, Hfi_Theta);
 
     filtered.d = BandStopFilter_Update(&Hfi_Current_Filter, origin.d);
     filtered.q = BandStopFilter_Update(&Hfi_Current_Filter, origin.q);
@@ -127,7 +127,7 @@ Clark_t Hfi_Get_FilteredCurrent(Clark_t current) {
     response.d = origin.d - filtered.d;
     response.q = origin.q - filtered.q;
 
-    InvParkTransform(&filtered, Hfi_Theta, &Hfi_IClarkFilt);
+    Hfi_IClarkFilt = InvParkTransform(filtered, Hfi_Theta);
 
     Hfi_IClarkFdbk = current;
     Hfi_IParkFdbk  = origin;
@@ -159,7 +159,7 @@ Clark_t Hfi_Apply_Injection(Park_t vol) {
     Clark_t out;
     vol.d += Hfi_VoltageInj.d;
     vol.q += Hfi_VoltageInj.q;
-    InvParkTransform(&vol, Hfi_Theta, &out);
+    out = InvParkTransform(vol, Hfi_Theta);
     return out;
 }
 

@@ -14,7 +14,8 @@ static bool              MainInt_UseRealTheta = true;
 static inline void MainInt_Update_FocCurrent(void) {
     Phase_t current_phase = Peripheral_Get_PhaseCurrent();
     Clark_t current_clark = {0};
-    ClarkeTransform(&current_phase, &current_clark);
+
+    current_clark = ClarkeTransform(current_phase);
     current_clark = Sensorless_FilterCurrent(current_clark);
     Foc_Set_Iclark_Fdbk(current_clark);
 }
