@@ -30,6 +30,14 @@
 #    define M_1_2PI 0.159154943091895F /* 1/2π */
 #endif
 
+#ifndef M_60_2PI
+#    define M_60_2PI 9.549296585513721F /* 60 / 2π */
+#endif
+
+#ifndef M_2PI_60
+#    define M_2PI_60 0.10471975511965977F /* 2π / 60 */
+#endif
+
 // #ifndef P_DEG
 // #    define P_DEG 0.0027777777777777777777777777777F /* 1/360 */
 // #endif
@@ -116,7 +124,7 @@ static inline float_t rad2deg(float_t rad) {
  * @return 角速度（弧度/秒）
  */
 static inline float_t rpm2radps(float_t rpm) {
-    return rpm * (M_2PI / 60.0F);
+    return rpm * M_2PI_60;
 }
 
 /**
@@ -125,7 +133,7 @@ static inline float_t rpm2radps(float_t rpm) {
  * @return 转速（每分钟转数）
  */
 static inline float_t radps2rpm(float_t radps) {
-    return radps * (60.0F * M_1_2PI);
+    return radps * M_60_2PI;
 }
 
 /**
