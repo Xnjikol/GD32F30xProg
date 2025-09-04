@@ -45,8 +45,6 @@ static Park_t  Hfi_IParkFilt  = {0};  // 高频滤波后的电流
 static Clark_t Hfi_IClarkFilt = {0};  // 滤波后的静止坐标系电流
 static Park_t  Hfi_VoltageInj = {0};  // 将要注入的高频电压
 
-// static volatile Park_t Hfi_IParkResp_Err = {0};  // 高频响应电流误差
-
 static BandPassFilter_t Hfi_Resp_Extractor = {0};
 static BandStopFilter_t Hfi_Current_Filter = {0};
 static LowPassFilter_t  Hfi_Error_Filter   = {0};
@@ -202,32 +200,8 @@ static inline float calculate_speed(void) {
     float n     = radps2rpm(omega) * Hfi_InvPn;
     Hfi_Speed   = n;
 
-    // Hfi_Theta = PLL_Update(&Hfi_PLL, Hfi_Error);
-    // Hfi_Omega = PLL_GetSpeed(&Hfi_PLL);
-    // Hfi_Speed = radps2rpm(Hfi_Omega);
-
     return Hfi_Speed;
 }
-
-// static inline Park_t extract_high_freq_response(void) {
-//     Park_t response = {0};
-
-//     if (!Hfi_Enabled) {
-//         return response;
-//     }
-
-//     response.d
-//         = BandPassFilter_Update(&Hfi_Resp_Extractor, Hfi_IParkFdbk.d);
-//     response.q
-//         = BandPassFilter_Update(&Hfi_Resp_Extractor, Hfi_IParkFdbk.q);
-
-//     Hfi_IParkResp_Err.d = Hfi_IParkResp.d - response.d;
-//     Hfi_IParkResp_Err.q = Hfi_IParkResp.q - response.q;
-
-//     Hfi_IParkResp = response;
-
-//     return response;
-// }
 
 void Hfi_Update(void) {
     // extract_high_freq_response();
