@@ -152,6 +152,13 @@ static inline void enable_hfi(bool enable) {
     if (enable) {
         if (!Hfi_Get_Enabled()) {
             Hfi_Set_Enabled(true);
+            float estimate, target, error;
+            estimate = Hfi_Get_Result().theta;
+            target   = Sensorless_Theta;
+            error    = wrap_theta_2pi(target - estimate + PI) - PI;
+            if (error >= M_PI_4 || error <= -M_PI_4) {
+                Hfi_Set_InitialPosition(target);
+            }
         }
     } else {
         if (Hfi_Get_Enabled()) {
@@ -200,15 +207,15 @@ bool Sensorless_Calculate(void) {
     return true;
 }
 
-Clark_t Sensorless_Inject_Voltage(Clark_t voltage) {
+Park_t Sensorless_Inject_Voltage(Park_t voltage) {
     if (!Sensorless_Enabled) {
         return voltage;
     }
 
     if (Hfi_Get_Enabled()) {
-        Clark_t inj = Hfi_Get_Inject_Voltage();
-        voltage.a += inj.a;
-        voltage.b += inj.b;
+        Park_t inj = Hfi_Get_Inject_Voltage();
+        voltage.d += inj.d;
+        voltage.q += inj.q;
         return voltage;
     }
 
