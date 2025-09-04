@@ -72,8 +72,11 @@ void RampGenerator_Init(RampGenerator_t* ramp,
                         float            limit_min,
                         float            limit_max,
                         float            Ts);
-void SineWave_Init(
-    SineWave_t* sine, float amplitude, float frequency, float phase, float Ts);
+void SineWave_Init(SineWave_t* sine,
+                   float       amplitude,
+                   float       frequency,
+                   float       phase,
+                   float       Ts);
 void SquareWave_Init(SquareWave_t* square,
                      float         amplitude,
                      float         frequency,
@@ -132,30 +135,31 @@ static inline float SawtoothWaveGenerator(SawtoothWave_t* sawtooth,
     }
 
     // 计算每个采样周期的步进量
-    float step = sawtooth->frequency * sawtooth->Ts;
+    float step
+        = sawtooth->frequency * sawtooth->Ts * sawtooth->amplitude;
 
     // 更新计数器
     sawtooth->counter += step;
 
     // 保持计数器在[0, 1]范围内
-    if (sawtooth->frequency > 0.0f) {
+    if (sawtooth->frequency >= 0.0F) {
         // 正向锯齿波：0→1然后跳回0
-        if (sawtooth->counter >= 1.0f) {
-            sawtooth->counter = sawtooth->counter - 1.0f;  // 取小数部分
-        } else if (sawtooth->counter < 0.0f) {
-            sawtooth->counter = 0.0f;
+        if (sawtooth->counter > sawtooth->amplitude) {
+            sawtooth->counter -= sawtooth->amplitude;  // 取小数部分
+        } else if (sawtooth->counter < 0.0F) {
+            sawtooth->counter = 0.0F;
         }
     } else {
         // 反向锯齿波：1→0然后跳回1
-        if (sawtooth->counter <= 0.0f) {
-            sawtooth->counter = sawtooth->counter + 1.0f;  // 从1开始递减
-        } else if (sawtooth->counter > 1.0f) {
-            sawtooth->counter = 1.0f;
+        if (sawtooth->counter < 0.0F) {
+            sawtooth->counter += sawtooth->amplitude;  // 从1开始递减
+        } else if (sawtooth->counter > sawtooth->amplitude) {
+            sawtooth->counter = sawtooth->amplitude;
         }
     }
 
     // 生成锯齿波输出：offset + amplitude * counter
-    return sawtooth->offset + sawtooth->amplitude * sawtooth->counter;
+    return sawtooth->offset + sawtooth->counter;
 }
 
 /**
@@ -187,7 +191,8 @@ static inline float SineWaveGenerator(SineWave_t* sine, bool reset) {
  * @param  reset   是否复位方波（true: 复位，false: 正常运行）
  * @retval 当前输出值
  */
-static inline float SquareWaveGenerator(SquareWave_t* square, bool reset) {
+static inline float SquareWaveGenerator(SquareWave_t* square,
+                                        bool          reset) {
     if (reset) {
         square->counter = 0.0f;
         square->state   = false;

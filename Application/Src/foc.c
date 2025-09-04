@@ -326,9 +326,12 @@ static inline Park_t Foc_Update_VfMode(bool reset) {
                           Foc_Current_Ts);
     }
     Foc_Sawtooth_Handler.frequency = Foc_VfParam.freq;
-    output    = Foc_VfParam.vol_ref;  // 获取电压参考
-    Foc_Theta = SawtoothWaveGenerator(&Foc_Sawtooth_Handler,
-                                      reset);  // 更新电压环角度
+    output = Foc_VfParam.vol_ref;  // 获取电压参考
+
+    float phase = 0.0F;
+    phase       = SawtoothWaveGenerator(&Foc_Sawtooth_Handler,
+                                  reset);  // 更新电压环角度
+    Foc_Theta   = wrap_theta_2pi(phase + Foc_VfParam.offset);
 
     ParkTransform(&Foc_Iclark_Fdbk, Foc_Theta, &Foc_Idq_Fdbk);
     reset_prev = reset;
@@ -340,7 +343,7 @@ static inline Park_t Foc_Update_IfMode(bool reset) {
     Park_t      output     = {0};
     // 如果传感器状态为启用，则直接使用参考值，否则使用正弦波生成器
     if (Foc_IfParam.use_sensor == true) {
-        Foc_IfParam.theta = Foc_Theta;
+        Foc_IfParam.offset = 0.0F;
     } else {
         if (reset_prev && !reset) {
             SawtoothWave_Init(&Foc_Sawtooth_Handler,
@@ -350,8 +353,11 @@ static inline Park_t Foc_Update_IfMode(bool reset) {
                               Foc_Current_Ts);
         }
         Foc_Sawtooth_Handler.frequency = Foc_IfParam.freq;
-        Foc_Theta = SawtoothWaveGenerator(&Foc_Sawtooth_Handler,
-                                          reset);  // 更新电流环角度
+
+        float phase = 0.0F;
+        phase       = SawtoothWaveGenerator(&Foc_Sawtooth_Handler,
+                                      reset);  // 更新电流环角度
+        Foc_Theta   = wrap_theta_2pi(phase + Foc_IfParam.offset);
     }
 
     ParkTransform(&Foc_Iclark_Fdbk, Foc_Theta, &Foc_Idq_Fdbk);
