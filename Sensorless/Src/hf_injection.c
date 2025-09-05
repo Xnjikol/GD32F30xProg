@@ -21,6 +21,16 @@
 
 #define THETA_COMPENSATION 2.356194490192345F
 
+typedef struct {
+    float Delay11_DSTATE; /* '<S1>/Delay11' */
+    float Delay21_DSTATE; /* '<S1>/Delay21' */
+    float Delay12_DSTATE; /* '<S1>/Delay12' */
+    float Delay22_DSTATE; /* '<S1>/Delay22' */
+} BandStopStore_t;
+
+static BandStopStore_t Hfi_BandStopStore_D = {0};
+static BandStopStore_t Hfi_BandStopStore_Q = {0};
+
 static bool  Hfi_Enabled    = {0};
 static bool  Hfi_ParamError = {0};
 static float Hfi_InjFreq    = {0};
@@ -32,8 +42,9 @@ static float Hfi_InvPn      = {0};
 static float Hfi_SampleTime = {0};
 static float Hfi_SampleFreq = {0};
 
-static volatile float Hfi_Theta_Err = {0};
-static volatile float Hfi_Speed_Err = {0};
+static volatile bool  Hfi_UpdateTheta = {0};
+static volatile float Hfi_Theta_Err   = {0};
+static volatile float Hfi_Speed_Err   = {0};
 
 static float volatile Hfi_RealTheta = {0};
 
@@ -126,14 +137,58 @@ void Hfi_Set_Speed_Err(float ref) {
     Hfi_Speed_Err = ref - Hfi_Speed;
 }
 
+float bandStopFilter_Step(BandStopStore_t* store, float in) {
+    float out = 0.0F;
+    float rtb_Delay11;
+    float rtb_Delay12;
+    float rtb_SumA31;
+    float rtb_SumA32;
+
+    /* Delay: '<S1>/Delay11' */
+    rtb_Delay11 = store->Delay11_DSTATE;
+
+    rtb_SumA31 = (0.99115359783172607 * in
+                  - -1.879463791847229 * store->Delay11_DSTATE)
+                 - 0.98190766572952271 * store->Delay21_DSTATE;
+
+    /* Delay: '<S1>/Delay12' */
+    rtb_Delay12 = store->Delay12_DSTATE;
+
+    rtb_SumA32
+        = (((-1.9022632837295532 * store->Delay11_DSTATE + rtb_SumA31)
+            + store->Delay21_DSTATE)
+               * 0.99115359783172607
+           - -1.891260027885437 * store->Delay12_DSTATE)
+          - 0.98286348581314087 * store->Delay22_DSTATE;
+    out = (-1.9022632837295532 * store->Delay12_DSTATE + rtb_SumA32)
+          + store->Delay22_DSTATE;
+
+    /* Update for Delay: '<S1>/Delay11' */
+    store->Delay11_DSTATE = rtb_SumA31;
+
+    /* Update for Delay: '<S1>/Delay21' */
+    store->Delay21_DSTATE = rtb_Delay11;
+
+    /* Update for Delay: '<S1>/Delay12' */
+    store->Delay12_DSTATE = rtb_SumA32;
+
+    /* Update for Delay: '<S1>/Delay22' */
+    store->Delay22_DSTATE = rtb_Delay12;
+
+    return out;
+}
+
 Clark_t Hfi_Get_FilteredCurrent(Clark_t current) {
     Park_t origin   = {0};
     Park_t filtered = {0};
     Park_t response = {0};
     origin          = ParkTransform(current, Hfi_Theta);
 
-    filtered.d = BandStopFilter_Update(&Hfi_Current_Filter, origin.d);
-    filtered.q = BandStopFilter_Update(&Hfi_Current_Filter, origin.q);
+    // filtered.d = BandStopFilter_Update(&Hfi_Current_Filter, origin.d);
+    // filtered.q = BandStopFilter_Update(&Hfi_Current_Filter, origin.q);
+
+    filtered.d = bandStopFilter_Step(&Hfi_BandStopStore_D, origin.d);
+    filtered.q = bandStopFilter_Step(&Hfi_BandStopStore_Q, origin.q);
 
     response.d = origin.d - filtered.d;
     response.q = origin.q - filtered.q;
@@ -171,11 +226,19 @@ Park_t Hfi_Get_Inject_Voltage(void) {
 }
 
 static inline float pll_update(float error, bool reset) {
+    static float hfi_theta_estimate = 0.0F;
     // 更新锁相环
     float omega = Pid_Update(error, reset, &Hfi_PLL.pid);
-    Hfi_Theta += omega * Hfi_SampleTime;
-    Hfi_Theta     = wrap_theta_2pi(Hfi_Theta);
-    Hfi_RealTheta = wrap_theta_2pi(Hfi_Theta + THETA_COMPENSATION);
+    hfi_theta_estimate += omega * Hfi_SampleTime;
+    hfi_theta_estimate = wrap_theta_2pi(hfi_theta_estimate);
+    Hfi_RealTheta
+        = wrap_theta_2pi(hfi_theta_estimate + THETA_COMPENSATION);
+
+    if (Hfi_UpdateTheta) {
+        Hfi_Theta = hfi_theta_estimate;
+    } else {
+        hfi_theta_estimate = Hfi_Theta;
+    }
 
     Hfi_Omega = omega;
     return omega;
@@ -233,7 +296,15 @@ void Hfi_Set_InitialPosition(float theta) {
 
 AngleResult_t Hfi_Get_Result(void) {
     AngleResult_t angle_result;
-    angle_result.theta = Hfi_RealTheta;
+    angle_result.theta = Hfi_Theta;
     angle_result.speed = Hfi_Speed;
     return angle_result;
+}
+
+float Hfi_Get_Response(void) {
+    return Hfi_IParkResp.q;
+}
+
+float Hfi_Get_Error(void) {
+    return Hfi_Error;
 }
