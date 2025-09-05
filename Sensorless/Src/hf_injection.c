@@ -191,7 +191,7 @@ static inline float calculate_error(float response) {
     float sin_hf = SIN(Hfi_Phase);
 
     /* 计算位置误差 */
-    position_error = response * 2 * sin_hf;
+    position_error = -response * 2 * sin_hf;
     position_error
         = LowPassFilter_Update(&Hfi_Error_Filter, position_error);
 
