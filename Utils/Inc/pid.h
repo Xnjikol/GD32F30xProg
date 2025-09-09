@@ -8,17 +8,18 @@
 
 typedef struct {
     /* data */
-    float Kp;             /* Proportional gain */
-    float Ki;             /* Integral gain */
-    float Kd;             /* Derivative gain */
-    float integral;       /* Integral term */
-    float previous_error; /* Previous error for derivative calculation */
-    float MaxOutput;      /* Maximum output limit */
-    float MinOutput;      /* Minimum output limit */
-    float output;         /* PID output value */
-    float IntegralLimit;  /* Integral limit to prevent windup */
-    float Ts;             /* Sample time */
-    bool  Reset;          /* Flag to check if the PID controller is reset */
+    float Kp;       /* Proportional gain */
+    float Ki;       /* Integral gain */
+    float Kd;       /* Derivative gain */
+    float integral; /* Integral term */
+    float
+        previous_error;  /* Previous error for derivative calculation */
+    float MaxOutput;     /* Maximum output limit */
+    float MinOutput;     /* Minimum output limit */
+    float output;        /* PID output value */
+    float IntegralLimit; /* Integral limit to prevent windup */
+    float Ts;            /* Sample time */
+    bool  Reset; /* Flag to check if the PID controller is reset */
 } PID_Handler_t;
 
 /**
@@ -61,12 +62,14 @@ static inline float Pid_Update(float          error,
     // 计算未限幅输出（用于条件积分判断）
     const float output_unclamped
         = proportional + handler->Ki * handler->integral;
-    const bool is_output_limited = (output_unclamped > handler->MaxOutput)
-                                   || (output_unclamped < handler->MinOutput);
+    const bool is_output_limited
+        = (output_unclamped > handler->MaxOutput)
+          || (output_unclamped < handler->MinOutput);
 
     // 条件积分抗饱和：仅当输出未限幅且Ki有效时才累加积分
-    if (!is_output_limited && handler->Ki != 0.0F && handler->Ts > 0.0F) {
-        handler->integral += error * handler->Ts;
+    if (!is_output_limited && handler->Ki != 0.0F
+        && handler->Ts > 0.0F) {
+        handler->integral += handler->Ki * error * handler->Ts;
 
         // 积分限幅保护
         if (handler->integral > handler->IntegralLimit)
@@ -78,14 +81,14 @@ static inline float Pid_Update(float          error,
     // 计算微分项（考虑采样时间，避免除零）
     float derivative = 0.0F;
     if (handler->Kd != 0.0F && handler->Ts > 0.0F) {
-        derivative
-            = handler->Kd * (error - handler->previous_error) / handler->Ts;
+        derivative = handler->Kd * (error - handler->previous_error)
+                     / handler->Ts;
         handler->previous_error = error;
     }
 
     // 计算完整输出
     const float total_output
-        = proportional + handler->Ki * handler->integral + derivative;
+        = proportional + handler->integral + derivative;
 
     // 输出限幅
     if (total_output > handler->MaxOutput)
