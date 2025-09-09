@@ -17,8 +17,9 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
-#include "pll.h"
+#include "pid.h"
 #include "reciprocal.h"
+#include "theta_calc.h"
 #include "transformation.h"
 
 /**
@@ -56,33 +57,13 @@ bool Hfi_Set_SampleTime(const SystemTimeConfig_t* time_config);
 bool Hfi_Initialization(const hf_injection_params_t* params);
 
 /**
- * @brief 设置带通滤波器参数
- * @param center_freq 中心频率 (Hz)
- * @param band_width 带宽 (Hz)
- * @param sample_freq 采样频率 (Hz)
- */
-void Hfi_Set_CurrentFilter(float center_freq,
-                           float band_width,
-                           float sample_freq);
-
-/**
- * @brief 设置低通滤波器的参数。
- * 
- * 此函数用于配置低通滤波器的截止频率和采样频率。
- * 
- * @param cutoff_freq 低通滤波器的截止频率（单位：Hz）。
- * @param sample_freq 信号的采样频率（单位：Hz）。
- */
-void Hfi_Set_ResponseFilter(float cutoff_freq, float sample_freq);
-
-/**
  * @brief 设置高频注入锁相环（PLL）参数
  *
  * 此函数用于配置高频注入算法中的锁相环（PLL）相关参数。
  *
  * @param pll_params 指向PLL参数结构体的指针，包含所需的配置参数。
  */
-void Hfi_Set_PllParams(const pll_params_t* pll_params);
+void Hfi_Set_PidParams(const PID_Handler_t* pid_params);
 
 void Hfi_Set_Current(Clark_t current);
 
