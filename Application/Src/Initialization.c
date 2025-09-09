@@ -155,20 +155,15 @@ bool init_module_hfi() {
            .inv_Pn            = 1.0F / MOTOR_PN};
     Hfi_Initialization(&hfi_param);
 
-    Hfi_Set_CurrentFilter(
-        HFI_RESPONSE_FREQ, HFI_RESPONSE_BANDWIDTH, HFI_SAMPLE_FREQ);
-
-    Hfi_Set_ResponseFilter(HFI_LOW_PASS_CUTOFF_FREQ, HFI_SAMPLE_FREQ);
-
-    pll_params_t hfi_pll_param
-        = {.kp             = HFI_PLL_KP,
-           .ki             = HFI_PLL_KI,
-           .kd             = HFI_PLL_KD,
-           .max_output     = HFI_PLL_MAX_OUTPUT,
-           .min_output     = HFI_PLL_MIN_OUTPUT,
-           .integral_limit = HFI_PLL_INTEGRAL_LIMIT,
-           .ts             = HFI_SAMPLE_TIME};
-    Hfi_Set_PllParams(&hfi_pll_param);
+    PID_Handler_t hfi_pid_param
+        = {.Kp            = HFI_PLL_KP,
+           .Ki            = HFI_PLL_KI,
+           .Kd            = HFI_PLL_KD,
+           .MaxOutput     = HFI_PLL_MAX_OUTPUT,
+           .MinOutput     = HFI_PLL_MIN_OUTPUT,
+           .IntegralLimit = HFI_PLL_INTEGRAL_LIMIT,
+           .Ts            = HFI_SAMPLE_TIME};
+    Hfi_Set_PidParams(&hfi_pid_param);
 
     return true;
 }
