@@ -144,9 +144,9 @@ Clark_t Hfi_Process_Current(Clark_t current) {
     cur_high_new.b = current.b - cur_base.b;
 
     cur_resp.a = cur_high_new.a - cur_high_old.a;
-    cur_resp.a *= Hfi_InjectSign ? 1.0F : -1.0F;
+    cur_resp.a *= Hfi_InjectSign ? -1.0F : 1.0F;
     cur_resp.b = cur_high_new.b - cur_high_old.b;
-    cur_resp.b *= Hfi_InjectSign ? 1.0F : -1.0F;
+    cur_resp.b *= Hfi_InjectSign ? -1.0F : 1.0F;
 
     cur_high_old   = cur_high_new;
     Hfi_IClarkResp = cur_resp;
