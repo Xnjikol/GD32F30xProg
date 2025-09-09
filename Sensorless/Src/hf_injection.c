@@ -23,6 +23,7 @@
 
 static bool  Hfi_Enabled    = {0};
 static bool  Hfi_ParamError = {0};
+static bool  Hfi_InjectSign = {0};
 static float Hfi_InjFreq    = {0};
 static float Hfi_InjVolt    = {0};
 static float Hfi_Ld         = {0};
@@ -45,6 +46,7 @@ static float   Hfi_Error      = {0};
 static Clark_t Hfi_IClarkFdbk = {0};
 static Park_t  Hfi_IParkFdbk  = {0};
 static Park_t  Hfi_IParkResp  = {0};  // 提取的高频响应电流
+static Clark_t Hfi_IClarkResp = {0};  // 提取的高频响应电流
 static Park_t  Hfi_IParkFilt  = {0};  // 高频滤波后的电流
 static Clark_t Hfi_IClarkFilt = {0};  // 滤波后的静止坐标系电流
 static Park_t  Hfi_VoltageInj = {0};  // 将要注入的高频电压
@@ -126,46 +128,64 @@ void Hfi_Set_Speed_Err(float ref) {
     Hfi_Speed_Err = ref - Hfi_Speed;
 }
 
-Clark_t Hfi_Get_FilteredCurrent(Clark_t current) {
-    Park_t origin   = {0};
-    Park_t filtered = {0};
-    Park_t response = {0};
-    origin          = ParkTransform(current, Hfi_Theta);
+Clark_t Hfi_Process_Current(Clark_t current) {
+    static Clark_t current_last = {0};
+    static Clark_t cur_high_old = {0};
+    Clark_t        cur_high_new = {0};
+    Clark_t        cur_base     = {0};
+    Clark_t        cur_resp     = {0};
 
-    filtered.d = BandStopFilter_Update(&Hfi_Current_Filter, origin.d);
-    filtered.q = BandStopFilter_Update(&Hfi_Current_Filter, origin.q);
+    cur_base.a     = (current.a + current_last.a) * 0.5F;
+    cur_base.b     = (current.b + current_last.b) * 0.5F;
+    current_last   = current;
+    Hfi_IClarkFilt = cur_base;
 
-    response.d = origin.d - filtered.d;
-    response.q = origin.q - filtered.q;
+    cur_high_new.a = current.a - cur_base.a;
+    cur_high_new.b = current.b - cur_base.b;
 
-    Hfi_IClarkFilt = InvParkTransform(filtered, Hfi_Theta);
+    cur_resp.a = cur_high_new.a - cur_high_old.a;
+    cur_resp.a *= Hfi_InjectSign ? 1.0F : -1.0F;
+    cur_resp.b = cur_high_new.b - cur_high_old.b;
+    cur_resp.b *= Hfi_InjectSign ? 1.0F : -1.0F;
 
-    Hfi_IClarkFdbk = current;
-    Hfi_IParkFdbk  = origin;
-    Hfi_IParkFilt  = filtered;
-    Hfi_IParkResp  = response;
+    cur_high_old   = cur_high_new;
+    Hfi_IClarkResp = cur_resp;
 
-    return Hfi_IClarkFilt;
+    return cur_base;
 }
 
 /**
  * @brief 生成高频注入信号
  */
+// static inline void generate_signal() {
+//     Park_t inj_dq = {0};
+//     float  cos_hf = {0};
+
+//     /* 更新高频相位 */
+//     Hfi_Phase = SawtoothWaveGenerator(&Hfi_Phase_Gen, false) * M_2PI;
+//     /* 生成脉振高频注入信号 (d轴注入) */
+//     cos_hf   = COS(Hfi_Phase);
+//     inj_dq.d = Hfi_InjVolt * cos_hf;
+//     inj_dq.q = 0.0F;
+
+//     Hfi_VoltageInj = inj_dq;
+// }
+
 static inline void generate_signal() {
     Park_t inj_dq = {0};
-    float  cos_hf = {0};
-
-    /* 更新高频相位 */
-    Hfi_Phase = SawtoothWaveGenerator(&Hfi_Phase_Gen, false) * M_2PI;
-    /* 生成脉振高频注入信号 (d轴注入) */
-    cos_hf   = COS(Hfi_Phase);
-    inj_dq.d = Hfi_InjVolt * cos_hf;
+    /* 更新高频注入信号 */
+    inj_dq.d = Hfi_InjVolt * (Hfi_InjectSign ? 1.0F : -1.0F);
     inj_dq.q = 0.0F;
 
     Hfi_VoltageInj = inj_dq;
 }
 
+static inline void update_signal() {
+    Hfi_InjectSign = !Hfi_InjectSign;
+}
+
 Park_t Hfi_Get_Inject_Voltage(void) {
+    update_signal();
     generate_signal();
     return Hfi_VoltageInj;
 }
@@ -181,21 +201,40 @@ static inline float pll_update(float error, bool reset) {
     return omega;
 }
 
-static inline float calculate_error(float response) {
-    float position_error = 0.0F;
+// static inline float calculate_error(float response) {
+//     float position_error = 0.0F;
+
+//     if (!Hfi_Enabled) {
+//         return position_error;
+//     }
+
+//     float sin_hf = SIN(Hfi_Phase);
+
+//     /* 计算位置误差 */
+//     position_error = -response * 2 * sin_hf;
+//     position_error
+//         = LowPassFilter_Update(&Hfi_Error_Filter, position_error);
+
+//     return position_error;
+// }
+
+static inline float calculate_error(Clark_t response, float angle) {
+    float angleErr   = 0.0F;
+    float errorAlpha = 0.0F;
+    float errorBeta  = 0.0F;
 
     if (!Hfi_Enabled) {
-        return position_error;
+        return angleErr;
     }
 
-    float sin_hf = SIN(Hfi_Phase);
+    float sin_hf = SIN(angle);
+    float cos_hf = COS(angle);
 
-    /* 计算位置误差 */
-    position_error = -response * 2 * sin_hf;
-    position_error
-        = LowPassFilter_Update(&Hfi_Error_Filter, position_error);
+    errorAlpha = -response.a * sin_hf;
+    errorBeta  = response.b * cos_hf;
+    angleErr   = errorAlpha + errorBeta;
 
-    return position_error;
+    return angleErr;
 }
 
 static inline float calculate_omega(float error) {
@@ -221,7 +260,7 @@ static inline float calculate_speed(float omega) {
 
 void Hfi_Update(void) {
     float omega = 0;
-    Hfi_Error   = calculate_error(Hfi_IParkResp.q);
+    Hfi_Error   = calculate_error(Hfi_IClarkResp, Hfi_Theta);
     omega       = calculate_omega(Hfi_Error);
     Hfi_Speed   = calculate_speed(omega);
 }
