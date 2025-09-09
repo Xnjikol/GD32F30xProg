@@ -6,7 +6,7 @@
 /*  Gate polarity definition */
 #ifndef Encoder_Position
 #    ifndef Resolver_Position
-#        define Resolver_Position /* Define here */
+#        define Encoder_Position /* Define here */
 #    endif
 #endif
 

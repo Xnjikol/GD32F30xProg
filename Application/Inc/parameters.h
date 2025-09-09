@@ -28,7 +28,7 @@
 /*********************************************************************/
 #ifndef RESOLVER_POSITION
 #    ifndef ENCODER_POSITION
-#        define RESOLVER_POSITION
+#        define ENCODER_POSITION
 #    endif
 #endif
 
@@ -65,11 +65,11 @@
 /*                        电机物理参数                                 */
 /*********************************************************************/
 /* 电机电气参数 */
-#define MOTOR_RS   1.25F  /* 定子电阻：1.25 Ω */
-#define MOTOR_LD   0.006F /* d轴电感：6 mH */
-#define MOTOR_LQ   0.009F /* q轴电感：9 mH */
-#define MOTOR_FLUX 0.1F   /* 永磁体磁链：0.1 Wb */
-#define MOTOR_PN   5.0F   /* 电机极对数：5 */
+#define MOTOR_RS   0.72F   /* 定子电阻：0.72 Ω */
+#define MOTOR_LD   3.2E-3F /* d轴电感：3.2 mH */
+#define MOTOR_LQ   5.8E-3F /* q轴电感：5.8 mH */
+#define MOTOR_FLUX 0.1F    /* 永磁体磁链：0.1 Wb */
+#define MOTOR_PN   5.0F    /* 电机极对数：5 */
 
 /* 位置传感器配置 */
 #ifdef RESOLVER_POSITION
@@ -132,7 +132,7 @@
 #define PID_CURRENT_D_LOOP_KD 0.0F            /* d轴微分系数 */
 
 /* d轴输出限制 */
-#define PID_CURRENT_D_LOOP_MAX_OUTPUT 50.0F /* 最大输出电压：Udc/√3 */
+#define PID_CURRENT_D_LOOP_MAX_OUTPUT 100.0F /* 最大输出电压：Udc/√3 */
 #define PID_CURRENT_D_LOOP_MIN_OUTPUT \
     (-1.0F * PID_CURRENT_D_LOOP_MAX_OUTPUT)
 #define PID_CURRENT_D_LOOP_INTEGRAL_LIMIT \
@@ -145,7 +145,7 @@
 #define PID_CURRENT_Q_LOOP_KD 0.0F            /* q轴微分系数 */
 
 /* q轴输出限制 */
-#define PID_CURRENT_Q_LOOP_MAX_OUTPUT 50.0F /* 最大输出电压：Udc/√3 */
+#define PID_CURRENT_Q_LOOP_MAX_OUTPUT 100.0F /* 最大输出电压：Udc/√3 */
 #define PID_CURRENT_Q_LOOP_MIN_OUTPUT \
     (-1.0F * PID_CURRENT_Q_LOOP_MAX_OUTPUT)
 #define PID_CURRENT_Q_LOOP_INTEGRAL_LIMIT \
@@ -173,8 +173,8 @@
 #define HFI_LOW_PASS_CUTOFF_FREQ 100.0F /* 误差信号截止频率：100Hz */
 
 /* 高频注入PLL跟踪器参数 */
-#define HFI_PLL_KP             1200.0F /* PLL比例系数 */
-#define HFI_PLL_KI             18E3F   /* PLL积分系数 */
+#define HFI_PLL_KP             600.0F  /* PLL比例系数 */
+#define HFI_PLL_KI             12E3F   /* PLL积分系数 */
 #define HFI_PLL_KD             0.0F    /* PLL微分系数 */
 #define HFI_PLL_MAX_OUTPUT     4000.0F /* PLL最大输出 */
 #define HFI_PLL_MIN_OUTPUT     (-1 * HFI_PLL_MAX_OUTPUT) /* PLL最小输出 */
@@ -188,7 +188,7 @@
 
 /* 滑模观测器PLL跟踪器参数 */
 #define SMO_PLL_KP             500.0F  /* PLL比例系数 */
-#define SMO_PLL_KI             4E4F    /* PLL积分系数 */
+#define SMO_PLL_KI             18E3F   /* PLL积分系数 */
 #define SMO_PLL_KD             0.0F    /* PLL微分系数 */
 #define SMO_PLL_MAX_OUTPUT     4000.0F /* PLL最大输出 */
 #define SMO_PLL_MIN_OUTPUT     (-1 * SMO_PLL_MAX_OUTPUT) /* PLL最小输出 */
