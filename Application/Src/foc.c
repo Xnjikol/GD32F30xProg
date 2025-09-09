@@ -5,19 +5,22 @@
 
 #include "hardware_interface.h"
 
-static FocMode_t       Foc_Mode               = IDLE;   // 当前FOC模式
-static bool            Foc_Reset              = false;  // FOC复位标志
-static float           Foc_Current_Ts         = 0.0F;  // 电流环采样周期
-static float           Foc_Current_Freq       = 0.0F;  // 电流环频率
-static uint16_t        Foc_Speed_Prescaler    = 0U;    // 电流环分频数
-static float           Foc_Speed_Ts           = 0.0F;  // 转速环采样周期
-static float           Foc_Speed_Freq         = 0.0F;  // 转速环频率
-static float           Foc_Speed_Ref          = 0.0F;  // 参考速度
-static volatile float  Foc_Speed_Ramp         = 0.0F;  // 实际指令转速
-static float           Foc_Speed_Fdbk         = 0.0F;  // 实际转速反馈
-static float           Foc_Theta              = 0.0F;
-static float           Foc_BusVoltage         = 0.0F;
-static float           Foc_BusVoltage_Inv     = 0.0F;
+static FocMode_t      Foc_Mode            = IDLE;   // 当前FOC模式
+static bool           Foc_Reset           = false;  // FOC复位标志
+static float          Foc_Current_Ts      = 0.0F;   // 电流环采样周期
+static float          Foc_Current_Freq    = 0.0F;   // 电流环频率
+static uint16_t       Foc_Speed_Prescaler = 0U;     // 电流环分频数
+static float          Foc_Speed_Ts        = 0.0F;   // 转速环采样周期
+static float          Foc_Speed_Freq      = 0.0F;   // 转速环频率
+static float          Foc_Speed_Ref       = 0.0F;   // 参考速度
+static volatile float Foc_Speed_Ramp      = 0.0F;   // 实际指令转速
+static float          Foc_Speed_Fdbk      = 0.0F;   // 实际转速反馈
+static float          Foc_Theta           = 0.0F;
+static float          Foc_BusVoltage      = 0.0F;
+static float          Foc_BusVoltage_Inv  = 0.0F;
+
+static volatile bool Foc_Sweep = true;  // FOC扫频标志
+
 static VF_Parameter_t  Foc_VfParam            = {0};
 static IF_Parameter_t  Foc_IfParam            = {0};
 static Clark_t         Foc_Iclark_Fdbk        = {0};
@@ -317,8 +320,10 @@ static inline Park_t Foc_Update_CurrentLoop(Park_t ref,
 }
 
 static inline Park_t Foc_Update_VfMode(bool reset) {
-    static bool reset_prev = true;
-    Park_t      output     = {0};
+    static bool  reset_prev = true;
+    static bool  sweep_flag = false;
+    static float phase_prev = 0.0F;
+    Park_t       output     = {0};
     if (reset_prev && !reset) {
         SawtoothWave_Init(&Foc_Sawtooth_Handler,
                           M_2PI,
@@ -332,7 +337,16 @@ static inline Park_t Foc_Update_VfMode(bool reset) {
     float phase = 0.0F;
     phase       = SawtoothWaveGenerator(&Foc_Sawtooth_Handler,
                                   reset);  // 更新电压环角度
-    Foc_Theta   = wrap_theta_2pi(phase + Foc_VfParam.offset);
+    if (fabs(phase - phase_prev) > M_PI_2) {
+        sweep_flag = false;
+    }
+    if (Foc_Sweep) {
+        sweep_flag = true;
+    }
+    if (sweep_flag) {
+        phase_prev = phase;
+    }
+    Foc_Theta = wrap_theta_2pi(phase_prev + Foc_VfParam.offset);
 
     Foc_Idq_Fdbk = ParkTransform(Foc_Iclark_Fdbk, Foc_Theta);
     reset_prev   = reset;
@@ -340,8 +354,10 @@ static inline Park_t Foc_Update_VfMode(bool reset) {
 }
 
 static inline Park_t Foc_Update_IfMode(bool reset) {
-    static bool reset_prev = true;
-    Park_t      output     = {0};
+    static bool  reset_prev = true;
+    static bool  sweep_flag = false;
+    static float phase_prev = 0.0F;
+    Park_t       output     = {0};
     // 如果传感器状态为启用，则直接使用参考值，否则使用正弦波生成器
     if (Foc_IfParam.use_sensor == true) {
         Foc_IfParam.offset = 0.0F;
@@ -358,7 +374,17 @@ static inline Park_t Foc_Update_IfMode(bool reset) {
         float phase = 0.0F;
         phase       = SawtoothWaveGenerator(&Foc_Sawtooth_Handler,
                                       reset);  // 更新电流环角度
-        Foc_Theta   = wrap_theta_2pi(phase + Foc_IfParam.offset);
+        if (fabs(phase - phase_prev) > M_PI_2) {
+            sweep_flag = false;
+        }
+        if (Foc_Sweep) {
+            sweep_flag = true;
+        }
+        if (sweep_flag) {
+            phase_prev = phase;
+        }
+
+        Foc_Theta = wrap_theta_2pi(phase_prev + Foc_IfParam.offset);
     }
 
     Foc_Idq_Fdbk = ParkTransform(Foc_Iclark_Fdbk, Foc_Theta);
