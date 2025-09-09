@@ -94,7 +94,7 @@ void Hfi_Set_Theta_Err(float ref);
 
 void Hfi_Set_Speed_Err(float ref);
 
-Clark_t Hfi_Get_FilteredCurrent(Clark_t current);
+Clark_t Hfi_Process_Current(Clark_t current);
 
 Park_t Hfi_Get_Inject_Voltage(void);
 
