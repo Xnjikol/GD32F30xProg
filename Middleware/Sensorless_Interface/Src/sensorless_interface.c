@@ -16,12 +16,13 @@
 #include "transformation.h"
 #include <math.h>
 
-static bool                Sensorless_Enabled    = {0};
-static float               Sensorless_Switch_Hfi = {0};
-static float               Sensorless_Switch_Smo = {0};
-static float               Sensorless_Speed_Ref  = {0};
-static float               Sensorless_Speed_Fdbk = {0};
-static float               Sensorless_Theta      = {0};
+static bool                Sensorless_Enabled       = {0};
+static float               Sensorless_Threshold_Hfi = {0};
+static float               Sensorless_Threshold_Smo = {0};
+static float               Sensorless_Switch_Speed  = {0};
+static float               Sensorless_Speed_Ref     = {0};
+static float               Sensorless_Speed_Fdbk    = {0};
+static float               Sensorless_Theta         = {0};
 static sensorless_method_t Sensorless_Method
     = SENSORLESS_METHOD_SM_OBSERVER;
 
@@ -30,8 +31,9 @@ bool Sensorless_Initialization(const Sensorless_Param_t* param) {
         return false;
     }
 
-    Sensorless_Switch_Hfi = param->switch_speed + param->hysteresis;
-    Sensorless_Switch_Smo = param->switch_speed - param->hysteresis;
+    Sensorless_Threshold_Hfi = param->switch_speed + param->hysteresis;
+    Sensorless_Threshold_Smo = param->switch_speed - param->hysteresis;
+    Sensorless_Switch_Speed  = param->switch_speed;
 
     return true;
 }
@@ -129,10 +131,23 @@ bool Sensorless_Update_Err(AngleResult_t result) {
 }
 
 AngleResult_t Sensorless_Update_Position(void) {
-    if (Smo_Get_Enabled()) {
-        return Smo_Get_Result();
+    if (fabsf(Sensorless_Speed_Ref) >= Sensorless_Switch_Speed) {
+        if (fabsf(Sensorless_Speed_Fdbk) >= Sensorless_Switch_Speed) {
+            return Smo_Get_Result();
+        }
     } else {
-        return Hfi_Get_Result();
+        if (fabsf(Sensorless_Speed_Fdbk) < Sensorless_Switch_Speed) {
+            return Hfi_Get_Result();
+        }
+    }
+    if (fabsf(Sensorless_Speed_Ref) <= Sensorless_Switch_Speed) {
+        if (fabsf(Sensorless_Speed_Fdbk) <= Sensorless_Switch_Speed) {
+            return Hfi_Get_Result();
+        }
+    } else {
+        if (fabsf(Sensorless_Speed_Fdbk) > Sensorless_Switch_Speed) {
+            return Smo_Get_Result();
+        }
     }
 }
 
@@ -168,21 +183,21 @@ static inline void enable_hfi(bool enable) {
 }
 
 static inline void judge_strategy(float ref, float fdbk) {
-    if (fabsf(ref) >= Sensorless_Switch_Smo) {
-        if (fabsf(fdbk) >= Sensorless_Switch_Smo) {
+    if (fabsf(ref) >= Sensorless_Threshold_Smo) {
+        if (fabsf(fdbk) >= Sensorless_Threshold_Smo) {
             enable_smo(true);
         }
     } else {
-        if (fabsf(fdbk) < Sensorless_Switch_Smo) {
+        if (fabsf(fdbk) < Sensorless_Threshold_Smo) {
             enable_smo(false);
         }
     }
-    if (fabsf(ref) <= Sensorless_Switch_Hfi) {
-        if (fabsf(fdbk) <= Sensorless_Switch_Hfi) {
+    if (fabsf(ref) <= Sensorless_Threshold_Hfi) {
+        if (fabsf(fdbk) <= Sensorless_Threshold_Hfi) {
             enable_hfi(true);
         }
     } else {
-        if (fabsf(fdbk) > Sensorless_Switch_Hfi) {
+        if (fabsf(fdbk) > Sensorless_Threshold_Hfi) {
             enable_hfi(false);
         }
     }
