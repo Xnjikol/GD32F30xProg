@@ -246,5 +246,5 @@ Clark_t Sensorless_FilterCurrent(Clark_t current) {
         return current;
     }
 
-    return Hfi_Get_FilteredCurrent(current);
+    return Hfi_Process_Current(current);
 }
