@@ -60,9 +60,8 @@ static inline float Pid_Update(float          error,
     const float proportional = handler->Kp * error;
 
     // 计算未限幅输出（用于条件积分判断）
-    const float output_unclamped
-        = proportional + handler->Ki * handler->integral;
-    const bool is_output_limited
+    const float output_unclamped = proportional + handler->integral;
+    const bool  is_output_limited
         = (output_unclamped > handler->MaxOutput)
           || (output_unclamped < handler->MinOutput);
 

@@ -149,6 +149,7 @@ AngleResult_t Sensorless_Update_Position(void) {
             return Smo_Get_Result();
         }
     }
+    return (AngleResult_t){0};
 }
 
 static inline void enable_smo(bool enable) {
