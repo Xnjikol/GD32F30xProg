@@ -157,7 +157,7 @@
 /*********************************************************************/
 /* 无位置传感器策略控制 */
 #define SENSORLESS_HYSTERESIS   50.0F  /* 无传感器滞环宽度：50rpm */
-#define SENSORLESS_SWITCH_SPEED 200.0F /* 无传感器切换速度：200rpm */
+#define SENSORLESS_SWITCH_SPEED 340.0F /* 无传感器切换速度：340rpm */
 
 /* 高频信号注入参数 */
 #define HF_INJECTION_FREQ 500.0F /* 注入信号频率：500Hz */
@@ -173,8 +173,8 @@
 #define HFI_LOW_PASS_CUTOFF_FREQ 100.0F /* 误差信号截止频率：100Hz */
 
 /* 高频注入PLL跟踪器参数 */
-#define HFI_PLL_KP             600.0F  /* PLL比例系数 */
-#define HFI_PLL_KI             12E3F   /* PLL积分系数 */
+#define HFI_PLL_KP             12E2F   /* PLL比例系数 */
+#define HFI_PLL_KI             40E3F   /* PLL积分系数 */
 #define HFI_PLL_KD             0.0F    /* PLL微分系数 */
 #define HFI_PLL_MAX_OUTPUT     4000.0F /* PLL最大输出 */
 #define HFI_PLL_MIN_OUTPUT     (-1 * HFI_PLL_MAX_OUTPUT) /* PLL最小输出 */

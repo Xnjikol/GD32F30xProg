@@ -19,6 +19,8 @@
 #include "theta_calc.h"
 #include "transformation.h"
 
+#define SQRT(x, y) arm_sqrt_f32(x, y)
+
 static bool  Hfi_Enabled    = {0};
 static bool  Hfi_ParamError = {0};
 static bool  Hfi_InjectSign = {0};
@@ -34,15 +36,15 @@ static float Hfi_SampleFreq = {0};
 static volatile float Hfi_Theta_Err = {0};
 static volatile float Hfi_Speed_Err = {0};
 
-static float   Hfi_Theta      = {0};
-static float   Hfi_Omega      = {0};
-static float   Hfi_Speed      = {0};
-static float   Hfi_Error      = {0};
-static Clark_t Hfi_IClarkFdbk = {0};
-static Park_t  Hfi_IParkFdbk  = {0};
-static Clark_t Hfi_IClarkResp = {0};  // 提取的高频响应电流
-static Clark_t Hfi_IClarkFilt = {0};  // 滤波后的静止坐标系电流
-static Park_t  Hfi_VoltageInj = {0};  // 将要注入的高频电压
+static float          Hfi_Theta      = {0};
+static float          Hfi_Omega      = {0};
+static float          Hfi_Speed      = {0};
+static volatile float Hfi_Error      = {0};
+static Clark_t        Hfi_IClarkFdbk = {0};
+static Park_t         Hfi_IParkFdbk  = {0};
+static Clark_t        Hfi_IClarkResp = {0};  // 提取的高频响应电流
+static Clark_t        Hfi_IClarkFilt = {0};  // 滤波后的静止坐标系电流
+static Park_t         Hfi_VoltageInj = {0};  // 将要注入的高频电压
 
 static LowPassFilter_t Hfi_Error_Filter = {0};
 static LowPassFilter_t Hfi_Speed_Filter = {0};
@@ -168,23 +170,6 @@ static inline float pll_update(float error, bool reset) {
     return omega;
 }
 
-// static inline float calculate_error(float response) {
-//     float position_error = 0.0F;
-
-//     if (!Hfi_Enabled) {
-//         return position_error;
-//     }
-
-//     float sin_hf = SIN(Hfi_Phase);
-
-//     /* 计算位置误差 */
-//     position_error = -response * 2 * sin_hf;
-//     position_error
-//         = LowPassFilter_Update(&Hfi_Error_Filter, position_error);
-
-//     return position_error;
-// }
-
 static inline float calculate_error(Clark_t response, float angle) {
     float angleErr   = 0.0F;
     float errorAlpha = 0.0F;
@@ -200,6 +185,14 @@ static inline float calculate_error(Clark_t response, float angle) {
     errorAlpha = -response.a * sin_hf;
     errorBeta  = response.b * cos_hf;
     angleErr   = errorAlpha + errorBeta;
+
+    float norm = 0.0F;
+    SQRT(response.a * response.a + response.b * response.b, &norm);
+    if (norm > 0.0001F) {
+        angleErr /= norm;
+    } else {
+        angleErr = 0.0F;
+    }
 
     return angleErr;
 }
