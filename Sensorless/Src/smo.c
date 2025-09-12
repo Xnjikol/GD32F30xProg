@@ -1,10 +1,12 @@
 #include "smo.h"
 #include <stdbool.h>
+#include "arm_math.h"
 #include "filter.h"
 #include "pid.h"
 #include "theta_calc.h"
 #include "transformation.h"
-#include <math.h>
+
+#define SQRT(x, y) arm_sqrt_f32(x, y)
 
 // Smo_A 和 Smo_B 是为了减少运行时计算时间而预先计算好的系数，用于后续算法中直接使用。
 
@@ -21,6 +23,7 @@ static float Smo_SampleTime       = {0};
 static float Smo_SampleFreq_Speed = {0};
 static float Smo_Prescaler        = {0};
 static float Smo_InvPn            = {0};
+static float Smo_Wc               = {0};
 static float Smo_Theta            = {0};
 static float Smo_Speed            = {0};
 
@@ -86,6 +89,7 @@ void Smo_Set_EmfFilter(float cutoff_freq, float sample_freq) {
 }
 
 void Smo_Set_SpeedFilter(float cutoff_freq, float sample_freq) {
+    Smo_Wc = cutoff_freq;
     LowPassFilter_Init(&Smo_Speed_Filter, cutoff_freq, sample_freq);
 }
 
@@ -153,19 +157,62 @@ void Smo_Update_EmfEst(void) {
     Smo_EmfEst.b = Smo_Gain * sign(est_delta);
 }
 
+static inline float compensate_theta(float theta, float omega) {
+    // 角度补偿
+    float comp = 0.0F;
+    // ATAN2(omega, Smo_Wc, &comp);
+    return theta + comp;
+}
+
 static inline float pll_update(float error, bool reset) {
     // 更新锁相环
     float omega = Pid_Update(error, reset, &Smo_Theta_PID);
     Smo_Theta += omega * Smo_SampleTime;
+    Smo_Theta = compensate_theta(Smo_Theta, omega);
     Smo_Theta = wrap_theta_2pi(Smo_Theta);
     return omega;
 }
 
-static inline float calc_error(Clark_t emf, float limit) {
-    float norm = emf.a * emf.a + emf.b * emf.b;
-    float diff = -1 * (emf.a * COS(Smo_Theta) + emf.b * SIN(Smo_Theta));
-    diff       = diff * diff * sign(diff);
-    return (norm > limit) ? (diff / norm) : (diff / limit);
+static inline float calculate_error(Clark_t emf, float angle) {
+    float angleErr   = 0.0F;
+    float errorAlpha = 0.0F;
+    float errorBeta  = 0.0F;
+
+    if (!Smo_Enabled) {
+        return angleErr;
+    }
+
+    float sin_smo = SIN(angle);
+    float cos_smo = COS(angle);
+
+    errorAlpha = -emf.a * sin_smo;
+    errorBeta  = emf.b * cos_smo;
+    angleErr   = errorAlpha + errorBeta;
+
+    float norm = 0.0F;
+    SQRT(emf.a * emf.a + emf.b * emf.b, &norm);
+    if (norm > 0.0001F) {
+        angleErr /= norm;
+    } else {
+        angleErr = 0.0F;
+    }
+
+    return angleErr;
+}
+
+static inline float calculate_speed(float omega) {
+    static uint16_t smo_count = 0x0000U;
+    static float    smo_integ = 0.0F;
+    float           speed     = 0.0F;
+    smo_integ += radps2rpm(omega) * Smo_InvPn * 0.1F;
+    smo_count++;
+    if (smo_count < 0x000AU) {
+        return Smo_Speed;
+    }
+    smo_count = 0x0000U;
+    speed     = LowPassFilter_Update(&Smo_Speed_Filter, smo_integ);
+    smo_integ = 0.0F;
+    return speed;
 }
 
 void Smo_Update_Angle(void) {
@@ -173,13 +220,12 @@ void Smo_Update_Angle(void) {
     filtered.a = LowPassFilter_Update(&Smo_Emf_A_Filter, Smo_EmfEst.a);
     filtered.b = LowPassFilter_Update(&Smo_Emf_B_Filter, Smo_EmfEst.b);
 
-    float error = calc_error(filtered, 1e-4F);
+    float error = calculate_error(filtered, Smo_Theta);
 
     Smo_EmfEst.a = filtered.a;
     Smo_EmfEst.b = filtered.b;
 
     // 计算电动势的相位角
     float omega = pll_update(error, !Smo_Enabled);
-    float n     = radps2rpm(omega) * Smo_InvPn;
-    Smo_Speed   = LowPassFilter_Update(&Smo_Speed_Filter, n);
+    Smo_Speed   = calculate_speed(omega);
 }
