@@ -50,14 +50,16 @@
 #ifdef ARM_DSP
 #    include "arm_math.h" /* CMSIS-DSP math */  // IWYU pragma: export
 
-#    define COS(x) arm_cos_f32(x)
-#    define SIN(x) arm_sin_f32(x)
+#    define COS(x)         arm_cos_f32(x)
+#    define SIN(x)         arm_sin_f32(x)
+#    define ATAN2(x, y, z) arm_atan2_f32(x, y, z)
 
 #else
 #    include <math.h>
 
-#    define COS(x) cosf(x)
-#    define SIN(x) sinf(x)
+#    define COS(x)      cosf(x)
+#    define SIN(x)      sinf(x)
+#    define ATAN2(x, y) atanf(x, y)
 
 #endif
 
