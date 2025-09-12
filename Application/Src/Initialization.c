@@ -137,7 +137,7 @@ bool init_module_smo(void) {
                              .Ts            = MAIN_LOOP_TIME};
     Smo_Set_Pid_Handler(smo_pid);
 
-    Smo_Set_EmfFilter(SMO_LPF_CUTOFF_FREQ * M_2PI, SMO_SAMPLING_FREQ);
+    Smo_Set_EmfFilter(SMO_LPF_CUTOFF_FREQ, SMO_SAMPLING_FREQ);
     Smo_Set_SpeedFilter(10.0F, SPEED_LOOP_FREQ);
 
     return true;
