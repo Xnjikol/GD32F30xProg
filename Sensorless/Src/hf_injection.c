@@ -12,6 +12,7 @@
 #include "hf_injection.h"
 #include <stdbool.h>
 #include <stddef.h>
+#include "arm_math.h"
 #include "filter.h"
 #include "pll.h"
 #include "reciprocal.h"
