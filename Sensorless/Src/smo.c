@@ -91,6 +91,7 @@ void Smo_Set_EmfFilter(float cutoff_freq, float sample_freq) {
 }
 
 void Smo_Set_SpeedFilter(float cutoff_freq, float sample_freq) {
+    Smo_Wc = cutoff_freq;
     LowPassFilter_Init(&Smo_Speed_Filter, cutoff_freq, sample_freq);
 }
 
