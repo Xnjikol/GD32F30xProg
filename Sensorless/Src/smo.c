@@ -24,6 +24,7 @@ static float Smo_SampleFreq_Speed = {0};
 static float Smo_Prescaler        = {0};
 static float Smo_InvPn            = {0};
 static float Smo_Wc               = {0};
+static float Smo_Theta_Temp       = {0};
 static float Smo_Theta            = {0};
 static float Smo_Speed            = {0};
 
@@ -35,8 +36,8 @@ static Clark_t Smo_Current = {0};
 static Clark_t Smo_CurEst  = {0};
 static Clark_t Smo_EmfEst  = {0};
 
-static LowPassFilter_t Smo_Emf_A_Filter = {0};
-static LowPassFilter_t Smo_Emf_B_Filter = {0};
+static LowPassFilter_t Smo_EmfA_Filter  = {0};
+static LowPassFilter_t Smo_EmfB_Filter  = {0};
 static LowPassFilter_t Smo_Speed_Filter = {0};
 static PID_Handler_t   Smo_Theta_PID    = {0};
 
@@ -84,12 +85,12 @@ void Smo_Set_InvPn(float inv_Pn) {
 }
 
 void Smo_Set_EmfFilter(float cutoff_freq, float sample_freq) {
-    LowPassFilter_Init(&Smo_Emf_A_Filter, cutoff_freq, sample_freq);
-    LowPassFilter_Init(&Smo_Emf_B_Filter, cutoff_freq, sample_freq);
+    LowPassFilter_Init(&Smo_EmfA_Filter, cutoff_freq, sample_freq);
+    LowPassFilter_Init(&Smo_EmfB_Filter, cutoff_freq, sample_freq);
+    Smo_Wc = M_2PI * cutoff_freq;
 }
 
 void Smo_Set_SpeedFilter(float cutoff_freq, float sample_freq) {
-    Smo_Wc = cutoff_freq;
     LowPassFilter_Init(&Smo_Speed_Filter, cutoff_freq, sample_freq);
 }
 
@@ -106,7 +107,7 @@ void Smo_Set_Current(Clark_t current) {
 }
 
 void Smo_Set_Theta(float theta) {
-    Smo_Theta = theta;
+    Smo_Theta_Temp = theta;
 }
 
 void Smo_Set_Theta_Err(float ref) {
@@ -160,15 +161,22 @@ void Smo_Update_EmfEst(void) {
 static inline float compensate_theta(float theta, float omega) {
     // 角度补偿
     float comp = 0.0F;
-    // ATAN2(omega, Smo_Wc, &comp);
+    ATAN2(omega, Smo_Wc, &comp);
+    // ATAN2(Smo_atan1, Smo_atan2, &Smo_atan_out);
     return theta + comp;
 }
 
 static inline float pll_update(float error, bool reset) {
     // 更新锁相环
     float omega = Pid_Update(error, reset, &Smo_Theta_PID);
-    Smo_Theta += omega * Smo_SampleTime;
-    Smo_Theta = compensate_theta(Smo_Theta, omega);
+    Smo_Theta_Temp += omega * Smo_SampleTime;
+    if (Smo_Theta_Temp > M_2PI) {
+        Smo_Theta_Temp -= M_2PI;
+    }
+    if (Smo_Theta_Temp < 0.0F) {
+        Smo_Theta_Temp += M_2PI;
+    }
+    Smo_Theta = compensate_theta(Smo_Theta_Temp, omega);
     Smo_Theta = wrap_theta_2pi(Smo_Theta);
     return omega;
 }
@@ -185,9 +193,9 @@ static inline float calculate_error(Clark_t emf, float angle) {
     float sin_smo = SIN(angle);
     float cos_smo = COS(angle);
 
-    errorAlpha = -emf.a * sin_smo;
-    errorBeta  = emf.b * cos_smo;
-    angleErr   = errorAlpha + errorBeta;
+    errorAlpha = -emf.a * cos_smo;
+    errorBeta  = emf.b * sin_smo;
+    angleErr   = errorAlpha - errorBeta;
 
     float norm = 0.0F;
     SQRT(emf.a * emf.a + emf.b * emf.b, &norm);
@@ -216,14 +224,10 @@ static inline float calculate_speed(float omega) {
 }
 
 void Smo_Update_Angle(void) {
-    Clark_t filtered = {0};
-    filtered.a = LowPassFilter_Update(&Smo_Emf_A_Filter, Smo_EmfEst.a);
-    filtered.b = LowPassFilter_Update(&Smo_Emf_B_Filter, Smo_EmfEst.b);
+    Smo_EmfEst.a = LowPassFilter_Update(&Smo_EmfA_Filter, Smo_EmfEst.a);
+    Smo_EmfEst.b = LowPassFilter_Update(&Smo_EmfB_Filter, Smo_EmfEst.b);
 
-    float error = calculate_error(filtered, Smo_Theta);
-
-    Smo_EmfEst.a = filtered.a;
-    Smo_EmfEst.b = filtered.b;
+    float error = calculate_error(Smo_EmfEst, Smo_Theta_Temp);
 
     // 计算电动势的相位角
     float omega = pll_update(error, !Smo_Enabled);
