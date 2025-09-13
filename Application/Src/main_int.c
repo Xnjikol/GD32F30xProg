@@ -2,12 +2,14 @@
 #include "Initialization.h"
 #include "foc.h"
 #include "hardware_interface.h"
+#include "justfloat.h"
 #include "reciprocal.h"
 #include "sensorless_interface.h"
 #include "transformation.h"
 
 static DeviceStateEnum_t MainInt_State        = RUNNING;
 static volatile bool     MainInt_UseRealTheta = true;
+static volatile uint16_t MainInt_DataFlag     = 0x000U;
 
 static inline void MainInt_Update_FocCurrent(void) {
     Phase_t current_phase = Peripheral_Get_PhaseCurrent();
@@ -90,6 +92,15 @@ static inline void MainInt_Run_Foc(void) {
     Foc_Set_Udq_Ref(vol_dq_ref);
 }
 
+static inline void MainInt_Send_Data(void) {
+    float DMA_Buffer[4];
+    DMA_Buffer[0] = Peripheral_UpdatePosition().theta;
+    DMA_Buffer[1] = Sensorless_Update_Position().theta;
+    DMA_Buffer[2] = Sensorless_Get_HfiResponse();
+    DMA_Buffer[3] = Sensorless_Get_HfiError();
+    justfloat(DMA_Buffer, 4);
+}
+
 static inline void MainInt_Exit(void) {
     Peripheral_Set_Stop(true);       // 停止所有操作
     Foc_Set_ResetFlag(true);         // 设置复位标志
@@ -126,6 +137,7 @@ void Main_Int_Handler(void) {
         // 运行状态：正常FOC控制
         MainInt_Run_Foc();
         MainInt_Update_Sensorless();
+        MainInt_Send_Data();
         break;
     }
 

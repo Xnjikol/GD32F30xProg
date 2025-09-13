@@ -161,6 +161,7 @@ Park_t Hfi_Get_Inject_Voltage(void) {
 }
 
 static inline float pll_update(float error, bool reset) {
+    static float hfi_theta_estimate = 0.0F;
     // 更新锁相环
     float omega = Pid_Update(error, reset, &Hfi_Theta_Pid);
     Hfi_Theta += omega * Hfi_SampleTime;

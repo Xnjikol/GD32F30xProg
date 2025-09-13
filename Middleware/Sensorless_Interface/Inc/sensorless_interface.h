@@ -57,6 +57,10 @@ void Sensorless_Set_SpeedRef(float ref);
 
 void Sensorless_Set_Angle(float angle);
 
+float Sensorless_Get_HfiResponse(void);
+
+float Sensorless_Get_HfiError(void);
+
 bool Sensorless_Update_Err(AngleResult_t result);
 
 AngleResult_t Sensorless_Update_Position(void);
