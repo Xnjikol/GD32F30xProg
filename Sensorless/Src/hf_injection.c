@@ -36,15 +36,15 @@ static float Hfi_SampleFreq = {0};
 static volatile float Hfi_Theta_Err = {0};
 static volatile float Hfi_Speed_Err = {0};
 
-static float          Hfi_Theta      = {0};
-static float          Hfi_Omega      = {0};
-static float          Hfi_Speed      = {0};
-static volatile float Hfi_Error      = {0};
-static Clark_t        Hfi_IClarkFdbk = {0};
-static Park_t         Hfi_IParkFdbk  = {0};
-static Clark_t        Hfi_IClarkResp = {0};  // 提取的高频响应电流
-static Clark_t        Hfi_IClarkFilt = {0};  // 滤波后的静止坐标系电流
-static Park_t         Hfi_VoltageInj = {0};  // 将要注入的高频电压
+static float   Hfi_Theta      = {0};
+static float   Hfi_Omega      = {0};
+static float   Hfi_Speed      = {0};
+static float   Hfi_Error      = {0};
+static Clark_t Hfi_IClarkFdbk = {0};
+static Park_t  Hfi_IParkFdbk  = {0};
+static Clark_t Hfi_IClarkResp = {0};  // 提取的高频响应电流
+static Clark_t Hfi_IClarkFilt = {0};  // 滤波后的静止坐标系电流
+static Park_t  Hfi_VoltageInj = {0};  // 将要注入的高频电压
 
 static LowPassFilter_t Hfi_Error_Filter = {0};
 static LowPassFilter_t Hfi_Speed_Filter = {0};
