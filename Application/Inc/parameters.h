@@ -114,9 +114,9 @@
 #define RAMP_SPEED_TIME      (SPEED_LOOP_TIME) /* 转速环采样周期 */
 
 /* 转速环PID参数配置 */
-#define PID_SPEED_LOOP_KP 0.005F /* 转速环比例系数 */
-#define PID_SPEED_LOOP_KI 0.1F   /* 转速环积分系数 */
-#define PID_SPEED_LOOP_KD 0.0F   /* 转速环微分系数 */
+#define PID_SPEED_LOOP_KP 0.01F /* 转速环比例系数 */
+#define PID_SPEED_LOOP_KI 0.02F /* 转速环积分系数 */
+#define PID_SPEED_LOOP_KD 0.00F /* 转速环微分系数 */
 
 /* 转速环输出限制 */
 #define PID_SPEED_LOOP_MAX_OUTPUT \
@@ -127,9 +127,9 @@
 #define PID_SPEED_LOOP_TIME (SPEED_LOOP_TIME) /* 转速环采样周期 */
 
 /* 电流环d轴PID参数配置 */
-#define PID_CURRENT_D_LOOP_KP 7.5398223686F   /* d轴比例系数 */
-#define PID_CURRENT_D_LOOP_KI 1570.796326794F /* d轴积分系数 */
-#define PID_CURRENT_D_LOOP_KD 0.0F            /* d轴微分系数 */
+#define PID_CURRENT_D_LOOP_KP 1.28F  /* d轴比例系数 */
+#define PID_CURRENT_D_LOOP_KI 288.0F /* d轴积分系数 */
+#define PID_CURRENT_D_LOOP_KD 0.00F  /* d轴微分系数 */
 
 /* d轴输出限制 */
 #define PID_CURRENT_D_LOOP_MAX_OUTPUT 100.0F /* 最大输出电压：Udc/√3 */
@@ -140,9 +140,9 @@
 #define PID_CURRENT_D_LOOP_TIME (MAIN_LOOP_TIME) /* d轴采样周期 */
 
 /* 电流环q轴PID参数配置 */
-#define PID_CURRENT_Q_LOOP_KP 11.30973355F    /* q轴比例系数 */
-#define PID_CURRENT_Q_LOOP_KI 1570.796326794F /* q轴积分系数 */
-#define PID_CURRENT_Q_LOOP_KD 0.0F            /* q轴微分系数 */
+#define PID_CURRENT_Q_LOOP_KP 2.32F  /* q轴比例系数 */
+#define PID_CURRENT_Q_LOOP_KI 288.0F /* q轴积分系数 */
+#define PID_CURRENT_Q_LOOP_KD 0.00F  /* q轴微分系数 */
 
 /* q轴输出限制 */
 #define PID_CURRENT_Q_LOOP_MAX_OUTPUT 100.0F /* 最大输出电压：Udc/√3 */
