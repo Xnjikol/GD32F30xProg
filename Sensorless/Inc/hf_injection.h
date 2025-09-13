@@ -85,10 +85,6 @@ void Hfi_Set_InitialPosition(float theta);
 
 AngleResult_t Hfi_Get_Result(void);
 
-float Hfi_Get_Response(void);
-
-float Hfi_Get_Error(void);
-
 #ifdef __cplusplus
 }
 #endif

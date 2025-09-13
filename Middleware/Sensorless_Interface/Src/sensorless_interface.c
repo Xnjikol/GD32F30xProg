@@ -68,6 +68,10 @@ sensorless_method_t Sensorless_Get_Method(void) {
     return Sensorless_Method;
 }
 
+Clark_t Sensorless_Get_SmoEmf(void) {
+    return Smo_Get_EmfEst();
+}
+
 bool Sensorless_Set_Voltage(Clark_t voltage) {
     if (!Sensorless_Enabled) {
         return false;
@@ -111,14 +115,6 @@ void Sensorless_Set_SpeedRef(float ref) {
 
 void Sensorless_Set_Angle(float angle) {
     Sensorless_Theta = angle;
-}
-
-float Sensorless_Get_HfiResponse(void) {
-    return Hfi_Get_Response();
-}
-
-float Sensorless_Get_HfiError(void) {
-    return Hfi_Get_Error();
 }
 
 bool Sensorless_Update_Err(AngleResult_t result) {

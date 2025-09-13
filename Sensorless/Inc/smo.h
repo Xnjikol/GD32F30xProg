@@ -19,20 +19,35 @@ typedef struct {
 /**
  * @brief SMO参数设置与获取接口
  */
-bool          Smo_Set_SampleTime(const SystemTimeConfig_t* config);
-bool          Smo_Initialization(const SMO_Param_t* param);
-void          Smo_Set_InvPn(float inv_Pn);
-void          Smo_Set_EmfFilter(float cutoff_freq, float sample_time);
-void          Smo_Set_SpeedFilter(float cutoff_freq, float sample_freq);
-void          Smo_Set_Pid_Handler(PID_Handler_t config);
-void          Smo_Set_Voltage(Clark_t voltage);
-void          Smo_Set_Current(Clark_t current);
-void          Smo_Set_Theta(float theta);
-void          Smo_Set_Theta_Err(float ref);
-void          Smo_Set_Speed_Err(float ref);
-void          Smo_Set_Enabled(bool enabled);
-bool          Smo_Get_Enabled(void);
+bool Smo_Set_SampleTime(const SystemTimeConfig_t* config);
+
+bool Smo_Initialization(const SMO_Param_t* param);
+
+void Smo_Set_InvPn(float inv_Pn);
+
+void Smo_Set_EmfFilter(float cutoff_freq, float sample_time);
+
+void Smo_Set_SpeedFilter(float cutoff_freq, float sample_freq);
+
+void Smo_Set_Pid_Handler(PID_Handler_t config);
+
+void Smo_Set_Voltage(Clark_t voltage);
+
+void Smo_Set_Current(Clark_t current);
+
+void Smo_Set_Theta(float theta);
+
+void Smo_Set_Theta_Err(float ref);
+
+void Smo_Set_Speed_Err(float ref);
+
+void Smo_Set_Enabled(bool enabled);
+
+bool Smo_Get_Enabled(void);
+
 AngleResult_t Smo_Get_Result(void);
+
+Clark_t Smo_Get_EmfEst(void);
 
 /**
  * @brief SMO内部状态更新接口

@@ -129,6 +129,10 @@ AngleResult_t Smo_Get_Result(void) {
     return result;
 }
 
+Clark_t Smo_Get_EmfEst(void) {
+    return Smo_EmfEst;
+}
+
 static inline float sign(float x) {
     return (x > 0) - (x < 0);
 }
