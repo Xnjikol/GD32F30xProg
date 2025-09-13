@@ -187,8 +187,8 @@
 #define SMO_GAIN_K2           0.01F  /* 观测器增益K2 */
 
 /* 滑模观测器PLL跟踪器参数 */
-#define SMO_PLL_KP             500.0F  /* PLL比例系数 */
-#define SMO_PLL_KI             18E3F   /* PLL积分系数 */
+#define SMO_PLL_KP             600.0F  /* PLL比例系数 */
+#define SMO_PLL_KI             90E3F   /* PLL积分系数 */
 #define SMO_PLL_KD             0.0F    /* PLL微分系数 */
 #define SMO_PLL_MAX_OUTPUT     4000.0F /* PLL最大输出 */
 #define SMO_PLL_MIN_OUTPUT     (-1 * SMO_PLL_MAX_OUTPUT) /* PLL最小输出 */
