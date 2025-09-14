@@ -97,7 +97,7 @@ static inline void MainInt_Send_Data(void) {
     DMA_Buffer[0]   = Peripheral_Get_PhaseCurrent().a;
     DMA_Buffer[1]   = Sensorless_Update_Position().theta;
     Clark_t smo_emf = Sensorless_Get_SmoEmf();
-    DMA_Buffer[2]   = smo_emf.a;
+    DMA_Buffer[2]   = Peripheral_UpdatePosition().theta;
     DMA_Buffer[3]   = smo_emf.b;
     justfloat(DMA_Buffer, 4);
 }
