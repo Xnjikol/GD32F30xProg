@@ -8,13 +8,13 @@
 #include "gpio.h"
 #include "hardware_interface.h"
 #include "hf_injection.h"
+#include "leso.h"
 #include "main.h"
 #include "motor.h"
 #include "parameters.h"
 #include "position_sensor.h"
 #include "protect.h"
 #include "sensorless_interface.h"
-#include "smo.h"
 #include "systick.h"
 #include "tim.h"
 #include "usart.h"
@@ -118,15 +118,15 @@ bool init_module_sensorless(void) {
 }
 
 bool init_module_smo(void) {
-    Smo_Set_SampleTime(&sys_time_cfg);
+    Leso_Set_SampleTime(&sys_time_cfg);
 
-    SMO_Param_t smo_param = {.Ld       = MOTOR_LD,
-                             .Lq       = MOTOR_LQ,
-                             .Rs       = MOTOR_RS,
-                             .smo_gain = SMO_GAIN_K1};
-    Smo_Initialization(&smo_param);
+    LESO_Param_t smo_param = {.Ld        = MOTOR_LD,
+                              .Lq        = MOTOR_LQ,
+                              .Rs        = MOTOR_RS,
+                              .leso_gain = SMO_GAIN_K1};
+    Leso_Initialization(&smo_param);
 
-    Smo_Set_InvPn(1.0F / MOTOR_PN);
+    Leso_Set_InvPn(1.0F / MOTOR_PN);
 
     PID_Handler_t smo_pid = {.Kp            = SMO_PLL_KP,
                              .Ki            = SMO_PLL_KI,
@@ -135,10 +135,10 @@ bool init_module_smo(void) {
                              .MinOutput     = SMO_PLL_MIN_OUTPUT,
                              .IntegralLimit = SMO_PLL_INTEGRAL_LIMIT,
                              .Ts            = MAIN_LOOP_TIME};
-    Smo_Set_Pid_Handler(smo_pid);
+    Leso_Set_Pid_Handler(smo_pid);
 
-    Smo_Set_EmfFilter(SMO_LPF_CUTOFF_FREQ, SMO_SAMPLING_FREQ);
-    Smo_Set_SpeedFilter(10.0F, SPEED_LOOP_FREQ);
+    Leso_Set_EmfFilter(SMO_LPF_CUTOFF_FREQ, SMO_SAMPLING_FREQ);
+    Leso_Set_SpeedFilter(10.0F, SPEED_LOOP_FREQ);
 
     return true;
 }

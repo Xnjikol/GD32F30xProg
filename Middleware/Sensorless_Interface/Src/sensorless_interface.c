@@ -11,8 +11,8 @@
 #include <stdbool.h>
 #include "filter.h"
 #include "hf_injection.h"
+#include "leso.h"
 #include "reciprocal.h"
-#include "smo.h"
 #include "transformation.h"
 #include <math.h>
 
@@ -54,7 +54,7 @@ bool Sensorless_Set_Method(sensorless_method_t method, bool enable) {
         break;
 
     case SENSORLESS_METHOD_SM_OBSERVER:
-        Smo_Set_Enabled(enable);
+        Leso_Set_Enabled(enable);
         break;
 
     default:
@@ -69,7 +69,7 @@ sensorless_method_t Sensorless_Get_Method(void) {
 }
 
 Clark_t Sensorless_Get_SmoEmf(void) {
-    return Smo_Get_EmfEst();
+    return Leso_Get_EmfEst();
 }
 
 bool Sensorless_Set_Voltage(Clark_t voltage) {
@@ -80,8 +80,8 @@ bool Sensorless_Set_Voltage(Clark_t voltage) {
     if (Hfi_Get_Enabled()) {
     }
 
-    if (Smo_Get_Enabled()) {
-        Smo_Set_Voltage(voltage);
+    if (Leso_Get_Enabled()) {
+        Leso_Set_Voltage(voltage);
     }
 
     return true;
@@ -90,7 +90,7 @@ bool Sensorless_Set_Voltage(Clark_t voltage) {
 bool Sensorless_Set_Current(Clark_t current) {
     if (!Sensorless_Enabled) {
         // Hfi_Set_Current((Clark_t){0});
-        Smo_Set_Current((Clark_t){0});
+        Leso_Set_Current((Clark_t){0});
         return false;
     }
 
@@ -98,8 +98,8 @@ bool Sensorless_Set_Current(Clark_t current) {
     //     Hfi_Set_Current(current);
     // }
 
-    if (Smo_Get_Enabled()) {
-        Smo_Set_Current(current);
+    if (Leso_Get_Enabled()) {
+        Leso_Set_Current(current);
     }
 
     return true;
@@ -128,8 +128,8 @@ bool Sensorless_Update_Err(AngleResult_t result) {
     Hfi_Set_Theta_Err(theta);
     Hfi_Set_Speed_Err(speed);
 
-    Smo_Set_Theta_Err(theta);
-    Smo_Set_Speed_Err(speed);
+    Leso_Set_Theta_Err(theta);
+    Leso_Set_Speed_Err(speed);
 
     return true;
 }
@@ -137,7 +137,7 @@ bool Sensorless_Update_Err(AngleResult_t result) {
 AngleResult_t Sensorless_Update_Position(void) {
     if (fabsf(Sensorless_Speed_Ref) >= Sensorless_Switch_Speed) {
         if (fabsf(Sensorless_Speed_Fdbk) >= Sensorless_Switch_Speed) {
-            return Smo_Get_Result();
+            return Leso_Get_Result();
         }
     } else {
         if (fabsf(Sensorless_Speed_Fdbk) < Sensorless_Switch_Speed) {
@@ -150,7 +150,7 @@ AngleResult_t Sensorless_Update_Position(void) {
         }
     } else {
         if (fabsf(Sensorless_Speed_Fdbk) > Sensorless_Switch_Speed) {
-            return Smo_Get_Result();
+            return Leso_Get_Result();
         }
     }
     return (AngleResult_t){0};
@@ -158,12 +158,12 @@ AngleResult_t Sensorless_Update_Position(void) {
 
 static inline void enable_smo(bool enable) {
     if (enable) {
-        if (!Smo_Get_Enabled()) {
-            Smo_Set_Enabled(true);
+        if (!Leso_Get_Enabled()) {
+            Leso_Set_Enabled(true);
         }
     } else {
-        if (Smo_Get_Enabled()) {
-            Smo_Set_Enabled(false);
+        if (Leso_Get_Enabled()) {
+            Leso_Set_Enabled(false);
         }
     }
 }
@@ -219,9 +219,9 @@ bool Sensorless_Calculate(void) {
         Hfi_Update();
     }
 
-    if (Smo_Get_Enabled()) {
-        Smo_Update_EmfEst();
-        Smo_Update_Angle();
+    if (Leso_Get_Enabled()) {
+        Leso_Update_EmfEst();
+        Leso_Update_Angle();
     }
 
     return true;
