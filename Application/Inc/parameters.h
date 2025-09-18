@@ -181,10 +181,11 @@
 #define HFI_PLL_INTEGRAL_LIMIT HFI_PLL_MAX_OUTPUT /* PLL积分限幅值 */
 
 /* 滑模观测器参数 */
-#define SMO_SIGMOID_AMPLITUDE 0.1F   /* S函数幅值 */
-#define SMO_SIGMOID_FACTOR    0.1F   /* S函数因子 */
-#define SMO_GAIN_K1           200.0F /* 观测器增益K1 */
-#define SMO_GAIN_K2           0.01F  /* 观测器增益K2 */
+#define SMO_SIGMOID_AMPLITUDE 0.1F      /* S函数幅值 */
+#define SMO_SIGMOID_FACTOR    0.1F      /* S函数因子 */
+#define SMO_GAIN_K1           200.0F    /* 观测器增益K1 */
+#define SMO_GAIN_K2           0.01F     /* 观测器增益K2 */
+#define LESO_WC               7.0958E3F /* 观测器带宽 */
 
 /* 滑模观测器PLL跟踪器参数 */
 #define SMO_PLL_KP             600.0F  /* PLL比例系数 */

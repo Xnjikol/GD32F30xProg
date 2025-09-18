@@ -120,10 +120,11 @@ bool init_module_sensorless(void) {
 bool init_module_smo(void) {
     Leso_Set_SampleTime(&sys_time_cfg);
 
-    LESO_Param_t smo_param = {.Ld        = MOTOR_LD,
-                              .Lq        = MOTOR_LQ,
-                              .Rs        = MOTOR_RS,
-                              .leso_gain = SMO_GAIN_K1};
+    LESO_Param_t smo_param = {.Ld         = MOTOR_LD,
+                              .Lq         = MOTOR_LQ,
+                              .Rs         = MOTOR_RS,
+                              .leso_beta1 = 2 * LESO_WC,
+                              .leso_beta2 = LESO_WC * LESO_WC};
     Leso_Initialization(&smo_param);
 
     Leso_Set_InvPn(1.0F / MOTOR_PN);
@@ -137,7 +138,7 @@ bool init_module_smo(void) {
                              .Ts            = MAIN_LOOP_TIME};
     Leso_Set_Pid_Handler(smo_pid);
 
-    Leso_Set_EmfFilter(SMO_LPF_CUTOFF_FREQ, SMO_SAMPLING_FREQ);
+    // Leso_Set_EmfFilter(SMO_LPF_CUTOFF_FREQ, SMO_SAMPLING_FREQ);
     Leso_Set_SpeedFilter(10.0F, SPEED_LOOP_FREQ);
 
     return true;

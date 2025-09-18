@@ -220,7 +220,8 @@ bool Sensorless_Calculate(void) {
     }
 
     if (Leso_Get_Enabled()) {
-        Leso_Update_EmfEst();
+        Leso_Update_EmfEstA();
+        Leso_Update_EmfEstB();
         Leso_Update_Angle();
     }
 

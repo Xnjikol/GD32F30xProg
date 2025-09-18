@@ -11,7 +11,8 @@
 // Leso_A 和 Leso_B 是为了减少运行时计算时间而预先计算好的系数，用于后续算法中直接使用。
 
 static bool  Leso_Enabled          = {0};
-static float Leso_Gain             = {0};
+static float Leso_Beta1            = {0};
+static float Leso_Beta2            = {0};
 static float Leso_Rs               = {0};
 static float Leso_Ld               = {0};
 static float Leso_Lq               = {0};
@@ -36,8 +37,6 @@ static Clark_t Leso_Current = {0};
 static Clark_t Leso_CurEst  = {0};
 static Clark_t Leso_EmfEst  = {0};
 
-static LowPassFilter_t Leso_EmfA_Filter  = {0};
-static LowPassFilter_t Leso_EmfB_Filter  = {0};
 static LowPassFilter_t Leso_Speed_Filter = {0};
 static PID_Handler_t   Leso_Theta_PID    = {0};
 
@@ -68,7 +67,8 @@ bool Leso_Initialization(const LESO_Param_t* param) {
         return false;
     }
 
-    Leso_Gain  = param->leso_gain;
+    Leso_Beta1 = param->leso_beta1;
+    Leso_Beta2 = param->leso_beta2;
     Leso_Rs    = param->Rs;
     Leso_Ld    = param->Ld;
     Leso_Lq    = param->Lq;
@@ -82,12 +82,6 @@ bool Leso_Initialization(const LESO_Param_t* param) {
 
 void Leso_Set_InvPn(float inv_Pn) {
     Leso_InvPn = inv_Pn;
-}
-
-void Leso_Set_EmfFilter(float cutoff_freq, float sample_freq) {
-    LowPassFilter_Init(&Leso_EmfA_Filter, cutoff_freq, sample_freq);
-    LowPassFilter_Init(&Leso_EmfB_Filter, cutoff_freq, sample_freq);
-    Leso_Wc = M_2PI * cutoff_freq;
 }
 
 void Leso_Set_SpeedFilter(float cutoff_freq, float sample_freq) {
@@ -138,31 +132,44 @@ Clark_t Leso_Get_EmfEst(void) {
     return Leso_EmfEst;
 }
 
-static inline float sign(float x) {
-    return (x > 0) - (x < 0);
+void Leso_Update_EmfEstA(void) {
+    // 更新电动势估计值
+    static float leso_f1a  = 0.0F;
+    float        leso_f0   = 0.0F;
+    float        leso_b0u  = 0.0F;
+    float        leso_err  = 0.0F;
+    float        leso_dcur = 0.0F;
+
+    leso_err = Leso_CurEst.a - Leso_Current.a;
+    leso_f0  = -Leso_Current.a * Leso_Rs * Leso_InvLq;
+    leso_b0u = Leso_Voltage.a * Leso_InvLq;
+    leso_f1a += -leso_err * Leso_Beta2 * Leso_SampleTime;
+    leso_dcur = leso_f0 + leso_b0u + leso_f1a - Leso_Beta1 * leso_err;
+    Leso_CurEst.a += leso_dcur * Leso_SampleTime;
+    Leso_EmfEst.a = -Leso_Lq * leso_f1a;
 }
 
-void Leso_Update_EmfEst(void) {
+void Leso_Update_EmfEstB(void) {
     // 更新电动势估计值
-    Leso_CurEst.a = Leso_A * Leso_CurEst.a
-                    + Leso_B * (Leso_Voltage.a - Leso_EmfEst.a);
-    Leso_CurEst.b = Leso_A * Leso_CurEst.b
-                    + Leso_B * (Leso_Voltage.b - Leso_EmfEst.b);
+    static float leso_f1b  = 0.0F;
+    float        leso_f0   = 0.0F;
+    float        leso_b0u  = 0.0F;
+    float        leso_err  = 0.0F;
+    float        leso_dcur = 0.0F;
 
-    float est_delta = 0.0F;
-
-    est_delta     = Leso_CurEst.a - Leso_Current.a;
-    Leso_EmfEst.a = Leso_Gain * sign(est_delta);
-
-    est_delta     = Leso_CurEst.b - Leso_Current.b;
-    Leso_EmfEst.b = Leso_Gain * sign(est_delta);
+    leso_err = Leso_CurEst.b - Leso_Current.b;
+    leso_f0  = -Leso_Current.b * Leso_Rs * Leso_InvLq;
+    leso_b0u = Leso_Voltage.b * Leso_InvLq;
+    leso_f1b += -leso_err * Leso_Beta2 * Leso_SampleTime;
+    leso_dcur = leso_f0 + leso_b0u + leso_f1b - Leso_Beta1 * leso_err;
+    Leso_CurEst.b += leso_dcur * Leso_SampleTime;
+    Leso_EmfEst.b = -Leso_Lq * leso_f1b;
 }
 
 static inline float compensate_theta(float theta, float omega) {
     // 角度补偿
     float comp = 0.0F;
     ATAN2(omega, Leso_Wc, &comp);
-    // ATAN2(Leso_atan1, Leso_atan2, &Leso_atan_out);
     return theta + comp;
 }
 
@@ -176,7 +183,7 @@ static inline float pll_update(float error, bool reset) {
     if (Leso_Theta_Temp < 0.0F) {
         Leso_Theta_Temp += M_2PI;
     }
-    Leso_Theta = compensate_theta(Leso_Theta_Temp, omega);
+    Leso_Theta = compensate_theta(Leso_Theta_Temp, 0.0F);
     Leso_Theta = wrap_theta_2pi(Leso_Theta);
     return omega;
 }
@@ -190,11 +197,11 @@ static inline float calculate_error(Clark_t emf, float angle) {
         return angleErr;
     }
 
-    float sin_smo = SIN(angle);
-    float cos_smo = COS(angle);
+    float sin_leso = SIN(angle);
+    float cos_leso = COS(angle);
 
-    errorAlpha = -emf.a * cos_smo;
-    errorBeta  = emf.b * sin_smo;
+    errorAlpha = -emf.a * cos_leso;
+    errorBeta  = emf.b * sin_leso;
     angleErr   = errorAlpha - errorBeta;
 
     float norm = 0.0F;
@@ -224,11 +231,6 @@ static inline float calculate_speed(float omega) {
 }
 
 void Leso_Update_Angle(void) {
-    Leso_EmfEst.a
-        = LowPassFilter_Update(&Leso_EmfA_Filter, Leso_EmfEst.a);
-    Leso_EmfEst.b
-        = LowPassFilter_Update(&Leso_EmfB_Filter, Leso_EmfEst.b);
-
     float error = calculate_error(Leso_EmfEst, Leso_Theta_Temp);
 
     // 计算电动势的相位角
