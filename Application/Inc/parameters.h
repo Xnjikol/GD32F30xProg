@@ -28,7 +28,7 @@
 /*********************************************************************/
 #ifndef RESOLVER_POSITION
 #    ifndef ENCODER_POSITION
-#        define ENCODER_POSITION
+#        define RESOLVER_POSITION
 #    endif
 #endif
 
@@ -65,11 +65,11 @@
 /*                        电机物理参数                                 */
 /*********************************************************************/
 /* 电机电气参数 */
-#define MOTOR_RS   0.72F   /* 定子电阻：0.72 Ω */
-#define MOTOR_LD   3.2E-3F /* d轴电感：3.2 mH */
-#define MOTOR_LQ   5.8E-3F /* q轴电感：5.8 mH */
-#define MOTOR_FLUX 0.1F    /* 永磁体磁链：0.1 Wb */
-#define MOTOR_PN   5.0F    /* 电机极对数：5 */
+#define MOTOR_RS   1.25F /* 定子电阻：0.72 Ω */
+#define MOTOR_LD   6E-3F /* d轴电感：3.2 mH */
+#define MOTOR_LQ   9E-3F /* q轴电感：5.8 mH */
+#define MOTOR_FLUX 0.1F  /* 永磁体磁链：0.1 Wb */
+#define MOTOR_PN   5.0F  /* 电机极对数：5 */
 
 /* 位置传感器配置 */
 #ifdef RESOLVER_POSITION
