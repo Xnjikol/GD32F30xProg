@@ -45,7 +45,7 @@
 /* 主定时器配置 */
 #define MAIN_INT_TIMER_PRESCALER 0 /* 预分频器：不分频 */
 #define MAIN_INT_TIMER_PERIOD \
-    6000 /* 周期值：6000 (10kHz = 120MHz/6000/2) */
+    30000 /* 周期值：6000 (10kHz = 120MHz/6000/2) */
 #define MAIN_INT_TIMER_DEADTIME_PERIOD \
     2000 /* 死区时间：2us (2us = 120MHz/6000/2*2000) */
 
@@ -90,8 +90,8 @@
         (M_2PI / (float)(MOTOR_POSITION_SCALE + 1))
 #endif
 
-#define MOTOR_RESOLVER_PN     1.0F      /* 旋变极对数 */
-#define MOTOR_POSITION_OFFSET 0.000000F /* 位置传感器零点偏置 */
+#define MOTOR_RESOLVER_PN     1.0F     /* 旋变极对数 */
+#define MOTOR_POSITION_OFFSET 39293.0F /* 位置传感器零点偏置 */
 
 /*********************************************************************/
 /*                        保护参数配置                                 */
