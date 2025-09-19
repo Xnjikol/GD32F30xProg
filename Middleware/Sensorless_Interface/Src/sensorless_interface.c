@@ -90,7 +90,7 @@ bool Sensorless_Set_Voltage(Clark_t voltage) {
 bool Sensorless_Set_Current(Clark_t current) {
     if (!Sensorless_Enabled) {
         // Hfi_Set_Current((Clark_t){0});
-        Leso_Set_Current((Clark_t){0});
+        // Leso_Set_Current((Clark_t){0});
         return false;
     }
 
