@@ -285,14 +285,6 @@ Phase_t Foc_Get_Tcm(void) {
     // 生成三相PWM时间
     tcm = calculate_SVPWM_Tcm(Foc_Uclark_Ref, Foc_BusVoltage_Inv);
 
-    float DMA_Buffer[2];
-    // Clark_t smo_emf   = Sensorless_Get_SmoEmf();
-    DMA_Buffer[0] = tcm.a;
-    DMA_Buffer[1] = tcm.b;
-    // DMA_Buffer[2]     = smo_emf.a;
-    // DMA_Buffer[3]     = smo_emf.b;
-    justfloat(DMA_Buffer, 2);
-
     return tcm;  // 返回三相PWM时间
 }
 
