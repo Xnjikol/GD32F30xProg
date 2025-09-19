@@ -45,7 +45,7 @@
 /* 主定时器配置 */
 #define MAIN_INT_TIMER_PRESCALER 0 /* 预分频器：不分频 */
 #define MAIN_INT_TIMER_PERIOD \
-    30000 /* 周期值：6000 (10kHz = 120MHz/6000/2) */
+    6000 /* 周期值：6000 (10kHz = 120MHz/6000/2) */
 #define MAIN_INT_TIMER_DEADTIME_PERIOD \
     2000 /* 死区时间：2us (2us = 120MHz/6000/2*2000) */
 
