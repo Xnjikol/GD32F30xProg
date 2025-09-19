@@ -93,13 +93,16 @@ static inline void MainInt_Run_Foc(void) {
 }
 
 static inline void MainInt_Send_Data(void) {
-    float DMA_Buffer[4];
-    DMA_Buffer[0]   = Peripheral_Get_PhaseCurrent().a;
-    DMA_Buffer[1]   = Sensorless_Update_Position().theta;
-    Clark_t smo_emf = Sensorless_Get_SmoEmf();
-    DMA_Buffer[2]   = smo_emf.a;
-    DMA_Buffer[3]   = smo_emf.b;
-    justfloat(DMA_Buffer, 4);
+    // float   DMA_Buffer[2];
+    // Phase_t phase_tcm = Foc_Get_Tcm();
+    // DMA_Buffer[0]     = Peripheral_Get_PhaseCurrent().a;
+    // DMA_Buffer[1]     = Sensorless_Update_Position().theta;
+    // Clark_t smo_emf   = Sensorless_Get_SmoEmf();
+    // DMA_Buffer[2]     = phase_tcm.a;
+    // DMA_Buffer[3]     = phase_tcm.b;
+    // DMA_Buffer[2]     = smo_emf.a;
+    // DMA_Buffer[3]     = smo_emf.b;
+    // justfloat(DMA_Buffer, 2);
 }
 
 static inline void MainInt_Exit(void) {
