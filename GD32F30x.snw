@@ -21,9 +21,9 @@
       <window type="NS_Snoop.FrmWatch" title="Param" />
       <window type="NS_Snoop.FrmWatch" title="Sensorless" />
       <window type="NS_Snoop.FrmEcuConfig" title="ECU1" />
+      <window type="NS_Snoop.FrmWatch" title="Watch4" />
       <window type="NS_Snoop.FrmHardwareInterface" title="CAN1" />
       <window type="NS_Snoop.FrmWatch" title="OpenLoop" />
-      <window type="NS_Snoop.FrmWatch" title="Watch4" />
     </ordered_windows>
   </snoop_main_window>
   <snoop_hardware_channel name="CAN1">
@@ -49,7 +49,7 @@
     <hardware_channel>CAN1</hardware_channel>
     <calibration_area include_gaps="true" />
     <file path="E:\Doc\Work\FRECON\Prj\GD32F30xProg\build\GD32F30xProg.a2l" relative="build\GD32F30xProg.a2l" symbols="true" prompt_before_overwrite="true" enabled="true" load="false" download="false" flash="false" upload="false" save="false" percent_complete="0" operation_in_progress="false">
-      <properties load_memory_type="file_data" time_operation_started="2013-05-01T00:00:30.3270000+08:00" last_time_loaded="2013-05-01T00:00:30.3270000+08:00" disk_properties_error="" exists_on_disk="true" time_disk_modified="2025-09-20T13:40:09.7165130+08:00" size_bytes_on_disk="51288" last_time_downloaded="0001-01-01T00:00:00.0000000" last_time_flashed="0001-01-01T00:00:00.0000000" last_time_saved="0001-01-01T00:00:00.0000000">
+      <properties load_memory_type="file_data" time_operation_started="2013-05-01T01:32:14.7300000+08:00" last_time_loaded="2013-05-01T01:32:14.7300000+08:00" disk_properties_error="" exists_on_disk="true" time_disk_modified="2025-09-20T15:12:22.5187428+08:00" size_bytes_on_disk="52832" last_time_downloaded="0001-01-01T00:00:00.0000000" last_time_flashed="0001-01-01T00:00:00.0000000" last_time_saved="0001-01-01T00:00:00.0000000">
         <upload_area type="manually_defined" manual_regions_contiguous="true" const_regions_contiguous="false">
           <upload_region start_address="Calibration" byte_length="" />
           <upload_region start_address=".cal_sec" byte_length="" />
@@ -190,20 +190,20 @@
   </snoop_watch>
   <snoop_watch name="Sensorless">
     <window_attributes window_state="normal">
-      <rectangle top="129" left="173" width="1070" height="668" />
+      <rectangle top="896" left="0" width="170" height="97" />
     </window_attributes>
-    <display scope_showing="true" scope_horizontal="false" autohide_buttons="true" scope_split_vertical="0.243809523809524" scope_split_horizontal="0.5" enums="decimal_and_label" pointers="label_or_hex" scope_timebase_sec="1" scope_acq_period_ms="10" scope_exclude_cals_from_daq="true" scope_exclude_unselected_signals_from_daq="true" scope_black_background="false" scope_show_points="true" scope_use_steps="false" scope_autoscale_mode="stacked_separated" />
+    <display scope_showing="true" scope_horizontal="false" autohide_buttons="true" scope_split_vertical="3.12" scope_split_horizontal="0.5" enums="decimal_and_label" pointers="label_or_hex" scope_timebase_sec="1" scope_acq_period_ms="10" scope_exclude_cals_from_daq="true" scope_exclude_unselected_signals_from_daq="true" scope_black_background="false" scope_show_points="true" scope_use_steps="false" scope_autoscale_mode="stacked_separated" />
     <can_signals dbc_to_timeout_mult="10" no_dbc_period_timeout_ms="3000" />
     <logging target_period_ms="100" filename_style="date_time_sortable" format="compact" can_format="with_variables" enums="decimal" pointers="label_or_hex" logfile_absolute="E:\Doc\Work\FRECON\Prj\GD32F30xProg\" logfile_relative="" paused_loaded_from_file="false" />
     <columns>
       <column name="ColAddress" index="0" visible="false" visible_scope_on="false" width="40" width_scope_on="40" font_name="Courier New" font_size="8.25" />
-      <column name="ColHex" index="1" visible="false" visible_scope_on="true" width="130" width_scope_on="39" font_name="等距更纱黑体 SC" font_size="7.8" />
-      <column name="ColValue" index="2" visible="true" visible_scope_on="true" width="377" width_scope_on="50" font_name="等距更纱黑体 SC" font_size="7.8" />
-      <column name="ColName" index="3" visible="true" visible_scope_on="true" width="1257" width_scope_on="120" font_name="等距更纱黑体 SC" font_size="7.8" />
+      <column name="ColHex" index="1" visible="false" visible_scope_on="true" width="130" width_scope_on="79" font_name="等距更纱黑体 SC" font_size="7.8" />
+      <column name="ColValue" index="2" visible="true" visible_scope_on="true" width="377" width_scope_on="99" font_name="等距更纱黑体 SC" font_size="7.8" />
+      <column name="ColName" index="3" visible="true" visible_scope_on="true" width="1257" width_scope_on="240" font_name="等距更纱黑体 SC" font_size="7.8" />
       <column name="ColType" index="4" visible="false" visible_scope_on="false" width="66" width_scope_on="66" font_name="Arial Narrow" font_size="8.25" />
       <column name="ColUnits" index="5" visible="false" visible_scope_on="false" width="37" width_scope_on="37" font_name="Arial Narrow" font_size="8.25" />
       <column name="ColDescription" index="6" visible="false" visible_scope_on="false" width="105" width_scope_on="105" font_name="Arial Narrow" font_size="8.25" />
-      <column name="ColScope" index="7" visible="true" visible_scope_on="true" width="277" width_scope_on="23" font_name="Arial" font_size="8.25" />
+      <column name="ColScope" index="7" visible="true" visible_scope_on="true" width="277" width_scope_on="47" font_name="Arial" font_size="8.25" />
     </columns>
     <rows>
       <row displayed_name="Sensorless_Enabled" nesting_depth="0" ecu="ECU1" scope_on="false" />
@@ -259,13 +259,13 @@
     <window_attributes window_state="normal">
       <rectangle top="160" left="160" width="1140" height="341" />
     </window_attributes>
-    <display scope_showing="true" scope_horizontal="false" autohide_buttons="true" scope_split_vertical="0.226785714285714" scope_split_horizontal="0.5" enums="decimal_and_label" pointers="label_or_hex" scope_timebase_sec="1" scope_acq_period_ms="10" scope_exclude_cals_from_daq="true" scope_exclude_unselected_signals_from_daq="true" scope_black_background="false" scope_show_points="true" scope_use_steps="false" scope_autoscale_mode="stacked_separated" />
+    <display scope_showing="true" scope_horizontal="false" autohide_buttons="true" scope_split_vertical="0.225892857142857" scope_split_horizontal="0.5" enums="decimal_and_label" pointers="label_or_hex" scope_timebase_sec="1" scope_acq_period_ms="10" scope_exclude_cals_from_daq="true" scope_exclude_unselected_signals_from_daq="true" scope_black_background="false" scope_show_points="true" scope_use_steps="false" scope_autoscale_mode="stacked_separated" />
     <can_signals dbc_to_timeout_mult="10" no_dbc_period_timeout_ms="3000" />
     <logging target_period_ms="100" filename_style="date_time_sortable" format="compact" can_format="with_variables" enums="decimal" pointers="label_or_hex" logfile_absolute="E:\Doc\Work\FRECON\Prj\GD32F30xProg\" logfile_relative="" paused_loaded_from_file="false" />
     <columns>
       <column name="ColAddress" index="0" visible="false" visible_scope_on="false" width="40" width_scope_on="40" font_name="Courier New" font_size="8.25" />
-      <column name="ColHex" index="1" visible="false" visible_scope_on="true" width="130" width_scope_on="40" font_name="等距更纱黑体 SC" font_size="7.8" />
-      <column name="ColValue" index="2" visible="true" visible_scope_on="true" width="377" width_scope_on="48" font_name="等距更纱黑体 SC" font_size="7.8" />
+      <column name="ColHex" index="1" visible="false" visible_scope_on="true" width="130" width_scope_on="39" font_name="等距更纱黑体 SC" font_size="7.8" />
+      <column name="ColValue" index="2" visible="true" visible_scope_on="true" width="377" width_scope_on="49" font_name="等距更纱黑体 SC" font_size="7.8" />
       <column name="ColName" index="3" visible="true" visible_scope_on="true" width="1257" width_scope_on="108" font_name="等距更纱黑体 SC" font_size="7.8" />
       <column name="ColType" index="4" visible="false" visible_scope_on="false" width="66" width_scope_on="66" font_name="Arial Narrow" font_size="8.25" />
       <column name="ColUnits" index="5" visible="false" visible_scope_on="false" width="37" width_scope_on="37" font_name="Arial Narrow" font_size="8.25" />
@@ -287,6 +287,7 @@
       <row displayed_name="Smo_atan1" nesting_depth="0" ecu="ECU1" scope_on="false" scope_colour_set="true" scope_colour_user="false" scope_colour="-7722014" />
       <row displayed_name="Smo_atan2" nesting_depth="0" ecu="ECU1" scope_on="false" scope_colour_set="true" scope_colour_user="false" scope_colour="-65281" />
       <row displayed_name="Smo_Theta_PID.output" nesting_depth="0" ecu="ECU1" scope_on="false" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
+      <row displayed_name="Leso_Lq" nesting_depth="0" ecu="ECU1" scope_on="false" />
     </rows>
   </snoop_watch>
 </snoop_workspace>
