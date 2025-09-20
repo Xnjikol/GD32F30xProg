@@ -25,7 +25,7 @@ static float    Motor_Theta_Elec      = 0.0F;
 static float    Motor_Theta_Mech      = 0.0F;
 static float    Motor_Speed           = 0.0F;
 
-static LowPassFilter_t Motor_Speed_Filter = {0};
+static FirstOrderFilter_t Motor_Speed_Filter = {0};
 
 static inline void Motor_Update_Theta(void) {
     // 位置传感器数据处理
@@ -52,7 +52,7 @@ static inline void Motor_Update_Speed(void) {
     Motor_Speed
         = calc_speed(Motor_Theta_Mech, last_theta, Motor_SampleFreq);
     Motor_Speed
-        = LowPassFilter_Update(&Motor_Speed_Filter, Motor_Speed);
+        = FirstOrderFilter_Update(&Motor_Speed_Filter, Motor_Speed);
     last_theta = Motor_Theta_Mech;
 }
 
@@ -90,7 +90,8 @@ bool Motor_Set_SpeedPrescaler(uint16_t prescaler) {
 }
 
 bool Motor_Set_Filter(float cutoff_freq, float sample_freq) {
-    LowPassFilter_Init(&Motor_Speed_Filter, cutoff_freq, sample_freq);
+    FirstOrderFilter_Init(
+        &Motor_Speed_Filter, cutoff_freq, sample_freq);
     return true;
 }
 

@@ -4,13 +4,13 @@
 
 /**
  * @brief Initialize low pass filter with optimized coefficient calculation
- * @param filter: pointer to LowPassFilter_t structure
+ * @param filter: pointer to FirstOrderFilter_t structure
  * @param cutoff_freq: cutoff frequency in Hz
  * @param sample_freq: sampling frequency in Hz
  */
-void LowPassFilter_Init(LowPassFilter_t* filter,
-                        float            cutoff_freq,
-                        float            sample_freq) {
+void FirstOrderFilter_Init(FirstOrderFilter_t* filter,
+                           float               cutoff_freq,
+                           float               sample_freq) {
     if (filter == NULL || cutoff_freq <= 0.0f || sample_freq <= 0.0f)
         return;
 
@@ -33,9 +33,9 @@ void LowPassFilter_Init(LowPassFilter_t* filter,
 
 /**
  * @brief Reset low pass filter state
- * @param filter: pointer to LowPassFilter_t structure
+ * @param filter: pointer to FirstOrderFilter_t structure
  */
-void LowPassFilter_Reset(LowPassFilter_t* filter) {
+void FirstOrderFilter_Reset(FirstOrderFilter_t* filter) {
     if (filter == NULL)
         return;
 
@@ -164,6 +164,53 @@ void BandStopFilter_Init(BandStopFilter_t* filter,
 void BandStopFilter_Reset(BandStopFilter_t* filter) {
     if (filter != NULL) {
         // 将所有延迟线值重置为0
+        filter->x1 = 0.0f;
+        filter->x2 = 0.0f;
+        filter->y1 = 0.0f;
+        filter->y2 = 0.0f;
+    }
+}
+
+// ================== IIR 2ND ORDER FILTER IMPLEMENTATION ==================
+/**
+ * @brief Initialize a second-order IIR low-pass filter using the bilinear
+ * transform method.
+ * @param filter Pointer to IIR2ndFilter_t structure to initialize.
+ * @param cutoff_freq Cutoff frequency of the low-pass filter in Hz.
+ * @param sample_freq Sampling frequency in Hz.
+ */
+void IIR2ndFilter_Init(IIR2ndFilter_t* filter,
+                       float           cutoff_freq,
+                       float           sample_freq) {
+    if (filter == NULL || sample_freq <= 0 || cutoff_freq <= 0
+        || cutoff_freq >= sample_freq / 2) {
+        // 无效参数处理，可以根据需要修改
+        return;
+    }
+
+    float temp = M_PI * cutoff_freq / sample_freq;
+
+    // 计算归一化频率
+    float wc = SIN(temp) / COS(temp);
+    float k1 = SQRT2 * wc;
+    float k2 = wc * wc;
+
+    // 计算滤波器系数
+    filter->b0 = k2 / (1 + k1 + k2);
+    filter->b1 = 2 * filter->b0;
+    filter->b2 = filter->b0;
+    filter->a1 = 2 * (k2 - 1) / (1 + k1 + k2);
+    filter->a2 = (1 - k1 + k2) / (1 + k1 + k2);
+
+    IIR2ndFilter_Reset(filter);  // 重置滤波器状态
+}
+
+/**
+ * @brief Reset low pass filter state
+ * @param filter: pointer to LowPassFilter_t structure
+ */
+void IIR2ndFilter_Reset(IIR2ndFilter_t* filter) {
+    if (filter != NULL) {
         filter->x1 = 0.0f;
         filter->x2 = 0.0f;
         filter->y1 = 0.0f;

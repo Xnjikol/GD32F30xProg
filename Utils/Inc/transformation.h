@@ -16,6 +16,10 @@
         "Please define TWO_PHASE_CURRENT_SENSING or THREE_PHASE_CURRENT_SENSING in foc.h"
 #endif
 
+#ifndef SQRT2
+#    define SQRT2 1.414213562373095F
+#endif
+
 #ifndef SQRT3
 #    define SQRT3 1.73205080757F
 #endif

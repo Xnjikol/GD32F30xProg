@@ -37,8 +37,8 @@ static Clark_t Leso_Current = {0};
 static Clark_t Leso_CurEst  = {0};
 static Clark_t Leso_EmfEst  = {0};
 
-static LowPassFilter_t Leso_Speed_Filter = {0};
-static PID_Handler_t   Leso_Theta_PID    = {0};
+static FirstOrderFilter_t Leso_Speed_Filter = {0};
+static PID_Handler_t      Leso_Theta_PID    = {0};
 
 /**
  * @brief 设置SMO采样时间相关参数
@@ -85,7 +85,7 @@ void Leso_Set_InvPn(float inv_Pn) {
 }
 
 void Leso_Set_SpeedFilter(float cutoff_freq, float sample_freq) {
-    LowPassFilter_Init(&Leso_Speed_Filter, cutoff_freq, sample_freq);
+    FirstOrderFilter_Init(&Leso_Speed_Filter, cutoff_freq, sample_freq);
 }
 
 void Leso_Set_Pid_Handler(PID_Handler_t config) {
@@ -225,7 +225,7 @@ static inline float calculate_speed(float omega) {
         return Leso_Speed;
     }
     leso_count = 0x0000U;
-    speed      = LowPassFilter_Update(&Leso_Speed_Filter, leso_integ);
+    speed = FirstOrderFilter_Update(&Leso_Speed_Filter, leso_integ);
     leso_integ = 0.0F;
     return speed;
 }

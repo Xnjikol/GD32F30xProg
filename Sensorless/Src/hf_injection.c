@@ -47,9 +47,9 @@ static Clark_t Hfi_IClarkResp = {0};  // 提取的高频响应电流
 static Clark_t Hfi_IClarkFilt = {0};  // 滤波后的静止坐标系电流
 static Park_t  Hfi_VoltageInj = {0};  // 将要注入的高频电压
 
-static LowPassFilter_t Hfi_Error_Filter = {0};
-static LowPassFilter_t Hfi_Speed_Filter = {0};
-static PID_Handler_t   Hfi_Theta_Pid    = {0};
+static FirstOrderFilter_t Hfi_Error_Filter = {0};
+static IIR2ndFilter_t     Hfi_Speed_Filter = {0};
+static PID_Handler_t      Hfi_Theta_Pid    = {0};
 
 bool Hfi_Set_SampleTime(const SystemTimeConfig_t* time_config) {
     if (time_config == NULL) {
@@ -76,9 +76,8 @@ bool Hfi_Initialization(const hf_injection_params_t* params) {
     Hfi_Delta_L = params->delta_L;
     Hfi_InvPn   = params->inv_Pn;
 
-    LowPassFilter_Init(
-        &Hfi_Speed_Filter, 10.0F, Hfi_SampleFreq / 10.0F);
-    LowPassFilter_Init(&Hfi_Error_Filter, 500.0F, Hfi_SampleFreq);
+    IIR2ndFilter_Init(&Hfi_Speed_Filter, 10.0F, Hfi_SampleFreq / 10.0F);
+    FirstOrderFilter_Init(&Hfi_Error_Filter, 500.0F, Hfi_SampleFreq);
 
     return true;
 }
@@ -133,8 +132,8 @@ Clark_t Hfi_Process_Current(Clark_t current) {
     cur_resp.b = cur_high_new.b - cur_high_old.b;
     cur_resp.b *= Hfi_InjectSign ? -1.0F : 1.0F;
 
-    // cur_resp.a = LowPassFilter_Update(&Hfi_Error_Filter, cur_resp.a);
-    // cur_resp.b = LowPassFilter_Update(&Hfi_Error_Filter, cur_resp.b);
+    // cur_resp.a = FirstOrderFilter_Update(&Hfi_Error_Filter, cur_resp.a);
+    // cur_resp.b = FirstOrderFilter_Update(&Hfi_Error_Filter, cur_resp.b);
 
     cur_high_old   = cur_high_new;
     Hfi_IClarkResp = cur_resp;
@@ -215,7 +214,7 @@ static inline float calculate_speed(float omega) {
         return Hfi_Speed;
     }
     hfi_count = 0x0000U;
-    speed     = LowPassFilter_Update(&Hfi_Speed_Filter, hfi_integ);
+    speed     = IIR2ndFilter_Update(&Hfi_Speed_Filter, hfi_integ);
     hfi_integ = 0.0F;
     return speed;
 }
