@@ -25,6 +25,17 @@ SystemTimeConfig_t sys_time_cfg
        .speed     = {.val = SPEED_LOOP_TIME, .inv = SPEED_LOOP_FREQ},
        .prescaler = SPEED_LOOP_PRESCALER};
 
+MotorParam_t motor_param = {.Rs              = MOTOR_RS,
+                            .Ld              = MOTOR_LD,
+                            .Lq              = MOTOR_LQ,
+                            .Flux            = MOTOR_FLUX,
+                            .Pn              = MOTOR_PN,
+                            .inv_MotorPn     = 1.0F / MOTOR_PN,
+                            .Resolver_Pn     = MOTOR_RESOLVER_PN,
+                            .Position_Offset = MOTOR_POSITION_OFFSET,
+                            .Position_Scale  = MOTOR_POSITION_SCALE,
+                            .theta_factor    = MOTOR_THETA_FACTOR};
+
 bool init_module_foc(void) {
     Foc_Set_SampleTime(&sys_time_cfg);
 
@@ -80,17 +91,6 @@ bool init_module_foc(void) {
 }
 
 bool init_module_motor(void) {
-    MotorParam_t motor_param
-        = {.Rs              = MOTOR_RS,
-           .Ld              = MOTOR_LD,
-           .Lq              = MOTOR_LQ,
-           .Flux            = MOTOR_FLUX,
-           .Pn              = MOTOR_PN,
-           .inv_MotorPn     = 1.0F / MOTOR_PN,
-           .Resolver_Pn     = MOTOR_RESOLVER_PN,
-           .Position_Offset = MOTOR_POSITION_OFFSET,
-           .Position_Scale  = MOTOR_POSITION_SCALE,
-           .theta_factor    = MOTOR_THETA_FACTOR};
     Motor_Initialization(&motor_param);
     Motor_Set_SampleTime(&sys_time_cfg);
     Motor_Set_SpeedPrescaler(SPEED_LOOP_PRESCALER);
@@ -114,7 +114,7 @@ bool init_module_sensorless(void) {
            .hysteresis   = SENSORLESS_HYSTERESIS};
     Sensorless_Initialization(&sensorless_param);
     Sensorless_Set_SampleTime(&sys_time_cfg);
-    Sensorless_Set_SpeedFilter(10.0F, SPEED_LOOP_FREQ);
+    Sensorless_Set_SpeedFilter(20.0F, SPEED_LOOP_FREQ);
 
     PID_Handler_t sensorless_pid
         = {.Kp            = SENSORLESS_PLL_KP,
@@ -125,6 +125,7 @@ bool init_module_sensorless(void) {
            .IntegralLimit = SENSORLESS_PLL_INTEGRAL_LIMIT,
            .Ts            = MAIN_LOOP_TIME};
     Sensorless_Set_PidParams(&sensorless_pid);
+    Sensorless_Set_MotorParams(&motor_param);
 
     return true;
 }
