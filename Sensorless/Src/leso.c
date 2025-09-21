@@ -18,16 +18,14 @@ static float Leso_Ld               = {0};
 static float Leso_Lq               = {0};
 static float Leso_InvLd            = {0};
 static float Leso_InvLq            = {0};
-static float Leso_A                = {0};
-static float Leso_B                = {0};
 static float Leso_SampleTime       = {0};
 static float Leso_SampleFreq_Speed = {0};
 static float Leso_Prescaler        = {0};
 static float Leso_InvPn            = {0};
 static float Leso_Wc               = {0};
-static float Leso_Theta_Temp       = {0};
 static float Leso_Theta            = {0};
 static float Leso_Speed            = {0};
+static float Leso_Error            = {0};
 
 static volatile float Leso_Theta_Err = {0};
 static volatile float Leso_Speed_Err = {0};
@@ -74,8 +72,6 @@ bool Leso_Initialization(const LESO_Param_t* param) {
     Leso_Lq    = param->Lq;
     Leso_InvLd = 1.0F / Leso_Ld;
     Leso_InvLq = 1.0F / Leso_Lq;
-    Leso_A     = 1 - (Leso_Rs * Leso_InvLd * Leso_SampleTime);
-    Leso_B     = Leso_SampleTime * Leso_InvLd;
 
     return true;
 }
@@ -101,7 +97,7 @@ void Leso_Set_Current(Clark_t current) {
 }
 
 void Leso_Set_Theta(float theta) {
-    Leso_Theta_Temp = theta;
+    Leso_Theta = theta;
 }
 
 void Leso_Set_Theta_Err(float ref) {
@@ -126,6 +122,10 @@ AngleResult_t Leso_Get_Result(void) {
     result.theta         = Leso_Theta;
     result.speed         = Leso_Speed;
     return result;
+}
+
+float Leso_Get_Err(void) {
+    return Leso_Error;
 }
 
 Clark_t Leso_Get_EmfEst(void) {
@@ -176,14 +176,13 @@ static inline float compensate_theta(float theta, float omega) {
 static inline float pll_update(float error, bool reset) {
     // 更新锁相环
     float omega = Pid_Update(error, reset, &Leso_Theta_PID);
-    Leso_Theta_Temp += omega * Leso_SampleTime;
-    if (Leso_Theta_Temp > M_2PI) {
-        Leso_Theta_Temp -= M_2PI;
+    Leso_Theta += omega * Leso_SampleTime;
+    if (Leso_Theta > M_2PI) {
+        Leso_Theta -= M_2PI;
     }
-    if (Leso_Theta_Temp < 0.0F) {
-        Leso_Theta_Temp += M_2PI;
+    if (Leso_Theta < 0.0F) {
+        Leso_Theta += M_2PI;
     }
-    Leso_Theta = compensate_theta(Leso_Theta_Temp, 0.0F);
     Leso_Theta = wrap_theta_2pi(Leso_Theta);
     return omega;
 }
@@ -230,10 +229,9 @@ static inline float calculate_speed(float omega) {
     return speed;
 }
 
-void Leso_Update_Angle(void) {
-    float error = calculate_error(Leso_EmfEst, Leso_Theta_Temp);
-
+void Leso_Update(void) {
+    Leso_Error = calculate_error(Leso_EmfEst, Leso_Theta);
     // 计算电动势的相位角
-    float omega = pll_update(error, !Leso_Enabled);
-    Leso_Speed  = calculate_speed(omega);
+    // float omega = pll_update(Leso_Error, !Leso_Enabled);
+    // Leso_Speed  = calculate_speed(omega);
 }

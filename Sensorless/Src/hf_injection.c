@@ -108,6 +108,10 @@ void Hfi_Set_Theta_Err(float ref) {
     Hfi_Theta_Err = rad2deg(err);
 }
 
+void Hfi_Set_Theta(float theta) {
+    Hfi_Theta = theta;
+}
+
 void Hfi_Set_Speed_Err(float ref) {
     Hfi_Speed_Err = ref - Hfi_Speed;
 }
@@ -220,10 +224,9 @@ static inline float calculate_speed(float omega) {
 }
 
 void Hfi_Update(void) {
-    float omega = 0;
-    Hfi_Error   = calculate_error(Hfi_IClarkResp, Hfi_Theta);
-    omega       = calculate_omega(Hfi_Error);
-    Hfi_Speed   = calculate_speed(omega);
+    Hfi_Error = calculate_error(Hfi_IClarkResp, Hfi_Theta);
+    // float omega = calculate_omega(Hfi_Error);
+    // Hfi_Speed   = calculate_speed(omega);
 }
 
 void Hfi_Set_InitialPosition(float theta) {
@@ -236,4 +239,8 @@ AngleResult_t Hfi_Get_Result(void) {
     angle_result.theta = Hfi_Theta;
     angle_result.speed = Hfi_Speed;
     return angle_result;
+}
+
+float Hfi_Get_Err(void) {
+    return Hfi_Error;
 }

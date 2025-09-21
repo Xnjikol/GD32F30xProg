@@ -16,6 +16,8 @@ extern "C" {
 #endif
 
 #include <stdbool.h>
+#include "motor.h"
+#include "pid.h"
 #include "reciprocal.h"
 #include "theta_calc.h"
 #include "transformation.h"
@@ -24,10 +26,9 @@ extern "C" {
  * @brief 无传感器控制方法枚举
  */
 typedef enum {
-    SENSORLESS_METHOD_NONE         = 0, /*!< 无无传感器控制 */
-    SENSORLESS_METHOD_SM_OBSERVER  = 1, /*!< 磁链观测器 */
-    SENSORLESS_METHOD_HF_INJECTION = 2, /*!< 高频注入 */
-    SENSORLESS_METHOD_PSI_OBSERVER = 4  /*!< 磁链观测器 */
+    METHOD_NONE  = 0, /*!< 无无传感器控制 */
+    LES_OBSERVER = 1, /*!< 磁链观测器 */
+    HF_INJECTION = 2, /*!< 高频注入 */
 } sensorless_method_t;
 
 /**
@@ -45,7 +46,15 @@ typedef struct {
     float switch_speed;  // 切换速度
 } Sensorless_Param_t;
 
+bool Sensorless_Set_SampleTime(const SystemTimeConfig_t* config);
+
 bool Sensorless_Initialization(const Sensorless_Param_t* param);
+
+bool Sensorless_Set_SpeedFilter(float cutoff_freq, float sample_freq);
+
+bool Sensorless_Set_PidParams(const PID_Handler_t* pid_handler);
+
+bool Sensorless_Set_MotorParams(const MotorParam_t* motor_param);
 
 bool Sensorless_Set_Voltage(Clark_t voltage);
 

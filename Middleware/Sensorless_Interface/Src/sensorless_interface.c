@@ -12,29 +12,72 @@
 #include "filter.h"
 #include "hf_injection.h"
 #include "leso.h"
+#include "motor.h"
 #include "reciprocal.h"
 #include "transformation.h"
 #include <math.h>
 
-static bool                Sensorless_Enabled       = {0};
-static float               Sensorless_Threshold_Hfi = {0};
-static float               Sensorless_Threshold_Smo = {0};
-static float               Sensorless_Switch_Speed  = {0};
-static float               Sensorless_Speed_Ref     = {0};
-static float               Sensorless_Speed_Fdbk    = {0};
-static float               Sensorless_Theta         = {0};
-static sensorless_method_t Sensorless_Method
-    = SENSORLESS_METHOD_SM_OBSERVER;
+static bool  Sensorless_Enabled        = {0};
+static float Sensorless_Threshold_Hfi  = {0};
+static float Sensorless_Threshold_Leso = {0};
+static float Sensorless_Switch_Speed   = {0};
+static float Sensorless_SpeedRef       = {0};
+static float Sensorless_SpeedFdbk      = {0};
+static float Sensorless_SpeedEst       = {0};
+static float Sensorless_ThetaEst       = {0};
+static float Sensorless_SampleTime     = {0};
+static float Sensorless_invPn          = {0};
+
+static PID_Handler_t  Sensorless_Theta_PID    = {0};
+static IIR2ndFilter_t Sensorless_Speed_Filter = {0};
+
+static sensorless_method_t Sensorless_Method = LES_OBSERVER;
+
+bool Sensorless_Set_SampleTime(const SystemTimeConfig_t* config) {
+    if (config == NULL) {
+        return false;
+    }
+
+    Sensorless_SampleTime = config->current.val;  // 采样时间
+
+    return true;
+}
 
 bool Sensorless_Initialization(const Sensorless_Param_t* param) {
     if (param == NULL) {
         return false;
     }
 
-    Sensorless_Threshold_Hfi = param->switch_speed + param->hysteresis;
-    Sensorless_Threshold_Smo = param->switch_speed - param->hysteresis;
-    Sensorless_Switch_Speed  = param->switch_speed;
+    Sensorless_Threshold_Hfi  = param->switch_speed + param->hysteresis;
+    Sensorless_Threshold_Leso = param->switch_speed - param->hysteresis;
+    Sensorless_Switch_Speed   = param->switch_speed;
 
+    return true;
+}
+
+bool Sensorless_Set_SpeedFilter(float cutoff_freq, float sample_freq) {
+    if (cutoff_freq <= 0.0F || sample_freq <= 0.0F) {
+        return false;
+    }
+    IIR2ndFilter_Init(
+        &Sensorless_Speed_Filter, cutoff_freq, sample_freq);
+    return true;
+}
+
+bool Sensorless_Set_PidParams(const PID_Handler_t* pid_handler) {
+    if (pid_handler == NULL) {
+        return false;
+    }
+    Sensorless_Theta_PID = *pid_handler;
+    return true;
+}
+
+bool Sensorless_Set_MotorParams(const MotorParam_t* motor_param) {
+    if (motor_param == NULL || motor_param->inv_MotorPn <= 0) {
+        return false;
+    }
+
+    Sensorless_invPn = motor_param->inv_MotorPn;
     return true;
 }
 
@@ -49,11 +92,11 @@ bool Sensorless_Get_Enabled(void) {
 
 bool Sensorless_Set_Method(sensorless_method_t method, bool enable) {
     switch (method) {
-    case SENSORLESS_METHOD_HF_INJECTION:
+    case HF_INJECTION:
         Hfi_Set_Enabled(enable);
         break;
 
-    case SENSORLESS_METHOD_SM_OBSERVER:
+    case LES_OBSERVER:
         Leso_Set_Enabled(enable);
         break;
 
@@ -106,15 +149,15 @@ bool Sensorless_Set_Current(Clark_t current) {
 }
 
 void Sensorless_Set_SpeedFdbk(float fdbk) {
-    Sensorless_Speed_Fdbk = fdbk;
+    Sensorless_SpeedFdbk = fdbk;
 }
 
 void Sensorless_Set_SpeedRef(float ref) {
-    Sensorless_Speed_Ref = ref;
+    Sensorless_SpeedRef = ref;
 }
 
 void Sensorless_Set_Angle(float angle) {
-    Sensorless_Theta = angle;
+    Sensorless_ThetaEst = angle;
 }
 
 bool Sensorless_Update_Err(AngleResult_t result) {
@@ -134,26 +177,62 @@ bool Sensorless_Update_Err(AngleResult_t result) {
     return true;
 }
 
+static inline float pll_update(float error, bool reset) {
+    // 更新锁相环
+    float omega = Pid_Update(error, reset, &Sensorless_Theta_PID);
+    Sensorless_ThetaEst += omega * Sensorless_SampleTime;
+    if (Sensorless_ThetaEst > M_2PI) {
+        Sensorless_ThetaEst -= M_2PI;
+    }
+    if (Sensorless_ThetaEst < 0.0F) {
+        Sensorless_ThetaEst += M_2PI;
+    }
+    Sensorless_ThetaEst = wrap_theta_2pi(Sensorless_ThetaEst);
+    return omega;
+}
+
+static inline float calculate_speed(float omega) {
+    static uint16_t speed_cnt = 0x0000U;
+    static float    speed_int = 0.0F;
+    float           speed     = 0.0F;
+    speed_int += radps2rpm(omega) * Sensorless_invPn * 0.1F;
+    speed_cnt++;
+    if (speed_cnt < 0x000AU) {
+        return Sensorless_SpeedEst;
+    }
+    speed_cnt = 0x0000U;
+    speed = IIR2ndFilter_Update(&Sensorless_Speed_Filter, speed_int);
+    speed_int           = 0.0F;
+    Sensorless_SpeedEst = speed;
+    return speed;
+}
+
 AngleResult_t Sensorless_Update_Position(void) {
-    if (fabsf(Sensorless_Speed_Ref) >= Sensorless_Switch_Speed) {
-        if (fabsf(Sensorless_Speed_Fdbk) >= Sensorless_Switch_Speed) {
-            return Leso_Get_Result();
+    float error = 0.0F;
+    float omega = 0.0F;
+    float speed = 0.0F;
+    if (fabsf(Sensorless_SpeedRef) >= Sensorless_Switch_Speed) {
+        if (fabsf(Sensorless_SpeedFdbk) >= Sensorless_Switch_Speed) {
+            error = Leso_Get_Err();
+        } else {
+            error = Hfi_Get_Err();
         }
     } else {
-        if (fabsf(Sensorless_Speed_Fdbk) < Sensorless_Switch_Speed) {
-            return Hfi_Get_Result();
+        if (fabsf(Sensorless_SpeedFdbk) <= Sensorless_Switch_Speed) {
+            error = Hfi_Get_Err();
+        } else {
+            error = Leso_Get_Err();
         }
     }
-    if (fabsf(Sensorless_Speed_Ref) <= Sensorless_Switch_Speed) {
-        if (fabsf(Sensorless_Speed_Fdbk) <= Sensorless_Switch_Speed) {
-            return Hfi_Get_Result();
-        }
-    } else {
-        if (fabsf(Sensorless_Speed_Fdbk) > Sensorless_Switch_Speed) {
-            return Leso_Get_Result();
-        }
-    }
-    return (AngleResult_t){0};
+
+    omega = pll_update(error, !Sensorless_Enabled);
+    speed = calculate_speed(omega);
+
+    Leso_Set_Theta(Sensorless_ThetaEst);
+    Hfi_Set_Theta(Sensorless_ThetaEst);
+
+    return (AngleResult_t){.speed = Sensorless_SpeedEst,
+                           .theta = Sensorless_ThetaEst};
 }
 
 static inline void enable_smo(bool enable) {
@@ -174,7 +253,7 @@ static inline void enable_hfi(bool enable) {
             Hfi_Set_Enabled(true);
             float estimate, target, error;
             estimate = Hfi_Get_Result().theta;
-            target   = Sensorless_Theta;
+            target   = Sensorless_ThetaEst;
             error    = wrap_theta_2pi(target - estimate + PI) - PI;
             if (error >= M_PI_4 || error <= -M_PI_4) {
                 Hfi_Set_InitialPosition(target);
@@ -188,12 +267,12 @@ static inline void enable_hfi(bool enable) {
 }
 
 static inline void judge_strategy(float ref, float fdbk) {
-    if (fabsf(ref) >= Sensorless_Threshold_Smo) {
-        if (fabsf(fdbk) >= Sensorless_Threshold_Smo) {
+    if (fabsf(ref) >= Sensorless_Threshold_Leso) {
+        if (fabsf(fdbk) >= Sensorless_Threshold_Leso) {
             enable_smo(true);
         }
     } else {
-        if (fabsf(fdbk) < Sensorless_Threshold_Smo) {
+        if (fabsf(fdbk) < Sensorless_Threshold_Leso) {
             enable_smo(false);
         }
     }
@@ -213,7 +292,7 @@ bool Sensorless_Calculate(void) {
         return false;
     }
 
-    judge_strategy(Sensorless_Speed_Ref, Sensorless_Speed_Fdbk);
+    judge_strategy(Sensorless_SpeedRef, Sensorless_SpeedFdbk);
 
     if (Hfi_Get_Enabled()) {
         Hfi_Update();
@@ -222,7 +301,7 @@ bool Sensorless_Calculate(void) {
     if (Leso_Get_Enabled()) {
         Leso_Update_EmfEstA();
         Leso_Update_EmfEstB();
-        Leso_Update_Angle();
+        Leso_Update();
     }
 
     return true;

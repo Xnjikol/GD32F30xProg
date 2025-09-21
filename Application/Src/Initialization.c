@@ -80,7 +80,7 @@ bool init_module_foc(void) {
 }
 
 bool init_module_motor(void) {
-    Motor_Parameter_t motor_param
+    MotorParam_t motor_param
         = {.Rs              = MOTOR_RS,
            .Ld              = MOTOR_LD,
            .Lq              = MOTOR_LQ,
@@ -113,6 +113,18 @@ bool init_module_sensorless(void) {
         = {.switch_speed = SENSORLESS_SWITCH_SPEED,
            .hysteresis   = SENSORLESS_HYSTERESIS};
     Sensorless_Initialization(&sensorless_param);
+    Sensorless_Set_SampleTime(&sys_time_cfg);
+    Sensorless_Set_SpeedFilter(10.0F, SPEED_LOOP_FREQ);
+
+    PID_Handler_t sensorless_pid
+        = {.Kp            = SENSORLESS_PLL_KP,
+           .Ki            = SENSORLESS_PLL_KI,
+           .Kd            = SENSORLESS_PLL_KD,
+           .MaxOutput     = SENSORLESS_PLL_MAX_OUTPUT,
+           .MinOutput     = SENSORLESS_PLL_MIN_OUTPUT,
+           .IntegralLimit = SENSORLESS_PLL_INTEGRAL_LIMIT,
+           .Ts            = MAIN_LOOP_TIME};
+    Sensorless_Set_PidParams(&sensorless_pid);
 
     return true;
 }

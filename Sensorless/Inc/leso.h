@@ -46,6 +46,8 @@ bool Leso_Get_Enabled(void);
 
 AngleResult_t Leso_Get_Result(void);
 
+float Leso_Get_Err(void);
+
 Clark_t Leso_Get_EmfEst(void);
 
 /**
@@ -53,6 +55,6 @@ Clark_t Leso_Get_EmfEst(void);
  */
 void Leso_Update_EmfEstA(void);
 void Leso_Update_EmfEstB(void);
-void Leso_Update_Angle(void);
+void Leso_Update(void);
 
 #endif /* _SMO_H */

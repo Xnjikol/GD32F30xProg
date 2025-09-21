@@ -159,6 +159,16 @@
 #define SENSORLESS_HYSTERESIS   50.0F  /* 无传感器滞环宽度：50rpm */
 #define SENSORLESS_SWITCH_SPEED 340.0F /* 无传感器切换速度：340rpm */
 
+/* 无位置PLL跟踪器参数 */
+#define SENSORLESS_PLL_KP         600.0F  /* PLL比例系数 */
+#define SENSORLESS_PLL_KI         90E3F   /* PLL积分系数 */
+#define SENSORLESS_PLL_KD         0.0F    /* PLL微分系数 */
+#define SENSORLESS_PLL_MAX_OUTPUT 4000.0F /* PLL最大输出 */
+#define SENSORLESS_PLL_MIN_OUTPUT \
+    (-1 * SENSORLESS_PLL_MAX_OUTPUT) /* PLL最小输出 */
+#define SENSORLESS_PLL_INTEGRAL_LIMIT \
+    SENSORLESS_PLL_MAX_OUTPUT /* PLL积分限幅值 */
+
 /* 高频信号注入参数 */
 #define HF_INJECTION_FREQ 500.0F /* 注入信号频率：500Hz */
 #define HF_INJECTION_AMP  40.0F  /* 注入信号幅值：40V */

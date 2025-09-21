@@ -1,3 +1,5 @@
+#ifndef MOTOR_H_
+#define MOTOR_H_
 #include <stdbool.h>
 #include <stdint.h>
 #include "reciprocal.h"
@@ -13,10 +15,10 @@ typedef struct {
     float Position_Scale;
     float Position_Offset;  // Zero Position
     float theta_factor;
-} Motor_Parameter_t;
+} MotorParam_t;
 
 bool  Motor_Set_SampleTime(const SystemTimeConfig_t* time_config);
-bool  Motor_Initialization(const Motor_Parameter_t* motor_params);
+bool  Motor_Initialization(const MotorParam_t* motor_params);
 bool  Motor_Set_SpeedPrescaler(uint16_t prescaler);
 bool  Motor_Set_Filter(float sample_freq, float cutoff_freq);
 void  Motor_Set_Position(uint16_t position);
@@ -26,3 +28,4 @@ void  Motor_Set_Theta_Mech(float theta);
 float Motor_Get_Theta_Mech(void);
 void  Motor_Set_Speed(float speed);
 float Motor_Get_Speed(void);
+#endif  // MOTOR_H_

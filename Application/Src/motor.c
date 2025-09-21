@@ -64,7 +64,7 @@ bool Motor_Set_SampleTime(const SystemTimeConfig_t* time_config) {
     return true;
 }
 
-bool Motor_Initialization(const Motor_Parameter_t* motor_params) {
+bool Motor_Initialization(const MotorParam_t* motor_params) {
     Motor_Rs              = motor_params->Rs;
     Motor_Ld              = motor_params->Ld;
     Motor_Lq              = motor_params->Lq;
