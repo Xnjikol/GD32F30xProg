@@ -163,7 +163,7 @@ void Sensorless_Set_SpeedRef(float ref) {
 }
 
 void Sensorless_Set_Angle(float angle) {
-    Sensorless_ThetaEst = angle;
+    // Sensorless_ThetaEst = angle;
 }
 
 AngleResult_t Sensorless_Get_Error(void) {
