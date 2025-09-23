@@ -4,13 +4,13 @@
 
 /**
  * @brief Initialize low pass filter with optimized coefficient calculation
- * @param filter: pointer to FirstOrderFilter_t structure
+ * @param filter: pointer to IIR1stFilter_t structure
  * @param cutoff_freq: cutoff frequency in Hz
  * @param sample_freq: sampling frequency in Hz
  */
-void FirstOrderFilter_Init(FirstOrderFilter_t* filter,
-                           float               cutoff_freq,
-                           float               sample_freq) {
+void IIR1stFilter_Init(IIR1stFilter_t* filter,
+                       float           cutoff_freq,
+                       float           sample_freq) {
     if (filter == NULL || cutoff_freq <= 0.0f || sample_freq <= 0.0f)
         return;
 
@@ -33,9 +33,9 @@ void FirstOrderFilter_Init(FirstOrderFilter_t* filter,
 
 /**
  * @brief Reset low pass filter state
- * @param filter: pointer to FirstOrderFilter_t structure
+ * @param filter: pointer to IIR1stFilter_t structure
  */
-void FirstOrderFilter_Reset(FirstOrderFilter_t* filter) {
+void IIR1stFilter_Reset(IIR1stFilter_t* filter) {
     if (filter == NULL)
         return;
 

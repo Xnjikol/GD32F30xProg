@@ -35,8 +35,8 @@ static Clark_t Leso_Current = {0};
 static Clark_t Leso_CurEst  = {0};
 static Clark_t Leso_EmfEst  = {0};
 
-static FirstOrderFilter_t Leso_Speed_Filter = {0};
-static PID_Handler_t      Leso_Theta_PID    = {0};
+static IIR1stFilter_t Leso_Speed_Filter = {0};
+static PID_Handler_t  Leso_Theta_PID    = {0};
 
 /**
  * @brief 设置SMO采样时间相关参数
@@ -81,7 +81,7 @@ void Leso_Set_InvPn(float inv_Pn) {
 }
 
 void Leso_Set_SpeedFilter(float cutoff_freq, float sample_freq) {
-    FirstOrderFilter_Init(&Leso_Speed_Filter, cutoff_freq, sample_freq);
+    IIR1stFilter_Init(&Leso_Speed_Filter, cutoff_freq, sample_freq);
 }
 
 void Leso_Set_Pid_Handler(PID_Handler_t config) {
@@ -100,12 +100,12 @@ void Leso_Set_Theta(float theta) {
     Leso_Theta = theta;
 }
 
-void Leso_Set_Theta_Err(float ref) {
+void Leso_Calc_ThetaErr(float ref) {
     float err      = wrap_theta_2pi(ref - Leso_Theta + PI) - PI;
     Leso_Theta_Err = rad2deg(err);
 }
 
-void Leso_Set_Speed_Err(float ref) {
+void Leso_Calc_SpeedErr(float ref) {
     Leso_Speed_Err = ref - Leso_Speed;
 }
 
@@ -124,7 +124,7 @@ AngleResult_t Leso_Get_Result(void) {
     return result;
 }
 
-float Leso_Get_Err(void) {
+float Leso_Get_PllErr(void) {
     return Leso_Error;
 }
 
@@ -224,7 +224,7 @@ static inline float calculate_speed(float omega) {
         return Leso_Speed;
     }
     leso_count = 0x0000U;
-    speed = FirstOrderFilter_Update(&Leso_Speed_Filter, leso_integ);
+    speed      = IIR1stFilter_Update(&Leso_Speed_Filter, leso_integ);
     leso_integ = 0.0F;
     return speed;
 }

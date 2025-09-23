@@ -8,6 +8,7 @@
 #include "transformation.h"
 
 static DeviceStateEnum_t MainInt_State        = RUNNING;
+static float             Data_Buffer[5]       = {0};
 static volatile bool     MainInt_UseRealTheta = true;
 static volatile uint16_t MainInt_DataFlag     = 0x000U;
 
@@ -43,7 +44,7 @@ static inline void MainInt_Update_Angle_and_Speed(void) {
     real = Peripheral_UpdatePosition();
     est  = Sensorless_Update_Position();
 
-    Sensorless_Update_Err(real);
+    Sensorless_Calculate_Err(real);
 
     if (MainInt_UseRealTheta) {
         res = real;
@@ -57,6 +58,12 @@ static inline void MainInt_Update_Angle_and_Speed(void) {
     Sensorless_Set_SpeedRef(speed_ref);
     Sensorless_Set_SpeedFdbk(res.speed);
     Sensorless_Set_Angle(res.theta);
+
+    Data_Buffer[0] = real.theta;
+    Data_Buffer[1] = est.theta;
+    Data_Buffer[2] = real.speed;
+    Data_Buffer[3] = est.speed;
+    Data_Buffer[4] = Sensorless_Get_Error().theta;
 }
 
 static inline void MainInt_Initialization(void) {
@@ -93,12 +100,7 @@ static inline void MainInt_Run_Foc(void) {
 }
 
 static inline void MainInt_Send_Data(void) {
-    float   DMA_Buffer[3];
-    Phase_t current = Peripheral_Get_PhaseCurrent();
-    DMA_Buffer[0]   = current.a;
-    DMA_Buffer[1]   = current.b;
-    DMA_Buffer[2]   = current.c;
-    justfloat(DMA_Buffer, 3);
+    justfloat(Data_Buffer, 5);
 }
 
 static inline void MainInt_Exit(void) {
@@ -137,7 +139,6 @@ void Main_Int_Handler(void) {
         // 运行状态：正常FOC控制
         MainInt_Run_Foc();
         MainInt_Update_Sensorless();
-        MainInt_Send_Data();
         break;
     }
 
@@ -149,4 +150,5 @@ void Main_Int_Handler(void) {
     }
 
     MainInt_SVPWM();
+    MainInt_Send_Data();
 }

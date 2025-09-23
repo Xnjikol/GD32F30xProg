@@ -28,8 +28,12 @@ static float Sensorless_ThetaEst       = {0};
 static float Sensorless_SampleTime     = {0};
 static float Sensorless_invPn          = {0};
 
+volatile float Sensorless_ThetaErr = {0};
+volatile float Sensorless_SpeedErr = {0};
+
 static PID_Handler_t  Sensorless_Theta_PID    = {0};
-static IIR2ndFilter_t Sensorless_Speed_Filter = {0};
+static IIR1stFilter_t Sensorless_SpeedFilter1 = {0};
+static IIR2ndFilter_t Sensorless_SpeedFilter2 = {0};
 
 static sensorless_method_t Sensorless_Method = LES_OBSERVER;
 
@@ -60,7 +64,9 @@ bool Sensorless_Set_SpeedFilter(float cutoff_freq, float sample_freq) {
         return false;
     }
     IIR2ndFilter_Init(
-        &Sensorless_Speed_Filter, cutoff_freq, sample_freq);
+        &Sensorless_SpeedFilter2, cutoff_freq, sample_freq);
+    IIR1stFilter_Init(
+        &Sensorless_SpeedFilter1, cutoff_freq, sample_freq);
     return true;
 }
 
@@ -160,19 +166,29 @@ void Sensorless_Set_Angle(float angle) {
     Sensorless_ThetaEst = angle;
 }
 
-bool Sensorless_Update_Err(AngleResult_t result) {
+AngleResult_t Sensorless_Get_Error(void) {
+    return (AngleResult_t){.theta = Sensorless_ThetaErr,
+                           .speed = Sensorless_SpeedErr};
+}
+
+bool Sensorless_Calculate_Err(AngleResult_t result) {
     if (!Sensorless_Enabled) {
         return false;
     }
 
     float theta = result.theta;
     float speed = result.speed;
+    float error = 0.0F;
 
-    Hfi_Set_Theta_Err(theta);
-    Hfi_Set_Speed_Err(speed);
+    error = wrap_theta_2pi(theta - Sensorless_ThetaEst + PI) - PI;
+    Sensorless_ThetaErr = rad2deg(error);
+    Sensorless_SpeedErr = speed - Sensorless_SpeedEst;
 
-    Leso_Set_Theta_Err(theta);
-    Leso_Set_Speed_Err(speed);
+    Hfi_Calc_ThetaErr(theta);
+    Hfi_Calc_SpeedErr(speed);
+
+    Leso_Calc_ThetaErr(theta);
+    Leso_Calc_SpeedErr(speed);
 
     return true;
 }
@@ -194,6 +210,8 @@ static inline float pll_update(float error, bool reset) {
 static inline float calculate_speed(float omega) {
     static uint16_t speed_cnt = 0x0000U;
     static float    speed_int = 0.0F;
+    float           speed1    = 0.0F;
+    float           speed2    = 0.0F;
     float           speed     = 0.0F;
     speed_int += radps2rpm(omega) * Sensorless_invPn * 0.1F;
     speed_cnt++;
@@ -201,7 +219,13 @@ static inline float calculate_speed(float omega) {
         return Sensorless_SpeedEst;
     }
     speed_cnt = 0x0000U;
-    speed = IIR2ndFilter_Update(&Sensorless_Speed_Filter, speed_int);
+    speed1 = IIR1stFilter_Update(&Sensorless_SpeedFilter1, speed_int);
+    speed2 = IIR2ndFilter_Update(&Sensorless_SpeedFilter2, speed_int);
+    if (Sensorless_Method == LES_OBSERVER) {
+        speed = speed1;
+    } else {
+        speed = speed2;
+    }
     speed_int           = 0.0F;
     Sensorless_SpeedEst = speed;
     return speed;
@@ -213,15 +237,19 @@ AngleResult_t Sensorless_Update_Position(void) {
     float speed = 0.0F;
     if (fabsf(Sensorless_SpeedRef) >= Sensorless_Switch_Speed) {
         if (fabsf(Sensorless_SpeedFdbk) >= Sensorless_Switch_Speed) {
-            error = Leso_Get_Err();
+            Sensorless_Method = LES_OBSERVER;
+            error             = Leso_Get_PllErr();
         } else {
-            error = Hfi_Get_Err();
+            Sensorless_Method = HF_INJECTION;
+            error             = Hfi_Get_PllErr();
         }
     } else {
         if (fabsf(Sensorless_SpeedFdbk) <= Sensorless_Switch_Speed) {
-            error = Hfi_Get_Err();
+            Sensorless_Method = HF_INJECTION;
+            error             = Hfi_Get_PllErr();
         } else {
-            error = Leso_Get_Err();
+            Sensorless_Method = LES_OBSERVER;
+            error             = Leso_Get_PllErr();
         }
     }
 

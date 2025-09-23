@@ -73,9 +73,9 @@ bool Hfi_Get_Enabled(void);
 
 void Hfi_Set_Theta(float theta);
 
-void Hfi_Set_Theta_Err(float ref);
+void Hfi_Calc_ThetaErr(float ref);
 
-void Hfi_Set_Speed_Err(float ref);
+void Hfi_Calc_SpeedErr(float ref);
 
 Clark_t Hfi_Process_Current(Clark_t current);
 
@@ -87,7 +87,7 @@ void Hfi_Set_InitialPosition(float theta);
 
 AngleResult_t Hfi_Get_Result(void);
 
-float Hfi_Get_Err(void);
+float Hfi_Get_PllErr(void);
 
 #ifdef __cplusplus
 }

@@ -47,9 +47,9 @@ static Clark_t Hfi_IClarkResp = {0};  // 提取的高频响应电流
 static Clark_t Hfi_IClarkFilt = {0};  // 滤波后的静止坐标系电流
 static Park_t  Hfi_VoltageInj = {0};  // 将要注入的高频电压
 
-static FirstOrderFilter_t Hfi_Error_Filter = {0};
-static IIR2ndFilter_t     Hfi_Speed_Filter = {0};
-static PID_Handler_t      Hfi_Theta_Pid    = {0};
+static IIR1stFilter_t Hfi_Error_Filter = {0};
+static IIR2ndFilter_t Hfi_Speed_Filter = {0};
+static PID_Handler_t  Hfi_Theta_Pid    = {0};
 
 bool Hfi_Set_SampleTime(const SystemTimeConfig_t* time_config) {
     if (time_config == NULL) {
@@ -77,7 +77,7 @@ bool Hfi_Initialization(const hf_injection_params_t* params) {
     Hfi_InvPn   = params->inv_Pn;
 
     IIR2ndFilter_Init(&Hfi_Speed_Filter, 10.0F, Hfi_SampleFreq / 10.0F);
-    FirstOrderFilter_Init(&Hfi_Error_Filter, 500.0F, Hfi_SampleFreq);
+    IIR1stFilter_Init(&Hfi_Error_Filter, 500.0F, Hfi_SampleFreq);
 
     return true;
 }
@@ -103,7 +103,7 @@ bool Hfi_Get_Enabled(void) {
     return Hfi_Enabled;
 }
 
-void Hfi_Set_Theta_Err(float ref) {
+void Hfi_Calc_ThetaErr(float ref) {
     float err     = wrap_theta_2pi(ref - Hfi_Theta + PI) - PI;
     Hfi_Theta_Err = rad2deg(err);
 }
@@ -112,7 +112,7 @@ void Hfi_Set_Theta(float theta) {
     Hfi_Theta = theta;
 }
 
-void Hfi_Set_Speed_Err(float ref) {
+void Hfi_Calc_SpeedErr(float ref) {
     Hfi_Speed_Err = ref - Hfi_Speed;
 }
 
@@ -136,8 +136,8 @@ Clark_t Hfi_Process_Current(Clark_t current) {
     cur_resp.b = cur_high_new.b - cur_high_old.b;
     cur_resp.b *= Hfi_InjectSign ? -1.0F : 1.0F;
 
-    // cur_resp.a = FirstOrderFilter_Update(&Hfi_Error_Filter, cur_resp.a);
-    // cur_resp.b = FirstOrderFilter_Update(&Hfi_Error_Filter, cur_resp.b);
+    // cur_resp.a = IIR1stFilter_Update(&Hfi_Error_Filter, cur_resp.a);
+    // cur_resp.b = IIR1stFilter_Update(&Hfi_Error_Filter, cur_resp.b);
 
     cur_high_old   = cur_high_new;
     Hfi_IClarkResp = cur_resp;
@@ -241,6 +241,6 @@ AngleResult_t Hfi_Get_Result(void) {
     return angle_result;
 }
 
-float Hfi_Get_Err(void) {
+float Hfi_Get_PllErr(void) {
     return Hfi_Error;
 }

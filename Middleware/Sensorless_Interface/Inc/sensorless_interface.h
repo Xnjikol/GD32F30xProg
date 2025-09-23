@@ -27,7 +27,7 @@ extern "C" {
  */
 typedef enum {
     METHOD_NONE  = 0, /*!< 无无传感器控制 */
-    LES_OBSERVER = 1, /*!< 磁链观测器 */
+    LES_OBSERVER = 1, /*!< 线性扩张状态观测器 */
     HF_INJECTION = 2, /*!< 高频注入 */
 } sensorless_method_t;
 
@@ -68,7 +68,9 @@ void Sensorless_Set_Angle(float angle);
 
 Clark_t Sensorless_Get_SmoEmf(void);
 
-bool Sensorless_Update_Err(AngleResult_t result);
+bool Sensorless_Calculate_Err(AngleResult_t result);
+
+AngleResult_t Sensorless_Get_Error(void);
 
 AngleResult_t Sensorless_Update_Position(void);
 

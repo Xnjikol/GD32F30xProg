@@ -60,7 +60,7 @@ typedef struct {
     float alpha;        // Filter coefficient
     float prev_output;  // Previous output value
     bool  initialized;  // Initialization flag
-} FirstOrderFilter_t;
+} IIR1stFilter_t;
 
 /**
  * @brief Band pass filter structure (using two cascaded
@@ -123,25 +123,25 @@ typedef struct {
 } IIR2ndFilter_t;
 
 // Low pass filter functions
-void FirstOrderFilter_Init(FirstOrderFilter_t* filter,
-                           float               cutoff_freq,
-                           float               sample_freq);
+void IIR1stFilter_Init(IIR1stFilter_t* filter,
+                       float           cutoff_freq,
+                       float           sample_freq);
 /**
  * @brief Update low pass filter with improved
  * initialization
- * @param filter: pointer to FirstOrderFilter_t structure
+ * @param filter: pointer to IIR1stFilter_t structure
  * @param input: input value
  * @return filtered output value
  */
-static inline float FirstOrderFilter_Update(FirstOrderFilter_t* filter,
-                                            float               x) {
+static inline float IIR1stFilter_Update(IIR1stFilter_t* filter,
+                                        float           x) {
     float y = filter->alpha * filter->prev_output
               + (1.0F - filter->alpha) * x;
     filter->prev_output = y;
     return y;
 }
 
-void FirstOrderFilter_Reset(FirstOrderFilter_t* filter);
+void IIR1stFilter_Reset(IIR1stFilter_t* filter);
 
 // High pass filter functions
 void HighPassFilter_Init(HighPassFilter_t* filter,

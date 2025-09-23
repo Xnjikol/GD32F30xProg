@@ -36,9 +36,9 @@ void Leso_Set_Current(Clark_t current);
 
 void Leso_Set_Theta(float theta);
 
-void Leso_Set_Theta_Err(float ref);
+void Leso_Calc_ThetaErr(float ref);
 
-void Leso_Set_Speed_Err(float ref);
+void Leso_Calc_SpeedErr(float ref);
 
 void Leso_Set_Enabled(bool enabled);
 
@@ -46,7 +46,7 @@ bool Leso_Get_Enabled(void);
 
 AngleResult_t Leso_Get_Result(void);
 
-float Leso_Get_Err(void);
+float Leso_Get_PllErr(void);
 
 Clark_t Leso_Get_EmfEst(void);
 
