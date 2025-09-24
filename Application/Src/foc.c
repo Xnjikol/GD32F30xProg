@@ -302,7 +302,10 @@ static inline Park_t Foc_Update_SpeedLoop(float ref,
     float  ramp    = RampGenerator(&Foc_Ramp_Speed_Handler, reset);
     Foc_Speed_Ramp = ramp;
     output.q = Pid_Update(ramp - fdbk, reset, &Foc_Pid_Speed_Handler);
-    output.d = 0.0F;  // D轴电流参考为0
+    output.d = 3.0F;
+    if (output.d < 0.0F) {
+        output.d = -output.d;
+    }
 
     return output;  // 返回DQ轴电流参考
 }

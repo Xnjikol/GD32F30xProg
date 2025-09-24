@@ -226,9 +226,9 @@ static inline void init_nvic(void) {
 }
 
 static inline void init_exti(void) {
-    gpio_exti_source_select(GPIO_PORT_SOURCE_GPIOE, GPIO_PIN_SOURCE_4);
-    exti_init(EXTI_4, EXTI_INTERRUPT, EXTI_TRIG_RISING);
-    exti_interrupt_flag_clear(EXTI_4);
+    gpio_exti_source_select(GPIO_PORT_SOURCE_GPIOB, GPIO_PIN_SOURCE_7);
+    exti_init(EXTI_7, EXTI_INTERRUPT, EXTI_TRIG_FALLING);
+    exti_interrupt_flag_clear(EXTI_7);
 }
 
 bool Initialization_Drivers(void) {

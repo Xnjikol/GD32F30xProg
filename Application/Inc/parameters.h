@@ -28,7 +28,7 @@
 /*********************************************************************/
 #ifndef RESOLVER_POSITION
 #    ifndef ENCODER_POSITION
-#        define RESOLVER_POSITION
+#        define ENCODER_POSITION
 #    endif
 #endif
 
@@ -65,11 +65,11 @@
 /*                        电机物理参数                                 */
 /*********************************************************************/
 /* 电机电气参数 */
-#define MOTOR_RS   1.25F /* 定子电阻：1.25 Ω */
-#define MOTOR_LD   6E-3F /* d轴电感：6 mH */
-#define MOTOR_LQ   9E-3F /* q轴电感：9 mH */
-#define MOTOR_FLUX 0.1F  /* 永磁体磁链：0.1 Wb */
-#define MOTOR_PN   5.0F  /* 电机极对数：5 */
+#define MOTOR_RS   0.65F   /* 定子电阻：0.65 Ω */
+#define MOTOR_LD   180E-3F /* d轴电感：180 mH */
+#define MOTOR_LQ   120E-3F /* q轴电感：120 mH */
+#define MOTOR_FLUX 0.1F    /* 永磁体磁链：0.1 Wb */
+#define MOTOR_PN   2.0F    /* 电机极对数：2 */
 
 /* 位置传感器配置 */
 #ifdef RESOLVER_POSITION
@@ -84,20 +84,21 @@
 #ifdef RESOLVER_POSITION
 #    define MOTOR_THETA_FACTOR \
         (M_2PI / ((MOTOR_POSITION_SCALE + 1) * MOTOR_RESOLVER_PN))
+#    define MOTOR_POSITION_OFFSET 39293.0F /* 位置传感器零点偏置 */
 #endif
 #ifdef ENCODER_POSITION
 #    define MOTOR_THETA_FACTOR \
         (M_2PI / (float)(MOTOR_POSITION_SCALE + 1))
+#    define MOTOR_POSITION_OFFSET 6629.0F /* 位置传感器零点偏置 */
 #endif
 
-#define MOTOR_RESOLVER_PN     1.0F     /* 旋变极对数 */
-#define MOTOR_POSITION_OFFSET 39293.0F /* 位置传感器零点偏置 */
+#define MOTOR_RESOLVER_PN 1.0F /* 旋变极对数 */
 
 /*********************************************************************/
 /*                        保护参数配置                                 */
 /*********************************************************************/
 /* 电压保护参数 */
-#define PROTECT_VOLTAGE_RATE        220.0F /* 额定电压：220V */
+#define PROTECT_VOLTAGE_RATE        620.0F /* 额定电压：640V */
 #define PROTECT_VOLTAGE_FLUCTUATION 40.0F  /* 允许电压波动：±40V */
 
 /* 电流和温度保护参数 */
@@ -109,14 +110,14 @@
 /*********************************************************************/
 /* 转速斜坡控制参数 */
 #define RAMP_SPEED_SLOPE     50.0F    /* 速度变化率限制：50 rpm/s */
-#define RAMP_SPEED_LIMIT_MAX 4000.0F  /* 最大转速限制：4000 rpm */
-#define RAMP_SPEED_LIMIT_MIN -4000.0F /* 最小转速限制：-4000 rpm */
+#define RAMP_SPEED_LIMIT_MAX 1800.0F  /* 最大转速限制：1800 rpm */
+#define RAMP_SPEED_LIMIT_MIN -1800.0F /* 最小转速限制：-1800 rpm */
 #define RAMP_SPEED_TIME      (SPEED_LOOP_TIME) /* 转速环采样周期 */
 
 /* 转速环PID参数配置 */
-#define PID_SPEED_LOOP_KP 0.01F /* 转速环比例系数 */
-#define PID_SPEED_LOOP_KI 0.02F /* 转速环积分系数 */
-#define PID_SPEED_LOOP_KD 0.00F /* 转速环微分系数 */
+#define PID_SPEED_LOOP_KP 0.003F /* 转速环比例系数 */
+#define PID_SPEED_LOOP_KI 0.001F /* 转速环积分系数 */
+#define PID_SPEED_LOOP_KD 0.00F  /* 转速环微分系数 */
 
 /* 转速环输出限制 */
 #define PID_SPEED_LOOP_MAX_OUTPUT \
@@ -127,9 +128,9 @@
 #define PID_SPEED_LOOP_TIME (SPEED_LOOP_TIME) /* 转速环采样周期 */
 
 /* 电流环d轴PID参数配置 */
-#define PID_CURRENT_D_LOOP_KP 1.28F  /* d轴比例系数 */
-#define PID_CURRENT_D_LOOP_KI 288.0F /* d轴积分系数 */
-#define PID_CURRENT_D_LOOP_KD 0.00F  /* d轴微分系数 */
+#define PID_CURRENT_D_LOOP_KP 73.8274273F   /* d轴比例系数 */
+#define PID_CURRENT_D_LOOP_KI 408.40704496F /* d轴积分系数 */
+#define PID_CURRENT_D_LOOP_KD 0.00F         /* d轴微分系数 */
 
 /* d轴输出限制 */
 #define PID_CURRENT_D_LOOP_MAX_OUTPUT 100.0F /* 最大输出电压：Udc/√3 */
@@ -140,9 +141,9 @@
 #define PID_CURRENT_D_LOOP_TIME (MAIN_LOOP_TIME) /* d轴采样周期 */
 
 /* 电流环q轴PID参数配置 */
-#define PID_CURRENT_Q_LOOP_KP 2.32F  /* q轴比例系数 */
-#define PID_CURRENT_Q_LOOP_KI 288.0F /* q轴积分系数 */
-#define PID_CURRENT_Q_LOOP_KD 0.00F  /* q轴微分系数 */
+#define PID_CURRENT_Q_LOOP_KP 27.646015F    /* q轴比例系数 */
+#define PID_CURRENT_Q_LOOP_KI 408.40704496F /* q轴积分系数 */
+#define PID_CURRENT_Q_LOOP_KD 0.00F         /* q轴微分系数 */
 
 /* q轴输出限制 */
 #define PID_CURRENT_Q_LOOP_MAX_OUTPUT 100.0F /* 最大输出电压：Udc/√3 */
