@@ -302,9 +302,13 @@ static inline Park_t Foc_Update_SpeedLoop(float ref,
     float  ramp    = RampGenerator(&Foc_Ramp_Speed_Handler, reset);
     Foc_Speed_Ramp = ramp;
     output.q = Pid_Update(ramp - fdbk, reset, &Foc_Pid_Speed_Handler);
-    output.d = 3.0F;
+    output.d = 0.4F * output.q;
+
     if (output.d < 0.0F) {
         output.d = -output.d;
+    }
+    if (output.d < 1.0F) {
+        output.d = 1.0F;  // 最小磁链保持
     }
 
     return output;  // 返回DQ轴电流参考

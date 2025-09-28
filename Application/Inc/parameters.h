@@ -115,8 +115,8 @@
 #define RAMP_SPEED_TIME      (SPEED_LOOP_TIME) /* 转速环采样周期 */
 
 /* 转速环PID参数配置 */
-#define PID_SPEED_LOOP_KP 0.003F /* 转速环比例系数 */
-#define PID_SPEED_LOOP_KI 0.001F /* 转速环积分系数 */
+#define PID_SPEED_LOOP_KP 0.018F /* 转速环比例系数 */
+#define PID_SPEED_LOOP_KI 0.060F /* 转速环积分系数 */
 #define PID_SPEED_LOOP_KD 0.00F  /* 转速环微分系数 */
 
 /* 转速环输出限制 */
@@ -161,8 +161,8 @@
 #define SENSORLESS_SWITCH_SPEED 340.0F /* 无传感器切换速度：340rpm */
 
 /* 无位置PLL跟踪器参数 */
-#define SENSORLESS_PLL_KP         600.0F  /* PLL比例系数 */
-#define SENSORLESS_PLL_KI         90E3F   /* PLL积分系数 */
+#define SENSORLESS_PLL_KP         50.0F   /* PLL比例系数 */
+#define SENSORLESS_PLL_KI         625.0F  /* PLL积分系数 */
 #define SENSORLESS_PLL_KD         0.0F    /* PLL微分系数 */
 #define SENSORLESS_PLL_MAX_OUTPUT 4000.0F /* PLL最大输出 */
 #define SENSORLESS_PLL_MIN_OUTPUT \
@@ -192,11 +192,11 @@
 #define HFI_PLL_INTEGRAL_LIMIT HFI_PLL_MAX_OUTPUT /* PLL积分限幅值 */
 
 /* 滑模观测器参数 */
-#define SMO_SIGMOID_AMPLITUDE 0.1F      /* S函数幅值 */
-#define SMO_SIGMOID_FACTOR    0.1F      /* S函数因子 */
-#define SMO_GAIN_K1           200.0F    /* 观测器增益K1 */
-#define SMO_GAIN_K2           0.01F     /* 观测器增益K2 */
-#define LESO_WC               7.0958E3F /* 观测器带宽 */
+#define SMO_SIGMOID_AMPLITUDE 0.1F   /* S函数幅值 */
+#define SMO_SIGMOID_FACTOR    0.1F   /* S函数因子 */
+#define SMO_GAIN_K1           200.0F /* 观测器增益K1 */
+#define SMO_GAIN_K2           0.01F  /* 观测器增益K2 */
+#define LESO_WC               500.0F /* 观测器带宽 */
 
 /* 滑模观测器PLL跟踪器参数 */
 #define SMO_PLL_KP             600.0F  /* PLL比例系数 */

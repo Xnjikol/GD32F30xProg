@@ -187,9 +187,9 @@ static inline float calculate_error(Clark_t response, float angle) {
     float sin_hf = SIN(angle);
     float cos_hf = COS(angle);
 
-    errorAlpha = -response.a * sin_hf;
+    errorAlpha = response.a * sin_hf;
     errorBeta  = response.b * cos_hf;
-    angleErr   = errorAlpha + errorBeta;
+    angleErr   = errorAlpha - errorBeta;
 
     float norm = 0.0F;
     SQRT(response.a * response.a + response.b * response.b, &norm);

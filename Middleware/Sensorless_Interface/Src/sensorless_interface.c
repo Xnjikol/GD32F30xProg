@@ -30,6 +30,7 @@ static float Sensorless_invPn          = {0};
 
 volatile float Sensorless_ThetaErr = {0};
 volatile float Sensorless_SpeedErr = {0};
+volatile float Sensorless_ThetAdj  = {0};
 
 static PID_Handler_t  Sensorless_Theta_PID    = {0};
 static IIR1stFilter_t Sensorless_SpeedFilter1 = {0};
@@ -259,8 +260,9 @@ AngleResult_t Sensorless_Update_Position(void) {
     Leso_Set_Theta(Sensorless_ThetaEst);
     Hfi_Set_Theta(Sensorless_ThetaEst);
 
-    return (AngleResult_t){.speed = Sensorless_SpeedEst,
-                           .theta = Sensorless_ThetaEst};
+    return (AngleResult_t){
+        .speed = Sensorless_SpeedEst,
+        .theta = Sensorless_ThetaEst + Sensorless_ThetAdj};
 }
 
 static inline void enable_smo(bool enable) {
