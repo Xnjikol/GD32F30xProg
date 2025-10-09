@@ -23,7 +23,7 @@ void Peripheral_SCISendCallback(void);
 void           Peripheral_CalibrateADC(void);
 FloatWithInv_t Peripheral_UpdateUdc(void);
 Phase_t        Peripheral_Get_PhaseCurrent(void);
-AngleResult_t  Peripheral_UpdatePosition(void);
+AngleResult_t  Peripheral_Update_Position(void);
 void           Peripheral_Update_Temperature(void);
 void           Peripheral_Reset_ProtectFlag(void);
 void           Peripheral_EnableHardwareProtect(void);

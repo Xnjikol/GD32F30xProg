@@ -26,7 +26,7 @@ static float Sensorless_SpeedFdbk      = {0};
 static float Sensorless_SpeedEst       = {0};
 static float Sensorless_ThetaEst       = {0};
 static float Sensorless_SampleTime     = {0};
-static float Sensorless_invPn          = {0};
+static float Sensorless_InvPn          = {0};
 
 volatile float Sensorless_ThetaErr = {0};
 volatile float Sensorless_SpeedErr = {0};
@@ -84,7 +84,7 @@ bool Sensorless_Set_MotorParams(const MotorParam_t* motor_param) {
         return false;
     }
 
-    Sensorless_invPn = motor_param->inv_MotorPn;
+    Sensorless_InvPn = motor_param->inv_MotorPn;
     return true;
 }
 
@@ -214,7 +214,7 @@ static inline float calculate_speed(float omega) {
     float           speed1    = 0.0F;
     float           speed2    = 0.0F;
     float           speed     = 0.0F;
-    speed_int += radps2rpm(omega) * Sensorless_invPn * 0.1F;
+    speed_int += radps2rpm(omega) * Sensorless_InvPn * 0.1F;
     speed_cnt++;
     if (speed_cnt < 0x000AU) {
         return Sensorless_SpeedEst;
@@ -223,7 +223,7 @@ static inline float calculate_speed(float omega) {
     speed1 = IIR1stFilter_Update(&Sensorless_SpeedFilter1, speed_int);
     speed2 = IIR2ndFilter_Update(&Sensorless_SpeedFilter2, speed_int);
     if (Sensorless_Method == LES_OBSERVER) {
-        speed = speed1;
+        speed = speed2;
     } else {
         speed = speed2;
     }

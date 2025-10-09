@@ -41,7 +41,7 @@ static inline void MainInt_Update_Angle_and_Speed(void) {
     AngleResult_t real      = {0};
     float         speed_ref = Foc_Get_SpeedRamp();
 
-    real = Peripheral_UpdatePosition();
+    real = Peripheral_Update_Position();
     est  = Sensorless_Update_Position();
 
     Sensorless_Calculate_Err(real);

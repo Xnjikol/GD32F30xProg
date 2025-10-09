@@ -114,7 +114,7 @@ bool init_module_sensorless(void) {
            .hysteresis   = SENSORLESS_HYSTERESIS};
     Sensorless_Initialization(&sensorless_param);
     Sensorless_Set_SampleTime(&sys_time_cfg);
-    Sensorless_Set_SpeedFilter(20.0F, SPEED_LOOP_FREQ);
+    Sensorless_Set_SpeedFilter(10.0F, SPEED_LOOP_FREQ);
 
     PID_Handler_t sensorless_pid
         = {.Kp            = SENSORLESS_PLL_KP,

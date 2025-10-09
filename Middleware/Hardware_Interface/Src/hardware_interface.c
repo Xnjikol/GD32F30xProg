@@ -136,14 +136,14 @@ Phase_t Peripheral_Get_PhaseCurrent(void) {
     return current_phase;
 }
 
-AngleResult_t Peripheral_UpdatePosition() {
+AngleResult_t Peripheral_Update_Position() {
     uint16_t position_data = 0;
     ReadPositionSensor(&position_data);
 
     Motor_Set_Position(position_data);
 
     AngleResult_t result;
-    result.theta = Motor_Get_Theta_Elec();
+    result.theta = Motor_Get_ThetaElec();
     result.speed = Motor_Get_Speed();
     return result;
 }

@@ -23,7 +23,7 @@ bool  Motor_Set_SpeedPrescaler(uint16_t prescaler);
 bool  Motor_Set_Filter(float sample_freq, float cutoff_freq);
 void  Motor_Set_Position(uint16_t position);
 void  Motor_Set_Theta_Elec(float theta);
-float Motor_Get_Theta_Elec(void);
+float Motor_Get_ThetaElec(void);
 void  Motor_Set_Theta_Mech(float theta);
 float Motor_Get_Theta_Mech(void);
 void  Motor_Set_Speed(float speed);

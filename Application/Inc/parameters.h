@@ -65,11 +65,11 @@
 /*                        电机物理参数                                 */
 /*********************************************************************/
 /* 电机电气参数 */
-#define MOTOR_RS   0.65F   /* 定子电阻：0.65 Ω */
-#define MOTOR_LD   180E-3F /* d轴电感：180 mH */
-#define MOTOR_LQ   120E-3F /* q轴电感：120 mH */
-#define MOTOR_FLUX 0.1F    /* 永磁体磁链：0.1 Wb */
-#define MOTOR_PN   2.0F    /* 电机极对数：2 */
+#define MOTOR_RS   0.65F    /* 定子电阻：0.65 Ω */
+#define MOTOR_LD   164E-3F  /* d轴电感：164 mH */
+#define MOTOR_LQ   41.5E-3F /* q轴电感：41.5 mH */
+#define MOTOR_FLUX 0.1F     /* 永磁体磁链：0.1 Wb */
+#define MOTOR_PN   2.0F     /* 电机极对数：2 */
 
 /* 位置传感器配置 */
 #ifdef RESOLVER_POSITION
@@ -102,7 +102,7 @@
 #define PROTECT_VOLTAGE_FLUCTUATION 40.0F  /* 允许电压波动：±40V */
 
 /* 电流和温度保护参数 */
-#define PROTECT_CURRENT_MAX 10.0F /* 最大电流限制：10A */
+#define PROTECT_CURRENT_MAX 15.0F /* 最大电流限制：15A */
 #define PROTECT_TEMPERATURE 80.0F /* 最高温度限制：80℃ */
 
 /*********************************************************************/
@@ -121,7 +121,7 @@
 
 /* 转速环输出限制 */
 #define PID_SPEED_LOOP_MAX_OUTPUT \
-    (0.7F * PROTECT_CURRENT_MAX) /* q轴最大电流限制 */
+    (0.8F * PROTECT_CURRENT_MAX) /* q轴最大电流限制 */
 #define PID_SPEED_LOOP_MIN_OUTPUT (-1.0F * PID_SPEED_LOOP_MAX_OUTPUT)
 #define PID_SPEED_LOOP_INTEGRAL_LIMIT \
     PID_SPEED_LOOP_MAX_OUTPUT                 /* 积分限幅值 */
@@ -133,7 +133,7 @@
 #define PID_CURRENT_D_LOOP_KD 0.00F         /* d轴微分系数 */
 
 /* d轴输出限制 */
-#define PID_CURRENT_D_LOOP_MAX_OUTPUT 100.0F /* 最大输出电压：Udc/√3 */
+#define PID_CURRENT_D_LOOP_MAX_OUTPUT 300.0F /* 最大输出电压：Udc/√3 */
 #define PID_CURRENT_D_LOOP_MIN_OUTPUT \
     (-1.0F * PID_CURRENT_D_LOOP_MAX_OUTPUT)
 #define PID_CURRENT_D_LOOP_INTEGRAL_LIMIT \
@@ -158,7 +158,7 @@
 /*********************************************************************/
 /* 无位置传感器策略控制 */
 #define SENSORLESS_HYSTERESIS   50.0F  /* 无传感器滞环宽度：50rpm */
-#define SENSORLESS_SWITCH_SPEED 340.0F /* 无传感器切换速度：340rpm */
+#define SENSORLESS_SWITCH_SPEED 460.0F /* 无传感器切换速度：460rpm */
 
 /* 无位置PLL跟踪器参数 */
 #define SENSORLESS_PLL_KP         50.0F   /* PLL比例系数 */
@@ -191,12 +191,8 @@
 #define HFI_PLL_MIN_OUTPUT     (-1 * HFI_PLL_MAX_OUTPUT) /* PLL最小输出 */
 #define HFI_PLL_INTEGRAL_LIMIT HFI_PLL_MAX_OUTPUT /* PLL积分限幅值 */
 
-/* 滑模观测器参数 */
-#define SMO_SIGMOID_AMPLITUDE 0.1F   /* S函数幅值 */
-#define SMO_SIGMOID_FACTOR    0.1F   /* S函数因子 */
-#define SMO_GAIN_K1           200.0F /* 观测器增益K1 */
-#define SMO_GAIN_K2           0.01F  /* 观测器增益K2 */
-#define LESO_WC               500.0F /* 观测器带宽 */
+/* LESO参数 */
+#define LESO_WC 2000.0F /* 观测器带宽 */
 
 /* 滑模观测器PLL跟踪器参数 */
 #define SMO_PLL_KP             600.0F  /* PLL比例系数 */

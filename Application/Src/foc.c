@@ -6,21 +6,22 @@
 
 #include "hardware_interface.h"
 
-static FocMode_t      Foc_Mode            = IDLE;   // 当前FOC模式
-static bool           Foc_Reset           = false;  // FOC复位标志
-static float          Foc_Current_Ts      = 0.0F;   // 电流环采样周期
-static float          Foc_Current_Freq    = 0.0F;   // 电流环频率
-static uint16_t       Foc_Speed_Prescaler = 0U;     // 电流环分频数
-static float          Foc_Speed_Ts        = 0.0F;   // 转速环采样周期
-static float          Foc_Speed_Freq      = 0.0F;   // 转速环频率
-static float          Foc_Speed_Ref       = 0.0F;   // 参考速度
-static volatile float Foc_Speed_Ramp      = 0.0F;   // 实际指令转速
-static float          Foc_Speed_Fdbk      = 0.0F;   // 实际转速反馈
-static float          Foc_Theta           = 0.0F;
-static float          Foc_BusVoltage      = 0.0F;
-static float          Foc_BusVoltage_Inv  = 0.0F;
+static FocMode_t Foc_Mode            = IDLE;   // 当前FOC模式
+static bool      Foc_Reset           = false;  // FOC复位标志
+static float     Foc_Current_Ts      = 0.0F;   // 电流环采样周期
+static float     Foc_Current_Freq    = 0.0F;   // 电流环频率
+static uint16_t  Foc_Speed_Prescaler = 0U;     // 电流环分频数
+static float     Foc_Speed_Ts        = 0.0F;   // 转速环采样周期
+static float     Foc_Speed_Freq      = 0.0F;   // 转速环频率
+static float     Foc_Speed_Ref       = 0.0F;   // 参考速度
+static float     Foc_Speed_Fdbk      = 0.0F;   // 实际转速反馈
+static float     Foc_Theta           = 0.0F;
+static float     Foc_BusVoltage      = 0.0F;
+static float     Foc_BusVoltage_Inv  = 0.0F;
 
-static volatile bool Foc_Sweep = true;  // FOC扫频标志
+static volatile float Foc_Speed_Ramp = 0.0F;  // 实际指令转速
+static volatile float Foc_Id_Min     = 0.3F;  // D轴电流最小值
+static volatile bool  Foc_Sweep      = true;  // FOC扫频标志
 
 static VF_Parameter_t  Foc_VfParam            = {0};
 static IF_Parameter_t  Foc_IfParam            = {0};
@@ -302,14 +303,12 @@ static inline Park_t Foc_Update_SpeedLoop(float ref,
     float  ramp    = RampGenerator(&Foc_Ramp_Speed_Handler, reset);
     Foc_Speed_Ramp = ramp;
     output.q = Pid_Update(ramp - fdbk, reset, &Foc_Pid_Speed_Handler);
-    output.d = 0.4F * output.q;
+    output.d = 0.3F * output.q;
 
     if (output.d < 0.0F) {
         output.d = -output.d;
     }
-    if (output.d < 1.0F) {
-        output.d = 1.0F;  // 最小磁链保持
-    }
+    output.d += Foc_Id_Min;
 
     return output;  // 返回DQ轴电流参考
 }

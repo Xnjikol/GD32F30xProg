@@ -40,7 +40,7 @@ static inline void Motor_Update_Theta(void) {
     Motor_Theta_Elec = wrap_theta_2pi(Motor_Theta_Elec);
 }
 
-static inline void Motor_Update_Speed(void) {
+static inline void calculate_speed(void) {
     static uint16_t cnt_speed  = 0x0000;
     static float    last_theta = 0.0F;
     cnt_speed++;
@@ -51,9 +51,8 @@ static inline void Motor_Update_Speed(void) {
 
     Motor_Speed
         = calc_speed(Motor_Theta_Mech, last_theta, Motor_SampleFreq);
-    Motor_Speed
-        = IIR1stFilter_Update(&Motor_Speed_Filter, Motor_Speed);
-    last_theta = Motor_Theta_Mech;
+    Motor_Speed = IIR1stFilter_Update(&Motor_Speed_Filter, Motor_Speed);
+    last_theta  = Motor_Theta_Mech;
 }
 
 bool Motor_Set_SampleTime(const SystemTimeConfig_t* time_config) {
@@ -90,8 +89,7 @@ bool Motor_Set_SpeedPrescaler(uint16_t prescaler) {
 }
 
 bool Motor_Set_Filter(float cutoff_freq, float sample_freq) {
-    IIR1stFilter_Init(
-        &Motor_Speed_Filter, cutoff_freq, sample_freq);
+    IIR1stFilter_Init(&Motor_Speed_Filter, cutoff_freq, sample_freq);
     return true;
 }
 
@@ -104,7 +102,7 @@ void Motor_Set_Theta_Elec(float theta) {
     Motor_Theta_Elec = theta;
 }
 
-float Motor_Get_Theta_Elec(void) {
+float Motor_Get_ThetaElec(void) {
     return Motor_Theta_Elec;
 }
 
@@ -121,6 +119,6 @@ void Motor_Set_Speed(float speed) {
 }
 
 float Motor_Get_Speed(void) {
-    Motor_Update_Speed();
+    calculate_speed();
     return Motor_Speed;
 }
