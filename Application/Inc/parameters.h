@@ -102,7 +102,7 @@
 #define PROTECT_VOLTAGE_FLUCTUATION 60.0F  /* 允许电压波动：±60V */
 
 /* 电流和温度保护参数 */
-#define PROTECT_CURRENT_MAX 15.0F /* 最大电流限制：15A */
+#define PROTECT_CURRENT_MAX 23.0F /* 最大电流限制：23A */
 #define PROTECT_TEMPERATURE 80.0F /* 最高温度限制：80℃ */
 
 /*********************************************************************/
