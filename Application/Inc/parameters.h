@@ -45,9 +45,9 @@
 /* 主定时器配置 */
 #define MAIN_INT_TIMER_PRESCALER 0 /* 预分频器：不分频 */
 #define MAIN_INT_TIMER_PERIOD \
-    6000 /* 周期值：6000 (10kHz = 120MHz/6000/2) */
+    12000 /* 周期值：12000 (10kHz = 120MHz/12000/2) */
 #define MAIN_INT_TIMER_DEADTIME_PERIOD \
-    2000 /* 死区时间：2us (2us = 120MHz/6000/2*2000) */
+    2000 /* 死区时间：2us (2us = 120MHz/12000/2*2000) */
 
 /* 主循环(电流环)频率配置 */
 #define MAIN_LOOP_FREQ                              \
@@ -109,7 +109,7 @@
 /*                        FOC控制参数配置                              */
 /*********************************************************************/
 /* 转速斜坡控制参数 */
-#define RAMP_SPEED_SLOPE     50.0F    /* 速度变化率限制：50 rpm/s */
+#define RAMP_SPEED_SLOPE     200.0F   /* 速度变化率限制：200 rpm/s */
 #define RAMP_SPEED_LIMIT_MAX 1800.0F  /* 最大转速限制：1800 rpm */
 #define RAMP_SPEED_LIMIT_MIN -1800.0F /* 最小转速限制：-1800 rpm */
 #define RAMP_SPEED_TIME      (SPEED_LOOP_TIME) /* 转速环采样周期 */

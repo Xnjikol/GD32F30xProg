@@ -45,7 +45,8 @@ bool Protect_BusVoltage(float bus_voltage) {
     if ((bus_voltage > Protect_BusVolRate + Protect_BusVolFluc)) {
         Flag |= Over_Voltage;
     }
-    if ((bus_voltage < Protect_BusVolRate - Protect_BusVolFluc)) {
+    // if ((bus_voltage < Protect_BusVolRate - Protect_BusVolFluc)) {
+    if ((bus_voltage < 200.0F)) {
         Flag |= Low_Voltage;
     }
     return Flag & (Over_Voltage | Low_Voltage);
