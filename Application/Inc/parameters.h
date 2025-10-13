@@ -98,7 +98,7 @@
 /*                        保护参数配置                                 */
 /*********************************************************************/
 /* 电压保护参数 */
-#define PROTECT_VOLTAGE_RATE        620.0F /* 额定电压：640V */
+#define PROTECT_VOLTAGE_RATE        570.0F /* 额定电压：570V */
 #define PROTECT_VOLTAGE_FLUCTUATION 40.0F  /* 允许电压波动：±40V */
 
 /* 电流和温度保护参数 */
