@@ -10,11 +10,12 @@
  * @brief 无传感器控制状态机
  */
 typedef struct {
-    float leso_beta1; /*!< LESO增益 */
-    float leso_beta2; /*!< LESO增益 */
-    float Rs;         /*!< 定子电阻 */
-    float Ld;         /*!< 定子电感 */
-    float Lq;         /*!< 定子电感 */
+    float wc_gain; /*!< 观测器带宽系数 */
+    float wc_max;  /*!< 观测器带宽最大值 */
+    float wc_min;  /*!< 观测器带宽最小值 */
+    float Rs;      /*!< 定子电阻 */
+    float Ld;      /*!< 定子电感 */
+    float Lq;      /*!< 定子电感 */
 } LESO_Param_t;
 
 /**
@@ -24,7 +25,7 @@ bool Leso_Set_SampleTime(const SystemTimeConfig_t* config);
 
 bool Leso_Initialization(const LESO_Param_t* param);
 
-void Leso_Set_InvPn(float inv_Pn);
+void Leso_Set_Pn(float inv_Pn);
 
 void Leso_Set_SpeedFilter(float cutoff_freq, float sample_freq);
 
@@ -33,6 +34,8 @@ void Leso_Set_Pid_Handler(PID_Handler_t config);
 void Leso_Set_Voltage(Clark_t voltage);
 
 void Leso_Set_Current(Clark_t current);
+
+void Leso_Set_Speed(float speed);
 
 void Leso_Set_Theta(float theta);
 
@@ -53,6 +56,7 @@ Clark_t Leso_Get_EmfEst(void);
 /**
  * @brief SMO内部状态更新接口
  */
+void Leso_Update_Beta(void);
 void Leso_Update_EmfEstA(void);
 void Leso_Update_EmfEstB(void);
 void Leso_Update(void);

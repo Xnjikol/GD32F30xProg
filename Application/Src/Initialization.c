@@ -133,14 +133,15 @@ bool init_module_sensorless(void) {
 bool init_module_smo(void) {
     Leso_Set_SampleTime(&sys_time_cfg);
 
-    LESO_Param_t smo_param = {.Ld         = MOTOR_LD,
-                              .Lq         = MOTOR_LQ,
-                              .Rs         = MOTOR_RS,
-                              .leso_beta1 = 2 * LESO_WC,
-                              .leso_beta2 = LESO_WC * LESO_WC};
+    LESO_Param_t smo_param = {.wc_gain = LESO_WC_GAIN,
+                              .wc_max  = LESO_WC_MAX,
+                              .wc_min  = LESO_WC_MIN,
+                              .Ld      = MOTOR_LD,
+                              .Lq      = MOTOR_LQ,
+                              .Rs      = MOTOR_RS};
     Leso_Initialization(&smo_param);
 
-    Leso_Set_InvPn(1.0F / MOTOR_PN);
+    Leso_Set_Pn(MOTOR_PN);
 
     PID_Handler_t smo_pid = {.Kp            = SMO_PLL_KP,
                              .Ki            = SMO_PLL_KI,

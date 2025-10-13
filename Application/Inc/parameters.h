@@ -65,11 +65,11 @@
 /*                        电机物理参数                                 */
 /*********************************************************************/
 /* 电机电气参数 */
-#define MOTOR_RS   0.65F    /* 定子电阻：0.65 Ω */
-#define MOTOR_LD   164E-3F  /* d轴电感：164 mH */
-#define MOTOR_LQ   41.5E-3F /* q轴电感：41.5 mH */
-#define MOTOR_FLUX 0.1F     /* 永磁体磁链：0.1 Wb */
-#define MOTOR_PN   2.0F     /* 电机极对数：2 */
+#define MOTOR_RS   0.65F   /* 定子电阻：0.65 Ω */
+#define MOTOR_LD   100E-3F /* d轴电感：100 mH */
+#define MOTOR_LQ   16E-3F  /* q轴电感：16 mH */
+#define MOTOR_FLUX 0.1F    /* 永磁体磁链：0.1 Wb */
+#define MOTOR_PN   2.0F    /* 电机极对数：2 */
 
 /* 位置传感器配置 */
 #ifdef RESOLVER_POSITION
@@ -89,7 +89,7 @@
 #ifdef ENCODER_POSITION
 #    define MOTOR_THETA_FACTOR \
         (M_2PI / (float)(MOTOR_POSITION_SCALE + 1))
-#    define MOTOR_POSITION_OFFSET 6629.0F /* 位置传感器零点偏置 */
+#    define MOTOR_POSITION_OFFSET 9210.0F /* 位置传感器零点偏置 */
 #endif
 
 #define MOTOR_RESOLVER_PN 1.0F /* 旋变极对数 */
@@ -98,8 +98,8 @@
 /*                        保护参数配置                                 */
 /*********************************************************************/
 /* 电压保护参数 */
-#define PROTECT_VOLTAGE_RATE        570.0F /* 额定电压：570V */
-#define PROTECT_VOLTAGE_FLUCTUATION 40.0F  /* 允许电压波动：±40V */
+#define PROTECT_VOLTAGE_RATE        560.0F /* 额定电压：560V */
+#define PROTECT_VOLTAGE_FLUCTUATION 60.0F  /* 允许电压波动：±60V */
 
 /* 电流和温度保护参数 */
 #define PROTECT_CURRENT_MAX 15.0F /* 最大电流限制：15A */
@@ -133,7 +133,7 @@
 #define PID_CURRENT_D_LOOP_KD 0.00F         /* d轴微分系数 */
 
 /* d轴输出限制 */
-#define PID_CURRENT_D_LOOP_MAX_OUTPUT 300.0F /* 最大输出电压：Udc/√3 */
+#define PID_CURRENT_D_LOOP_MAX_OUTPUT 200.0F /* 最大输出电压：Udc/√3 */
 #define PID_CURRENT_D_LOOP_MIN_OUTPUT \
     (-1.0F * PID_CURRENT_D_LOOP_MAX_OUTPUT)
 #define PID_CURRENT_D_LOOP_INTEGRAL_LIMIT \
@@ -146,7 +146,7 @@
 #define PID_CURRENT_Q_LOOP_KD 0.00F         /* q轴微分系数 */
 
 /* q轴输出限制 */
-#define PID_CURRENT_Q_LOOP_MAX_OUTPUT 100.0F /* 最大输出电压：Udc/√3 */
+#define PID_CURRENT_Q_LOOP_MAX_OUTPUT 300.0F /* 最大输出电压：Udc/√3 */
 #define PID_CURRENT_Q_LOOP_MIN_OUTPUT \
     (-1.0F * PID_CURRENT_Q_LOOP_MAX_OUTPUT)
 #define PID_CURRENT_Q_LOOP_INTEGRAL_LIMIT \
@@ -192,7 +192,9 @@
 #define HFI_PLL_INTEGRAL_LIMIT HFI_PLL_MAX_OUTPUT /* PLL积分限幅值 */
 
 /* LESO参数 */
-#define LESO_WC 2000.0F /* 观测器带宽 */
+#define LESO_WC_GAIN 25.0F   /* 观测器带宽系数 */
+#define LESO_WC_MAX  5000.0F /* 观测器带宽最大值 */
+#define LESO_WC_MIN  800.0F  /* 观测器带宽最小值 */
 
 /* 滑模观测器PLL跟踪器参数 */
 #define SMO_PLL_KP             600.0F  /* PLL比例系数 */

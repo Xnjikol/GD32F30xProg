@@ -258,6 +258,7 @@ AngleResult_t Sensorless_Update_Position(void) {
     speed = calculate_speed(omega);
 
     Leso_Set_Theta(Sensorless_ThetaEst);
+    Leso_Set_Speed(speed);
     Hfi_Set_Theta(Sensorless_ThetaEst);
 
     return (AngleResult_t){
@@ -329,6 +330,7 @@ bool Sensorless_Calculate(void) {
     }
 
     if (Leso_Get_Enabled()) {
+        Leso_Update_Beta();
         Leso_Update_EmfEstA();
         Leso_Update_EmfEstB();
         Leso_Update();

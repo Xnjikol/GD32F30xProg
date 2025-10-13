@@ -289,6 +289,16 @@ Phase_t Foc_Get_Tcm(void) {
     return tcm;  // 返回三相PWM时间
 }
 
+static inline float dispatch_current(float cur_ref) {
+    if (cur_ref < 0.0F) {
+        cur_ref = -cur_ref;
+    }
+    float out = 0.0003497F * cur_ref * cur_ref * cur_ref
+                - 0.02016F * cur_ref * cur_ref + 0.7335F * cur_ref
+                + 0.6032F;  // 三次函数拟合
+    return out;
+}
+
 static inline Park_t Foc_Update_SpeedLoop(float ref,
                                           float fdbk,
                                           bool  reset) {
@@ -303,12 +313,7 @@ static inline Park_t Foc_Update_SpeedLoop(float ref,
     float  ramp    = RampGenerator(&Foc_Ramp_Speed_Handler, reset);
     Foc_Speed_Ramp = ramp;
     output.q = Pid_Update(ramp - fdbk, reset, &Foc_Pid_Speed_Handler);
-    output.d = 0.3F * output.q;
-
-    if (output.d < 0.0F) {
-        output.d = -output.d;
-    }
-    output.d += Foc_Id_Min;
+    output.d = dispatch_current(output.q);
 
     return output;  // 返回DQ轴电流参考
 }

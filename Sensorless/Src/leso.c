@@ -21,8 +21,13 @@ static float Leso_InvLq            = {0};
 static float Leso_SampleTime       = {0};
 static float Leso_SampleFreq_Speed = {0};
 static float Leso_Prescaler        = {0};
+static float Leso_Pn               = {0};
 static float Leso_InvPn            = {0};
+static float Leso_Gain             = {0};
 static float Leso_Wc               = {0};
+static float Leso_Wc_Min           = {0};
+static float Leso_Wc_Max           = {0};
+static float Leso_We               = {0};
 static float Leso_Theta            = {0};
 static float Leso_Speed            = {0};
 static float Leso_Error            = {0};
@@ -61,23 +66,21 @@ bool Leso_Set_SampleTime(const SystemTimeConfig_t* config) {
  * @param param 指向 LESO_Param_t 结构体的指针，包含所需参数
  */
 bool Leso_Initialization(const LESO_Param_t* param) {
-    if (param == NULL) {
-        return false;
-    }
-
-    Leso_Beta1 = param->leso_beta1;
-    Leso_Beta2 = param->leso_beta2;
-    Leso_Rs    = param->Rs;
-    Leso_Ld    = param->Ld;
-    Leso_Lq    = param->Lq;
-    Leso_InvLd = 1.0F / Leso_Ld;
-    Leso_InvLq = 1.0F / Leso_Lq;
+    Leso_Gain   = param->wc_gain;
+    Leso_Wc_Max = param->wc_max;
+    Leso_Wc_Min = param->wc_min;
+    Leso_Rs     = param->Rs;
+    Leso_Ld     = param->Ld;
+    Leso_Lq     = param->Lq;
+    Leso_InvLd  = 1.0F / Leso_Ld;
+    Leso_InvLq  = 1.0F / Leso_Lq;
 
     return true;
 }
 
-void Leso_Set_InvPn(float inv_Pn) {
-    Leso_InvPn = inv_Pn;
+void Leso_Set_Pn(float pole_pairs) {
+    Leso_Pn    = pole_pairs;
+    Leso_InvPn = 1.0F / pole_pairs;
 }
 
 void Leso_Set_SpeedFilter(float cutoff_freq, float sample_freq) {
@@ -98,6 +101,11 @@ void Leso_Set_Current(Clark_t current) {
 
 void Leso_Set_Theta(float theta) {
     Leso_Theta = theta;
+}
+
+void Leso_Set_Speed(float speed) {
+    Leso_Speed = speed;
+    Leso_We    = rpm2radps(speed) * Leso_Pn;
 }
 
 void Leso_Calc_ThetaErr(float ref) {
@@ -132,7 +140,23 @@ Clark_t Leso_Get_EmfEst(void) {
     return Leso_EmfEst;
 }
 
+void Leso_Update_Beta(void) {
+    Leso_Wc = Leso_Gain * Leso_We;
+    if (Leso_Wc > Leso_Wc_Max) {
+        Leso_Wc = Leso_Wc_Max;
+    }
+    if (Leso_Wc < Leso_Wc_Min) {
+        Leso_Wc = Leso_Wc_Min;
+    }
+
+    // 根据带宽计算观测器增益
+    Leso_Beta1 = 2.0F * Leso_Wc;
+    Leso_Beta2 = Leso_Wc * Leso_Wc;
+}
+
 void Leso_Update_EmfEstA(void) {
+    Leso_InvLq = 1.0F / Leso_Lq;
+
     // 更新电动势估计值
     static float leso_f1a  = 0.0F;
     float        leso_f0   = 0.0F;
@@ -169,7 +193,7 @@ void Leso_Update_EmfEstB(void) {
 static inline float compensate_theta(float theta, float omega) {
     // 角度补偿
     float comp = 0.0F;
-    ATAN2(omega, Leso_Wc, &comp);
+    ATAN2(omega, Leso_Gain, &comp);
     return theta + comp;
 }
 
