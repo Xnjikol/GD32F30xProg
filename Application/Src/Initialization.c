@@ -215,7 +215,7 @@ static inline void init_nvic(void) {
     // 设置中断优先级分组
     nvic_priority_group_set(NVIC_PRIGROUP_PRE2_SUB2);
     nvic_irq_enable(TIMER0_BRK_IRQn, 0, 0);
-    nvic_irq_enable(EXTI4_IRQn, 1U, 0U);
+    nvic_irq_enable(EXTI5_9_IRQn, 1U, 0U);
     nvic_irq_enable(USBD_LP_CAN0_RX0_IRQn, 2, 0);
     nvic_irq_enable(ADC0_1_IRQn, 3, 0);
     nvic_irq_enable(TIMER3_IRQn, 4, 0);
