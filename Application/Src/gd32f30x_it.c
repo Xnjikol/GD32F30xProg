@@ -35,11 +35,9 @@ OF SUCH DAMAGE.
 #include "gd32f30x_it.h"
 
 #include "can.h"
-#include "foc.h"
 #include "gd32f30x.h"
 #include "gd32f30x_timer.h"
 #include "hardware_interface.h"
-#include "justfloat.h"
 #include "main_int.h"
 #include "protect.h"
 #include "systick.h"
@@ -150,6 +148,7 @@ void ADC0_1_IRQHandler(void) {
     if (cnt_stop >= cnt_start) {
         systick_cnt = cnt_stop - cnt_start;
     } else {
+        // 计数器溢出，需要减去溢出部分55535
         systick_cnt = cnt_stop - cnt_start - 0xD8EFU;
     }
 }

@@ -10,7 +10,7 @@
 static DeviceStateEnum_t MainInt_State        = RUNNING;
 static float             Data_Buffer[5]       = {0};
 static volatile bool     MainInt_UseRealTheta = true;
-static volatile uint16_t MainInt_DataFlag     = 0x000U;
+//static volatile uint16_t MainInt_DataFlag     = 0x000U;
 
 static inline void MainInt_Update_FocCurrent(void) {
     Phase_t current_phase = Peripheral_Get_PhaseCurrent();
@@ -58,7 +58,7 @@ static inline void MainInt_Update_Angle_and_Speed(void) {
 
     Sensorless_Set_SpeedRef(speed_ref);
     Sensorless_Set_SpeedFdbk(res.speed);
-    Sensorless_Set_Angle(res.theta);
+    //Sensorless_Set_Angle(res.theta);
 
     Data_Buffer[0] = real.theta;
     Data_Buffer[1] = est.theta;

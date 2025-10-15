@@ -16,7 +16,6 @@
 #define PROTECT_H
 
 #include <stdbool.h>
-#include <stdint.h>
 #include "transformation.h"
 
 /*-------------------- 保护标志位定义 --------------------*/

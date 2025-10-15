@@ -2,7 +2,7 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-static bool           Protect_Enable     = false;
+//static bool           Protect_Enable     = false;
 static float          Protect_BusVolRate = 0.0F;
 static float          Protect_BusVolFluc = 0.0F;
 static float          Protect_CurrentMax = 0.0F;

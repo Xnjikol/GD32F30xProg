@@ -7,7 +7,6 @@ set(Utils_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/pid.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/pll.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/signal.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Src/transformation.c
 )
 
 add_library(Utils STATIC

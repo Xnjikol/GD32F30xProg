@@ -11,21 +11,24 @@
 void IIR1stFilter_Init(IIR1stFilter_t* filter,
                        float           cutoff_freq,
                        float           sample_freq) {
-    if (filter == NULL || cutoff_freq <= 0.0f || sample_freq <= 0.0f)
+    if (filter == NULL || cutoff_freq <= 0.0f || sample_freq <= 0.0f) {
         return;
+    }
 
     // Calculate RC time constant and sampling period
-    float rc = 1.0f / (2.0f * M_PI * cutoff_freq);
-    float dt = 1.0f / sample_freq;
+    float rc = 1.0F / (2.0F * (float)M_PI * cutoff_freq);
+    float dt = 1.0F / sample_freq;
 
     // Calculate alpha coefficient using optimized formula
     filter->alpha = dt / (rc + dt);
 
     // Clamp alpha to valid range [0, 1] for stability
-    if (filter->alpha > 1.0f)
+    if (filter->alpha > 1.0f) {
         filter->alpha = 1.0f;
-    if (filter->alpha < 0.0f)
+    }
+    if (filter->alpha < 0.0f) {
         filter->alpha = 0.0f;
+    }
 
     filter->prev_output = 0.0f;
     filter->initialized = true;
@@ -36,8 +39,9 @@ void IIR1stFilter_Init(IIR1stFilter_t* filter,
  * @param filter: pointer to IIR1stFilter_t structure
  */
 void IIR1stFilter_Reset(IIR1stFilter_t* filter) {
-    if (filter == NULL)
+    if (filter == NULL) {
         return;
+    }
 
     filter->prev_output = 0.0f;
     filter->initialized = false;
@@ -75,9 +79,9 @@ void BandPassFilter_Init(BandPassFilter_t* filter,
     }
 
     // 计算二阶巴特沃斯带通滤波器系数
-    float Q      = centerFreq / bandwidth;    // 品质因数
-    float omega0 = 2.0F * M_PI * centerFreq;  // 中心角频率
-    float T      = 1.0F / sampleRate;         // 采样周期
+    float Q      = centerFreq / bandwidth;           // 品质因数
+    float omega0 = 2.0F * (float)M_PI * centerFreq;  // 中心角频率
+    float T      = 1.0F / sampleRate;                // 采样周期
     float alpha  = SIN(omega0 * T) / (2.0F * Q);
 
     float denominator = 1.0f + alpha;
@@ -139,9 +143,9 @@ void BandStopFilter_Init(BandStopFilter_t* filter,
     }
 
     // 计算二阶巴特沃斯带阻滤波器系数
-    float Q      = centerFreq / bandwidth;    // 品质因数
-    float omega0 = 2.0f * M_PI * centerFreq;  // 中心角频率
-    float T      = 1.0f / sampleRate;         // 采样周期
+    float Q      = centerFreq / bandwidth;           // 品质因数
+    float omega0 = 2.0F * (float)M_PI * centerFreq;  // 中心角频率
+    float T      = 1.0f / sampleRate;                // 采样周期
     float alpha  = sinf(omega0 * T) / (2.0f * Q);
 
     float denominator = 1.0f + alpha;

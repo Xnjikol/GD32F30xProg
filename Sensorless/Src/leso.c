@@ -1,6 +1,6 @@
 #include "leso.h"
 #include <stdbool.h>
-#include "arm_math.h"
+#include "arm_math.h" /* CMSIS-DSP math */ // IWYU pragma: export
 #include "filter.h"
 #include "pid.h"
 #include "theta_calc.h"
@@ -217,26 +217,26 @@ void Leso_Update_EmfEstB(void) {
     Leso_EmfEst.b = -Leso_Lq * leso_f1b;
 }
 
-static inline float compensate_theta(float theta, float omega) {
-    // 角度补偿
-    float comp = 0.0F;
-    ATAN2(omega, Leso_Gain, &comp);
-    return theta + comp;
-}
+// static inline float compensate_theta(float theta, float omega) {
+//     // 角度补偿
+//     float comp = 0.0F;
+//     ATAN2(omega, Leso_Gain, &comp);
+//     return theta + comp;
+// }
 
-static inline float pll_update(float error, bool reset) {
-    // 更新锁相环
-    float omega = Pid_Update(error, reset, &Leso_Theta_PID);
-    Leso_Theta += omega * Leso_SampleTime;
-    if (Leso_Theta > M_2PI) {
-        Leso_Theta -= M_2PI;
-    }
-    if (Leso_Theta < 0.0F) {
-        Leso_Theta += M_2PI;
-    }
-    Leso_Theta = wrap_theta_2pi(Leso_Theta);
-    return omega;
-}
+// static inline float pll_update(float error, bool reset) {
+//     // 更新锁相环
+//     float omega = Pid_Update(error, reset, &Leso_Theta_PID);
+//     Leso_Theta += omega * Leso_SampleTime;
+//     if (Leso_Theta > M_2PI) {
+//         Leso_Theta -= M_2PI;
+//     }
+//     if (Leso_Theta < 0.0F) {
+//         Leso_Theta += M_2PI;
+//     }
+//     Leso_Theta = wrap_theta_2pi(Leso_Theta);
+//     return omega;
+// }
 
 static inline float calculate_error(Clark_t emf, float angle) {
     float angleErr   = 0.0F;
@@ -265,20 +265,20 @@ static inline float calculate_error(Clark_t emf, float angle) {
     return angleErr;
 }
 
-static inline float calculate_speed(float omega) {
-    static uint16_t leso_count = 0x0000U;
-    static float    leso_integ = 0.0F;
-    float           speed      = 0.0F;
-    leso_integ += radps2rpm(omega) * Leso_InvPn * 0.1F;
-    leso_count++;
-    if (leso_count < 0x000AU) {
-        return Leso_Speed;
-    }
-    leso_count = 0x0000U;
-    speed      = IIR1stFilter_Update(&Leso_Speed_Filter, leso_integ);
-    leso_integ = 0.0F;
-    return speed;
-}
+// static inline float calculate_speed(float omega) {
+//     static uint16_t leso_count = 0x0000U;
+//     static float    leso_integ = 0.0F;
+//     float           speed      = 0.0F;
+//     leso_integ += radps2rpm(omega) * Leso_InvPn * 0.1F;
+//     leso_count++;
+//     if (leso_count < 0x000AU) {
+//         return Leso_Speed;
+//     }
+//     leso_count = 0x0000U;
+//     speed      = IIR1stFilter_Update(&Leso_Speed_Filter, leso_integ);
+//     leso_integ = 0.0F;
+//     return speed;
+// }
 
 void Leso_Update(void) {
     Leso_Error = calculate_error(Leso_EmfEst, Leso_Theta);

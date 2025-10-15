@@ -43,8 +43,6 @@ include("cmake/gcc-arm-none-eabi.cmake")
 
 # 声明项目
 project(${CMAKE_PROJECT_NAME})
-message("-- 项目名称: ${CMAKE_PROJECT_NAME}")
-message("-- 构建类型: ${CMAKE_BUILD_TYPE}")
 
 # 启用 C 和汇编语言支持
 enable_language(C ASM)
@@ -111,7 +109,6 @@ target_link_libraries(${PROJECT_NAME}
 # HEX 文件用于烧录到微控制器
 add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD
     COMMAND ${CMAKE_OBJCOPY} -O ihex $<TARGET_FILE:${PROJECT_NAME}> ${PROJECT_NAME}.hex
-    COMMENT "正在从 ELF 文件生成 HEX 烧录文件..."
     VERBATIM
 )
 

@@ -2,9 +2,6 @@
 #define _THETA_CALC_H_
 
 #include <stdbool.h>
-#include <stdint.h>
-
-#include "gd32f30x.h"
 
 #ifndef SQRT3
 #    define SQRT3 1.73205080757F

@@ -2,9 +2,6 @@
 #define _PID_H_
 
 #include <stdbool.h>
-#include <stdint.h>
-
-#include "gd32f30x.h"
 
 typedef struct {
     /* data */
@@ -71,10 +68,11 @@ static inline float Pid_Update(float          error,
         handler->integral += handler->Ki * error * handler->Ts;
 
         // 积分限幅保护
-        if (handler->integral > handler->IntegralLimit)
+        if (handler->integral > handler->IntegralLimit) {
             handler->integral = handler->IntegralLimit;
-        else if (handler->integral < -handler->IntegralLimit)
+        } else if (handler->integral < -handler->IntegralLimit) {
             handler->integral = -handler->IntegralLimit;
+        }
     }
 
     // 计算微分项（考虑采样时间，避免除零）
@@ -90,12 +88,13 @@ static inline float Pid_Update(float          error,
         = proportional + handler->integral + derivative;
 
     // 输出限幅
-    if (total_output > handler->MaxOutput)
+    if (total_output > handler->MaxOutput) {
         handler->output = handler->MaxOutput;
-    else if (total_output < handler->MinOutput)
+    } else if (total_output < handler->MinOutput) {
         handler->output = handler->MinOutput;
-    else
+    } else {
         handler->output = total_output;
+    }
 
     return handler->output;
 }

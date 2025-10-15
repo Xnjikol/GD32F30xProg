@@ -157,9 +157,9 @@ void Sensorless_Set_SpeedRef(float ref) {
     Sensorless_SpeedRef = ref;
 }
 
-void Sensorless_Set_Angle(float angle) {
-    // Sensorless_ThetaEst = angle;
-}
+// void Sensorless_Set_Angle(float angle) {
+//     // Sensorless_ThetaEst = angle;
+// }
 
 AngleResult_t Sensorless_Get_Error(void) {
     return (AngleResult_t){.theta = Sensorless_ThetaErr,
@@ -287,7 +287,7 @@ static inline void enable_hfi(bool enable) {
     if (enable) {
         if (!Hfi_Get_Enabled()) {
             Hfi_Set_Enabled(true);
-            float estimate, target, error;
+            float estimate = 0.0F, target = 0.0F, error = 0.0F;
             estimate = Hfi_Get_Result().theta;
             target   = Sensorless_ThetaEst;
             error    = wrap_theta_2pi(target - estimate + PI) - PI;

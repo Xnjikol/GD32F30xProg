@@ -12,11 +12,9 @@
 #include "hf_injection.h"
 #include <stdbool.h>
 #include <stddef.h>
-#include "arm_math.h"
+#include "arm_math.h" /* CMSIS-DSP math */ // IWYU pragma: export
 #include "filter.h"
-#include "pll.h"
 #include "reciprocal.h"
-#include "signal.h"
 #include "theta_calc.h"
 #include "transformation.h"
 
@@ -38,7 +36,7 @@ static volatile float Hfi_Theta_Err = {0};
 static volatile float Hfi_Speed_Err = {0};
 
 static float   Hfi_Theta      = {0};
-static float   Hfi_Omega      = {0};
+//static float   Hfi_Omega      = {0};
 static float   Hfi_Speed      = {0};
 static float   Hfi_Error      = {0};
 static Clark_t Hfi_IClarkFdbk = {0};
@@ -145,7 +143,7 @@ Clark_t Hfi_Process_Current(Clark_t current) {
     return cur_base;
 }
 
-static inline void generate_signal() {
+static inline void generate_signal(void) {
     Park_t inj_dq = {0};
     /* 更新高频注入信号 */
     inj_dq.d = Hfi_InjVolt * (Hfi_InjectSign ? 1.0F : -1.0F);
@@ -154,7 +152,7 @@ static inline void generate_signal() {
     Hfi_VoltageInj = inj_dq;
 }
 
-static inline void update_signal() {
+static inline void update_signal(void) {
     Hfi_InjectSign = !Hfi_InjectSign;
 }
 
@@ -164,16 +162,16 @@ Park_t Hfi_Get_Inject_Voltage(void) {
     return Hfi_VoltageInj;
 }
 
-static inline float pll_update(float error, bool reset) {
-    static float hfi_theta_estimate = 0.0F;
-    // 更新锁相环
-    float omega = Pid_Update(error, reset, &Hfi_Theta_Pid);
-    Hfi_Theta += omega * Hfi_SampleTime;
-    Hfi_Theta = wrap_theta_2pi(Hfi_Theta);
+// static inline float pll_update(float error, bool reset) {
+//     //static float hfi_theta_estimate = 0.0F;
+//     // 更新锁相环
+//     float omega = Pid_Update(error, reset, &Hfi_Theta_Pid);
+//     Hfi_Theta += omega * Hfi_SampleTime;
+//     Hfi_Theta = wrap_theta_2pi(Hfi_Theta);
 
-    Hfi_Omega = omega;
-    return omega;
-}
+//     Hfi_Omega = omega;
+//     return omega;
+// }
 
 static inline float calculate_error(Clark_t response, float angle) {
     float angleErr   = 0.0F;
@@ -202,26 +200,26 @@ static inline float calculate_error(Clark_t response, float angle) {
     return angleErr;
 }
 
-static inline float calculate_omega(float error) {
-    float omega = pll_update(error, !Hfi_Enabled);
+// static inline float calculate_omega(float error) {
+//     float omega = pll_update(error, !Hfi_Enabled);
 
-    return omega;
-}
+//     return omega;
+// }
 
-static inline float calculate_speed(float omega) {
-    static uint16_t hfi_count = 0x0000U;
-    static float    hfi_integ = 0.0F;
-    float           speed     = 0.0F;
-    hfi_integ += radps2rpm(omega) * Hfi_InvPn * 0.1F;
-    hfi_count++;
-    if (hfi_count < 0x000AU) {
-        return Hfi_Speed;
-    }
-    hfi_count = 0x0000U;
-    speed     = IIR2ndFilter_Update(&Hfi_Speed_Filter, hfi_integ);
-    hfi_integ = 0.0F;
-    return speed;
-}
+// static inline float calculate_speed(float omega) {
+//     static uint16_t hfi_count = 0x0000U;
+//     static float    hfi_integ = 0.0F;
+//     float           speed     = 0.0F;
+//     hfi_integ += radps2rpm(omega) * Hfi_InvPn * 0.1F;
+//     hfi_count++;
+//     if (hfi_count < 0x000AU) {
+//         return Hfi_Speed;
+//     }
+//     hfi_count = 0x0000U;
+//     speed     = IIR2ndFilter_Update(&Hfi_Speed_Filter, hfi_integ);
+//     hfi_integ = 0.0F;
+//     return speed;
+// }
 
 void Hfi_Update(void) {
     Hfi_Error = calculate_error(Hfi_IClarkResp, Hfi_Theta);

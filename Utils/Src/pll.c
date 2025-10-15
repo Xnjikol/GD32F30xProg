@@ -9,8 +9,8 @@
  */
 
 #include "pll.h"
-#include <stdlib.h>
 #include <string.h>
+#include "theta_calc.h"
 
 #ifndef M_PI
 #    define M_PI 3.14159265358979323846F /* π */
@@ -25,7 +25,8 @@ int PLL_Init(Pll_Handler_t* pll, const pll_params_t* params) {
     }
 
     /* 参数检查 */
-    if (params->ts <= 0.0f || params->max_output <= params->min_output) {
+    if (params->ts <= 0.0f
+        || params->max_output <= params->min_output) {
         return -1;
     }
 
@@ -67,7 +68,8 @@ void PLL_DeInit(Pll_Handler_t* pll) {
  * @brief 更新PLL控制器
  */
 float PLL_Update(Pll_Handler_t* pll, float error) {
-    if (pll == NULL || !pll->state.is_initialized || !pll->state.is_enabled) {
+    if (pll == NULL || !pll->state.is_initialized
+        || !pll->state.is_enabled) {
         return pll ? pll->state.theta : 0.0f;
     }
 
@@ -164,7 +166,8 @@ void PLL_UpdateParams(Pll_Handler_t* pll, const pll_params_t* params) {
     }
 
     /* 参数检查 */
-    if (params->ts <= 0.0f || params->max_output <= params->min_output) {
+    if (params->ts <= 0.0f
+        || params->max_output <= params->min_output) {
         return;
     }
 

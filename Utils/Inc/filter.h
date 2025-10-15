@@ -4,9 +4,6 @@
 
 #include <stdbool.h>
 #include <stddef.h>
-#include <stdint.h>
-
-#include "gd32f30x.h"
 
 #define MAX_FILTER_SIZE 32
 
@@ -155,8 +152,9 @@ void HighPassFilter_Init(HighPassFilter_t* filter,
  */
 static inline float HighPassFilter_Update(HighPassFilter_t* filter,
                                           float             input) {
-    if (filter == NULL)
+    if (filter == NULL) {
         return input;
+    }
 
     // Initialize with first input value
     if (!filter->initialized) {

@@ -3,13 +3,10 @@
 #include "can.h"
 #include "com.h"
 #include "foc.h"
-#include "foc_types.h"
 #include "gd32f30x_gpio.h"
 #include "gpio.h"
-#include "hardware_interface.h"
 #include "hf_injection.h"
 #include "leso.h"
-#include "main.h"
 #include "motor.h"
 #include "parameters.h"
 #include "position_sensor.h"
@@ -158,7 +155,7 @@ bool init_module_smo(void) {
     return true;
 }
 
-bool init_module_hfi() {
+bool init_module_hfi(void) {
     Hfi_Set_SampleTime(&sys_time_cfg);
 
     hf_injection_params_t hfi_param

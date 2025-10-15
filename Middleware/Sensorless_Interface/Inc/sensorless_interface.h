@@ -64,7 +64,7 @@ void Sensorless_Set_SpeedFdbk(float fdbk);
 
 void Sensorless_Set_SpeedRef(float ref);
 
-void Sensorless_Set_Angle(float angle);
+//void Sensorless_Set_Angle(float angle);
 
 bool Sensorless_Set_ResetFlag(bool enabled);
 

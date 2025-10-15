@@ -35,9 +35,6 @@ OF SUCH DAMAGE.
 #ifndef GD32F30X_IT_H
 #define GD32F30X_IT_H
 
-#include "gd32f30x.h"
-#include "main.h"
-
 /* function declarations */
 /* this function handles NMI exception */
 void NMI_Handler(void);

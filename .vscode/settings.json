@@ -1,4 +1,13 @@
 {
+    "python.terminal.activateEnvironment": true,
+    "clangd.enabled": true,
+    "clangd.arguments": [
+        "--compile-commands-dir=build",
+        "--query-driver=**/arm-none-eabi-*",
+        "--all-scopes-completion",
+        "--header-insertion=never",
+        "--log=verbose"
+    ],
     "C_Cpp.default.compilerPath": "arm-none-eabi-gcc.exe",
     "C_Cpp.default.intelliSenseMode": "gcc-arm",
     "C_Cpp.default.cStandard": "c11",
@@ -9,8 +18,65 @@
     "C_Cpp.codeAnalysis.clangTidy.config": "file",
     "C_Cpp.clang_format_path": "clang-format",
     "C_Cpp.clang_format_style": "file",
+    "VsCodeTaskButtons.showCounter": true,
+    "VsCodeTaskButtons.tasks": [
+        {
+            "label": "$(gear) Configure",
+            "task": "CMake Configure",
+            "tooltip": "Run CMake Configure Task"
+        },
+        {
+            "label": "$(tools) Build",
+            "task": "Build",
+            "tooltip": "Run Build Task"
+        },
+        {
+            "label": "$(wrench) CMake Build",
+            "task": "CMake Build",
+            "tooltip": "Run CMake Build Task"
+        },
+        {
+            "label": "$(chip) Flash",
+            "task": "Flash",
+            "tooltip": "Run Flash Task"
+        },
+        {
+            "label": "$(pencil) A2L",
+            "task": "Generate A2L",
+            "tooltip": "Run Generate A2L Task"
+        },
+    ],
+    "commentAnchors.showCursor": true,
+    "better-comments.multilineComments": true,
+    "better-comments.tags": [
+        {
+            "tag": "#",
+            "color": "#FF2D00",
+            "strikethrough": false,
+            "underline": false,
+            "backgroundColor": "transparent",
+            "bold": false,
+            "italic": false
+        },
+        {
+            "tag": "<",
+            "color": "#3498DB"
+        },
+        {
+            "tag": "//",
+            "color": "#474747",
+            "strikethrough": true
+        },
+        {
+            "tag": ">",
+            "color": "#FF8C00"
+        },
+        {
+            "tag": "-",
+            "color": "#98C379"
+        }
+    ],
     "cortex-debug.variableUseNaturalFormat": true,
-    "cmake.generator": "Ninja",
     "files.associations": {
         "*.h": "c",
     }

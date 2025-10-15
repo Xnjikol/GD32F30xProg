@@ -1,10 +1,11 @@
 #include "foc.h"
-#include "justfloat.h"
 #include "pid.h"
 #include "signal.h"
+#include "stdint.h"
 #include "transformation.h"
 
-#include "hardware_interface.h"
+#include "MTPA.h"
+#include "identification.h"
 
 static FocMode_t Foc_Mode            = IDLE;   // 当前FOC模式
 static FocMode_t Foc_Mode_Prev       = IDLE;   // 上一次FOC模式
@@ -37,12 +38,14 @@ static PID_Handler_t   Foc_Pid_CurQ_Handler   = {0};
 static RampGenerator_t Foc_Ramp_Speed_Handler = {0};
 static SawtoothWave_t  Foc_Sawtooth_Handler   = {0};
 
+FluxExperiment_t Experiment = {0};
+
 void Foc_Set_SampleTime(const SystemTimeConfig_t* config) {
     Foc_Current_Ts      = config->current.val;  // 电流环采样周期
     Foc_Current_Freq    = config->current.inv;  // 电流环频率
     Foc_Speed_Ts        = config->speed.val;    // 转速环采样周期
     Foc_Speed_Freq      = config->speed.inv;    // 转速环频率
-    Foc_Speed_Prescaler = config->prescaler;    // 转速环分频数
+    Foc_Speed_Prescaler = (uint16_t)config->prescaler;  // 转速环分频数
 }
 
 void Foc_Set_Mode(FocMode_t mode) {
@@ -183,12 +186,15 @@ static inline Phase_t calculate_SVPWM_Tcm(Clark_t u_ref,
     float   v_ref3 = (-SQRT3 * alpha - beta) * 0.5F;
 
     // 判断扇区（1~6）
-    if (v_ref1 > 0)
+    if (v_ref1 > 0) {
         sector += 1;
-    if (v_ref2 > 0)
+    }
+    if (v_ref2 > 0) {
         sector += 2;
-    if (v_ref3 > 0)
+    }
+    if (v_ref3 > 0) {
         sector += 4;
+    }
 
     // Clarke to t1/t2 projection
     float X = SQRT3 * beta * inv_Vdc;
@@ -300,9 +306,11 @@ static inline float dispatch_current(float cur_ref) {
     if (cur_ref < 0.0F) {
         cur_ref = -cur_ref;
     }
-    float out = 0.0003497F * cur_ref * cur_ref * cur_ref
-                - 0.02016F * cur_ref * cur_ref + 0.7335F * cur_ref
-                + 0.6032F;  // 三次函数拟合
+    // float out = 0.0003497F * cur_ref * cur_ref * cur_ref - 0.02016F * cur_ref * cur_ref +
+    //             0.7335F * cur_ref + 0.6032F;  // 三次函数拟合
+    float out = 0.0F;
+    MTPA_interp_by_Iq(
+        mtpa_table, MTPA_TABLE_POINTS, cur_ref, &out, NULL);
     return out;
 }
 
@@ -357,7 +365,7 @@ static inline Park_t Foc_Update_VfMode(bool reset) {
     float phase = 0.0F;
     phase       = SawtoothWaveGenerator(&Foc_Sawtooth_Handler,
                                   reset);  // 更新电压环角度
-    if (fabs(phase - phase_prev) > M_PI_2) {
+    if (fabsf(phase - phase_prev) > M_PI_2) {
         sweep_flag = false;
     }
     if (Foc_Sweep) {
@@ -394,7 +402,7 @@ static inline Park_t Foc_Update_IfMode(bool reset) {
         float phase = 0.0F;
         phase       = SawtoothWaveGenerator(&Foc_Sawtooth_Handler,
                                       reset);  // 更新电流环角度
-        if (fabs(phase - phase_prev) > M_PI_2) {
+        if (fabsf(phase - phase_prev) > M_PI_2) {
             sweep_flag = false;
         }
         if (Foc_Sweep) {
@@ -428,6 +436,7 @@ static inline Park_t Foc_Update_SpeedMode(bool reset) {
     // 更新转速环
     Foc_Idq_Ref
         = Foc_Update_SpeedLoop(Foc_Speed_Ref, Foc_Speed_Fdbk, reset);
+
     // 更新电流环
     output = Foc_Update_CurrentLoop(Foc_Idq_Ref, Foc_Idq_Fdbk, reset);
 
@@ -455,9 +464,42 @@ Park_t Foc_Update_Main(void) {
         output = Foc_Update_SpeedMode(Foc_Reset);  // 转速模式
         break;
     }
+    case Identify: {
+        if (Experiment.Initialized == false) {
+            Experiment_Init(&Experiment,
+                            Foc_Current_Ts,
+                            SAMPLE_CAPACITY,
+                            REPEAT_TIMES,
+                            MAX_STEPS,
+                            3,
+                            12,
+                            1,
+                            100);
+            MTPA_build_table(
+                mtpa_table, MTPA_TABLE_POINTS, 0.0f, 50.0f);
+        } else if (Experiment.Complete == true) {
+            float ad0 = 0.0F, add = 0.0F, aq0 = 0.0F, aqq = 0.0F,
+                  adq = 0.0F;
+            Get_Identification_Results(
+                &Experiment, &ad0, &add, &aq0, &aqq, &adq);
+            MTPA_Get_Parameter(ad0, add, aq0, aqq, adq);
+            MTPA_build_table(
+                mtpa_table, MTPA_TABLE_POINTS, 0.0f, 50.0f);
+            Foc_Mode = IDLE;
+            break;
+        }
+        Foc_Idq_Fdbk = ParkTransform(Foc_Iclark_Fdbk, Foc_Theta);
+        Experiment_Step(&Experiment,
+                        Foc_Idq_Fdbk.d,
+                        Foc_Idq_Fdbk.q,
+                        &output.d,
+                        &output.q);
+        break;
+    }
     default: {
         output.d = 0.0F;  // 默认情况下，D轴电压参考为0
         output.q = 0.0F;  // Q轴电压参考为0
+
         break;
     }
     }

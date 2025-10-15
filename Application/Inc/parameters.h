@@ -51,7 +51,7 @@
 
 /* 主循环(电流环)频率配置 */
 #define MAIN_LOOP_FREQ                              \
-    (MCU_MAIN_FREQ / (MAIN_INT_TIMER_PRESCALER + 1) \
+    (MCU_MAIN_FREQ / (MAIN_INT_TIMER_PRESCALER + 1.0F) \
      / MAIN_INT_TIMER_PERIOD / 2)              /* 10kHz */
 #define MAIN_LOOP_TIME (1.0F / MAIN_LOOP_FREQ) /* 100us */
 

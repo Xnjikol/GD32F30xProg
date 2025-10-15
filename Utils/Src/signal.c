@@ -10,14 +10,17 @@
  * @param  Ts         采样周期 (s)
  * @retval None
  */
-void RampGenerator_Init(RampGenerator_t* ramp, float slope, float limit_min, float limit_max, float Ts)
-{
-  ramp->value = 0.0f;
-  ramp->slope = slope;
-  ramp->limit_min = limit_min;
-  ramp->limit_max = limit_max;
-  ramp->target = 0.0f;
-  ramp->Ts = Ts;
+void RampGenerator_Init(RampGenerator_t* ramp,
+                        float            slope,
+                        float            limit_min,
+                        float            limit_max,
+                        float            Ts) {
+    ramp->value     = 0.0f;
+    ramp->slope     = slope;
+    ramp->limit_min = limit_min;
+    ramp->limit_max = limit_max;
+    ramp->target    = 0.0f;
+    ramp->Ts        = Ts;
 }
 
 /**
@@ -29,13 +32,16 @@ void RampGenerator_Init(RampGenerator_t* ramp, float slope, float limit_min, flo
  * @param  Ts         采样周期 (s)
  * @retval None
  */
-void SineWave_Init(SineWave_t* sine, float amplitude, float frequency, float phase, float Ts)
-{
-  sine->amplitude = amplitude;
-  sine->frequency = frequency;
-  sine->phase = phase;
-  sine->theta = phase;
-  sine->Ts = Ts;
+void SineWave_Init(SineWave_t* sine,
+                   float       amplitude,
+                   float       frequency,
+                   float       phase,
+                   float       Ts) {
+    sine->amplitude = amplitude;
+    sine->frequency = frequency;
+    sine->phase     = phase;
+    sine->theta     = phase;
+    sine->Ts        = Ts;
 }
 
 /**
@@ -47,14 +53,17 @@ void SineWave_Init(SineWave_t* sine, float amplitude, float frequency, float pha
  * @param  Ts         采样周期 (s)
  * @retval None
  */
-void SquareWave_Init(SquareWave_t* square, float amplitude, float frequency, float duty_cycle, float Ts)
-{
-  square->amplitude = amplitude;
-  square->frequency = frequency;
-  square->duty_cycle = duty_cycle;
-  square->counter = 0.0f;
-  square->Ts = Ts;
-  square->state = false;
+void SquareWave_Init(SquareWave_t* square,
+                     float         amplitude,
+                     float         frequency,
+                     float         duty_cycle,
+                     float         Ts) {
+    square->amplitude  = amplitude;
+    square->frequency  = frequency;
+    square->duty_cycle = duty_cycle;
+    square->counter    = 0.0f;
+    square->Ts         = Ts;
+    square->state      = false;
 }
 
 /**
@@ -66,11 +75,14 @@ void SquareWave_Init(SquareWave_t* square, float amplitude, float frequency, flo
  * @param  Ts         采样周期 (s)
  * @retval None
  */
-void SawtoothWave_Init(SawtoothWave_t* sawtooth, float amplitude, float frequency, float offset, float Ts)
-{
-  sawtooth->amplitude = amplitude;
-  sawtooth->frequency = frequency;
-  sawtooth->offset = offset;
-  sawtooth->counter = 0.0f;
-  sawtooth->Ts = Ts;
+void SawtoothWave_Init(SawtoothWave_t* sawtooth,
+                       float           amplitude,
+                       float           frequency,
+                       float           offset,
+                       float           Ts) {
+    sawtooth->amplitude = amplitude;
+    sawtooth->frequency = frequency;
+    sawtooth->offset    = offset;
+    sawtooth->counter   = 0.0f;
+    sawtooth->Ts        = Ts;
 }

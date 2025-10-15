@@ -3,7 +3,6 @@
 #include <stddef.h>
 #include "adc.h"
 #include "can.h"
-#include "filter.h"
 #include "gpio.h"
 #include "motor.h"
 #include "position_sensor.h"
@@ -22,8 +21,9 @@ static inline bool can_receive_to_frame(
     const can_receive_message_struct* hw_msg, can_frame_t* frame);
 
 bool Peripheral_CANSend(const can_frame_t* frame) {
-    if (!frame || frame->dlc > 8)
+    if (!frame || frame->dlc > 8) {
         return false;
+    }
 
     can_transmit_message_struct tx_msg;
     tx_msg.tx_dlen = frame->dlc;
@@ -136,7 +136,7 @@ Phase_t Peripheral_Get_PhaseCurrent(void) {
     return current_phase;
 }
 
-AngleResult_t Peripheral_Update_Position() {
+AngleResult_t Peripheral_Update_Position(void) {
     uint16_t position_data = 0;
     ReadPositionSensor(&position_data);
 
@@ -170,8 +170,9 @@ void Peripheral_Reset_ProtectFlag(void) {
 
 static inline bool can_receive_to_frame(
     const can_receive_message_struct* hw_msg, can_frame_t* frame) {
-    if (!hw_msg || !frame)
+    if (!hw_msg || !frame) {
         return false;
+    }
 
     // 判断标准帧还是扩展帧
     if (hw_msg->rx_ff == CAN_FF_STANDARD) {

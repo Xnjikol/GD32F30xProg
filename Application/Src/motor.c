@@ -17,13 +17,13 @@ static float Motor_MotorPn_inv     = 0.0F;
 static float Motor_Position_Scale  = 0.0F;
 static float Motor_Position_Offset = 0.0F;
 static float Motor_Theta_Factor    = 0.0F;
+static float Motor_SampleFreq      = 0.0F;
+static float Motor_Position        = 0.0F;
+static float Motor_Theta_Elec      = 0.0F;
+static float Motor_Theta_Mech      = 0.0F;
+static float Motor_Speed           = 0.0F;
 
-static float    Motor_SampleFreq      = 0.0F;
-static uint16_t Motor_Speed_Prescaler = 0.0F;
-static uint16_t Motor_Position        = 0.0F;
-static float    Motor_Theta_Elec      = 0.0F;
-static float    Motor_Theta_Mech      = 0.0F;
-static float    Motor_Speed           = 0.0F;
+static uint16_t Motor_Speed_Prescaler = 0;
 
 static IIR1stFilter_t Motor_Speed_Filter = {0};
 
@@ -31,7 +31,7 @@ static inline void Motor_Update_Theta(void) {
     // 位置传感器数据处理
     float delta = Motor_Position - Motor_Position_Offset;
     if (delta < 0) {
-        delta += (float)(Motor_Position_Scale + 1);
+        delta += (Motor_Position_Scale + 1.0F);
     }
 
     Motor_Theta_Mech = delta * Motor_Theta_Factor;
