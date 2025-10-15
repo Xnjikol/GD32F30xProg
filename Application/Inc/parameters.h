@@ -50,7 +50,7 @@
     2000 /* 死区时间：2us (2us = 120MHz/12000/2*2000) */
 
 /* 主循环(电流环)频率配置 */
-#define MAIN_LOOP_FREQ                              \
+#define MAIN_LOOP_FREQ                                 \
     (MCU_MAIN_FREQ / (MAIN_INT_TIMER_PRESCALER + 1.0F) \
      / MAIN_INT_TIMER_PERIOD / 2)              /* 10kHz */
 #define MAIN_LOOP_TIME (1.0F / MAIN_LOOP_FREQ) /* 100us */
@@ -102,14 +102,14 @@
 #define PROTECT_VOLTAGE_FLUCTUATION 60.0F  /* 允许电压波动：±60V */
 
 /* 电流和温度保护参数 */
-#define PROTECT_CURRENT_MAX 23.0F /* 最大电流限制：23A */
+#define PROTECT_CURRENT_MAX 30.0F /* 最大电流限制：30A */
 #define PROTECT_TEMPERATURE 80.0F /* 最高温度限制：80℃ */
 
 /*********************************************************************/
 /*                        FOC控制参数配置                              */
 /*********************************************************************/
 /* 转速斜坡控制参数 */
-#define RAMP_SPEED_SLOPE     200.0F   /* 速度变化率限制：200 rpm/s */
+#define RAMP_SPEED_SLOPE     100.0F   /* 速度变化率限制：100 rpm/s */
 #define RAMP_SPEED_LIMIT_MAX 1800.0F  /* 最大转速限制：1800 rpm */
 #define RAMP_SPEED_LIMIT_MIN -1800.0F /* 最小转速限制：-1800 rpm */
 #define RAMP_SPEED_TIME      (SPEED_LOOP_TIME) /* 转速环采样周期 */
@@ -146,7 +146,7 @@
 #define PID_CURRENT_Q_LOOP_KD 0.00F         /* q轴微分系数 */
 
 /* q轴输出限制 */
-#define PID_CURRENT_Q_LOOP_MAX_OUTPUT 310.0F /* 最大输出电压：Udc/√3 */
+#define PID_CURRENT_Q_LOOP_MAX_OUTPUT 350.0F /* 最大输出电压：Udc/√3 */
 #define PID_CURRENT_Q_LOOP_MIN_OUTPUT \
     (-1.0F * PID_CURRENT_Q_LOOP_MAX_OUTPUT)
 #define PID_CURRENT_Q_LOOP_INTEGRAL_LIMIT \
@@ -161,10 +161,10 @@
 #define SENSORLESS_SWITCH_SPEED 460.0F /* 无传感器切换速度：460rpm */
 
 /* 无位置PLL跟踪器参数 */
-#define SENSORLESS_PLL_KP         50.0F   /* PLL比例系数 */
-#define SENSORLESS_PLL_KI         625.0F  /* PLL积分系数 */
-#define SENSORLESS_PLL_KD         0.0F    /* PLL微分系数 */
-#define SENSORLESS_PLL_MAX_OUTPUT 4000.0F /* PLL最大输出 */
+#define SENSORLESS_PLL_KP         50.0F  /* PLL比例系数 */
+#define SENSORLESS_PLL_KI         625.0F /* PLL积分系数 */
+#define SENSORLESS_PLL_KD         0.0F   /* PLL微分系数 */
+#define SENSORLESS_PLL_MAX_OUTPUT 500.0F /* PLL最大输出 */
 #define SENSORLESS_PLL_MIN_OUTPUT \
     (-1 * SENSORLESS_PLL_MAX_OUTPUT) /* PLL最小输出 */
 #define SENSORLESS_PLL_INTEGRAL_LIMIT \
