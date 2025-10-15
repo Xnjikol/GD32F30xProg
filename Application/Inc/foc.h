@@ -11,9 +11,9 @@ typedef enum {
     IDLE,
     VF_MODE,
     IF_MODE,
-    Speed,
+    SPEED,
     STARTUP,
-    space
+    IDENTIFY
 } FocMode_t;
 
 typedef struct {

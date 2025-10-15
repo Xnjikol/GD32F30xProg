@@ -74,7 +74,7 @@ bool Foc_Get_ResetFlag(void) {
 //         return true;
 //     }
 //     if (Foc_Mode == VF_MODE || Foc_Mode == IF_MODE
-//         || Foc_Mode == Speed) {
+//         || Foc_Mode == SPEED) {
 //         return Foc_Reset;  // 获取复位标志状态
 //     }
 //     return true;  // 在IDLE模式下始终返回true
@@ -460,11 +460,11 @@ Park_t Foc_Update_Main(void) {
         output.q = 0.0F;  // Q轴电压参考为0
         break;
     }
-    case Speed: {
+    case SPEED: {
         output = Foc_Update_SpeedMode(Foc_Reset);  // 转速模式
         break;
     }
-    case Identify: {
+    case IDENTIFY: {
         if (Experiment.Initialized == false) {
             Experiment_Init(&Experiment,
                             Foc_Current_Ts,

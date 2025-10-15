@@ -81,7 +81,7 @@ static inline void MainInt_Startup(void) {
     if (Sensorless_Get_Method() & FLYING) {
         Foc_Set_Mode(STARTUP);
     } else {
-        Foc_Set_Mode(Speed);
+        Foc_Set_Mode(SPEED);
     }
 }
 
