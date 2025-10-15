@@ -1,4 +1,5 @@
 #include "Initialization.h"
+#include "MTPA.h"
 #include "adc.h"
 #include "can.h"
 #include "com.h"
@@ -83,6 +84,8 @@ bool init_module_foc(void) {
                                 .target    = 0.0F,
                                 .value     = 0.0F};
     Foc_Set_Ramp_Speed_Handler(&ramp_cfg);
+
+    MTPA_build_table(mtpa_table, MTPA_TABLE_POINTS, 0.0f, 50.0f);
 
     return true;
 }

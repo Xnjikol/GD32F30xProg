@@ -18,7 +18,8 @@
 #include "transformation.h"
 #include <math.h>
 
-static bool  Sensorless_Enabled        = {0};
+static volatile bool Sensorless_Enabled = {0};
+
 static bool  Sensorless_Reset          = {0};
 static bool  Sensorless_Reset_Prev     = {0};
 static float Sensorless_Threshold_Hfi  = {0};
