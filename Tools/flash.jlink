@@ -4,7 +4,7 @@ if SWD
 speed 50000
 r
 halt
-loadfile build/GD32F303VCT6.elf
+loadfile build/GD32F30xProg.elf
 r
 go
 exit

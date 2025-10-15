@@ -27,6 +27,7 @@ static inline void MainInt_Check_ProtectFlag(void) {
     Foc_Set_ResetFlag(stop);
     stop = Foc_Get_ResetFlag();
     Peripheral_Set_Stop(stop);
+    Sensorless_Set_ResetFlag(stop);
 }
 
 static inline void MainInt_Update_BusVoltage(void) {
@@ -74,6 +75,14 @@ static inline void MainInt_Initialization(void) {
     }
     Peripheral_Reset_ProtectFlag();
     Foc_Set_Mode(IDLE);
+}
+
+static inline void MainInt_Startup(void) {
+    if (Sensorless_Get_Method() & FLYING) {
+        Foc_Set_Mode(STARTUP);
+    } else {
+        Foc_Set_Mode(Speed);
+    }
 }
 
 static inline void MainInt_Update_Sensorless(void) {
@@ -137,6 +146,13 @@ void Main_Int_Handler(void) {
 
     case RUNNING: {
         // 运行状态：正常FOC控制
+        MainInt_Run_Foc();
+        MainInt_Update_Sensorless();
+        break;
+    }
+
+    case SENSORLESS: {
+        MainInt_Startup();
         MainInt_Run_Foc();
         MainInt_Update_Sensorless();
         break;

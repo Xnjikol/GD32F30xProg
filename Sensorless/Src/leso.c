@@ -34,6 +34,7 @@ static float Leso_Error            = {0};
 
 static volatile float Leso_Theta_Err = {0};
 static volatile float Leso_Speed_Err = {0};
+static volatile float Leso_Int_limit = {0};
 
 static Clark_t Leso_Voltage = {0};
 static Clark_t Leso_Current = {0};
@@ -74,6 +75,8 @@ bool Leso_Initialization(const LESO_Param_t* param) {
     Leso_Lq     = param->Lq;
     Leso_InvLd  = 1.0F / Leso_Ld;
     Leso_InvLq  = 1.0F / Leso_Lq;
+
+    Leso_Int_limit = 1E25F;  // 积分限幅值
 
     return true;
 }
@@ -140,6 +143,16 @@ Clark_t Leso_Get_EmfEst(void) {
     return Leso_EmfEst;
 }
 
+static inline float clamp_f32(float val, float min, float max) {
+    if (val > max) {
+        return max;
+    }
+    if (val < min) {
+        return min;
+    }
+    return val;
+}
+
 void Leso_Update_Beta(void) {
     Leso_Wc = Leso_Gain * Leso_We;
     if (Leso_Wc > Leso_Wc_Max) {
@@ -152,11 +165,11 @@ void Leso_Update_Beta(void) {
     // 根据带宽计算观测器增益
     Leso_Beta1 = 2.0F * Leso_Wc;
     Leso_Beta2 = Leso_Wc * Leso_Wc;
+
+    Leso_InvLq = 1.0F / Leso_Lq;
 }
 
 void Leso_Update_EmfEstA(void) {
-    Leso_InvLq = 1.0F / Leso_Lq;
-
     // 更新电动势估计值
     static float leso_f1a  = 0.0F;
     float        leso_f0   = 0.0F;
@@ -167,9 +180,16 @@ void Leso_Update_EmfEstA(void) {
     leso_err = Leso_CurEst.a - Leso_Current.a;
     leso_f0  = -Leso_Current.a * Leso_Rs * Leso_InvLq;
     leso_b0u = Leso_Voltage.a * Leso_InvLq;
-    leso_f1a += -leso_err * Leso_Beta2 * Leso_SampleTime;
+    leso_f1a -= Leso_Beta2 * Leso_SampleTime * leso_err;
+
+    leso_f1a = clamp_f32(leso_f1a, -Leso_Int_limit, Leso_Int_limit);
+
     leso_dcur = leso_f0 + leso_b0u + leso_f1a - Leso_Beta1 * leso_err;
     Leso_CurEst.a += leso_dcur * Leso_SampleTime;
+
+    Leso_CurEst.a
+        = clamp_f32(Leso_CurEst.a, -Leso_Int_limit, Leso_Int_limit);
+
     Leso_EmfEst.a = -Leso_Lq * leso_f1a;
 }
 
@@ -184,9 +204,16 @@ void Leso_Update_EmfEstB(void) {
     leso_err = Leso_CurEst.b - Leso_Current.b;
     leso_f0  = -Leso_Current.b * Leso_Rs * Leso_InvLq;
     leso_b0u = Leso_Voltage.b * Leso_InvLq;
-    leso_f1b += -leso_err * Leso_Beta2 * Leso_SampleTime;
+    leso_f1b -= Leso_Beta2 * Leso_SampleTime * leso_err;
+
+    leso_f1b = clamp_f32(leso_f1b, -Leso_Int_limit, Leso_Int_limit);
+
     leso_dcur = leso_f0 + leso_b0u + leso_f1b - Leso_Beta1 * leso_err;
     Leso_CurEst.b += leso_dcur * Leso_SampleTime;
+
+    Leso_CurEst.b
+        = clamp_f32(Leso_CurEst.b, -Leso_Int_limit, Leso_Int_limit);
+
     Leso_EmfEst.b = -Leso_Lq * leso_f1b;
 }
 

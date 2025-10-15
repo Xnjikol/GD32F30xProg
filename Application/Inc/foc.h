@@ -12,7 +12,7 @@ typedef enum {
     VF_MODE,
     IF_MODE,
     Speed,
-    Identify,
+    STARTUP,
     space
 } FocMode_t;
 

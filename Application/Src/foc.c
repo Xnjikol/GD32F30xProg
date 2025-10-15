@@ -7,6 +7,7 @@
 #include "hardware_interface.h"
 
 static FocMode_t Foc_Mode            = IDLE;   // 当前FOC模式
+static FocMode_t Foc_Mode_Prev       = IDLE;   // 上一次FOC模式
 static bool      Foc_Reset           = false;  // FOC复位标志
 static float     Foc_Current_Ts      = 0.0F;   // 电流环采样周期
 static float     Foc_Current_Freq    = 0.0F;   // 电流环频率
@@ -18,10 +19,10 @@ static float     Foc_Speed_Fdbk      = 0.0F;   // 实际转速反馈
 static float     Foc_Theta           = 0.0F;
 static float     Foc_BusVoltage      = 0.0F;
 static float     Foc_BusVoltage_Inv  = 0.0F;
+static float     Foc_Speed_Ramp      = 0.0F;  // 实际指令转速
 
-static volatile float Foc_Speed_Ramp = 0.0F;  // 实际指令转速
-static volatile float Foc_Id_Min     = 0.3F;  // D轴电流最小值
-static volatile bool  Foc_Sweep      = true;  // FOC扫频标志
+static volatile float Foc_Id_Min = 0.3F;  // D轴电流最小值
+static volatile bool  Foc_Sweep  = true;  // FOC扫频标志
 
 static VF_Parameter_t  Foc_VfParam            = {0};
 static IF_Parameter_t  Foc_IfParam            = {0};
@@ -57,18 +58,24 @@ void Foc_Set_ResetFlag(bool reset) {
 }
 
 bool Foc_Get_ResetFlag(void) {
-    static FocMode_t last_mode = IDLE;
-    if (last_mode != Foc_Mode) {
-        // 防止意外切换模式
-        last_mode = Foc_Mode;
-        return true;
+    if (Foc_Mode == IDLE) {
+        return true;  // 在IDLE模式下始终返回true
     }
-    if (Foc_Mode == VF_MODE || Foc_Mode == IF_MODE
-        || Foc_Mode == Speed) {
-        return Foc_Reset;  // 获取复位标志状态
-    }
-    return true;  // 在IDLE模式下始终返回true
+    return Foc_Reset;  // 获取复位标志状态
 }
+
+// bool Foc_Get_ResetFlag(void) {
+//     if (Foc_Mode_Prev != Foc_Mode) {
+//         // 防止意外切换模式
+//         Foc_Mode_Prev = Foc_Mode;
+//         return true;
+//     }
+//     if (Foc_Mode == VF_MODE || Foc_Mode == IF_MODE
+//         || Foc_Mode == Speed) {
+//         return Foc_Reset;  // 获取复位标志状态
+//     }
+//     return true;  // 在IDLE模式下始终返回true
+// }
 
 void Foc_Set_Angle(float angle) {
     Foc_Theta = wrap_theta_2pi(angle);  // 确保角度在 [0, 2π) 范围内
@@ -437,6 +444,11 @@ Park_t Foc_Update_Main(void) {
     }
     case IF_MODE: {
         output = Foc_Update_IfMode(Foc_Reset);  // IF模式
+        break;
+    }
+    case STARTUP: {
+        output.d = 5.0F;  // D轴电压参考为5
+        output.q = 0.0F;  // Q轴电压参考为0
         break;
     }
     case Speed: {

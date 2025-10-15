@@ -26,7 +26,7 @@ extern "C" {
  * @brief 无传感器控制方法枚举
  */
 typedef enum {
-    METHOD_NONE  = 0, /*!< 无无传感器控制 */
+    FLYING       = 0, /*!< 无传感器控制初始辨识 */
     LES_OBSERVER = 1, /*!< 线性扩张状态观测器 */
     HF_INJECTION = 2, /*!< 高频注入 */
 } sensorless_method_t;
@@ -65,6 +65,14 @@ void Sensorless_Set_SpeedFdbk(float fdbk);
 void Sensorless_Set_SpeedRef(float ref);
 
 void Sensorless_Set_Angle(float angle);
+
+bool Sensorless_Set_ResetFlag(bool enabled);
+
+bool Sensorless_Get_Reset(void);
+
+bool Sensorless_Set_Method(sensorless_method_t method, bool enable);
+
+sensorless_method_t Sensorless_Get_Method(void);
 
 Clark_t Sensorless_Get_SmoEmf(void);
 
