@@ -27,6 +27,8 @@ bool Leso_Initialization(const LESO_Param_t* param);
 
 void Leso_Set_Pn(float inv_Pn);
 
+void Leso_Set_Inductor(Park_t inductance);
+
 void Leso_Set_SpeedFilter(float cutoff_freq, float sample_freq);
 
 void Leso_Set_Pid_Handler(PID_Handler_t config);

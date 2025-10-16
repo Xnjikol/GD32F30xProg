@@ -36,6 +36,7 @@ void      Foc_Set_ResetFlag(bool reset);
 bool      Foc_Get_ResetFlag(void);
 void      Foc_Set_BusVoltage(float voltage);
 float     Foc_Get_BusVoltage(void);
+Park_t    Foc_Get_Inductor(void);
 void      Foc_Set_BusVoltageInv(float voltage);
 void      Foc_Set_Angle(float angle);
 void      Foc_Set_Speed(float speed);
