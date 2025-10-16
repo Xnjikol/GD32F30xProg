@@ -12,7 +12,7 @@
 #include "hf_injection.h"
 #include <stdbool.h>
 #include <stddef.h>
-#include "arm_math.h" /* CMSIS-DSP math */ // IWYU pragma: export
+#include "arm_math.h" /* CMSIS-DSP math */  // IWYU pragma: export
 #include "filter.h"
 #include "reciprocal.h"
 #include "theta_calc.h"
@@ -163,7 +163,6 @@ Park_t Hfi_Get_Inject_Voltage(void) {
 }
 
 static inline float pll_update(float error, bool reset) {
-    static float hfi_theta_estimate = 0.0F;
     // 更新锁相环
     float omega = Pid_Update(error, reset, &Hfi_Theta_Pid);
     Hfi_Theta += omega * Hfi_SampleTime;
@@ -222,7 +221,7 @@ static inline float calculate_speed(float omega) {
 }
 
 void Hfi_Update(void) {
-    Hfi_Error = calculate_error(Hfi_IClarkResp, Hfi_Theta);
+    Hfi_Error   = calculate_error(Hfi_IClarkResp, Hfi_Theta);
     float omega = calculate_omega(Hfi_Error);
     Hfi_Speed   = calculate_speed(omega);
 }
