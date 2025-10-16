@@ -1,6 +1,8 @@
 #include "MTPA.h"
 #include <math.h>
-
+#include "theta_calc.h"
+#include "motor.h"
+#include "transformation.h"
 /*----------- 辅助宏 -----------*/
 #ifndef MIN
 #define MIN(a, b) (((a) < (b)) ? (a) : (b))
@@ -26,6 +28,9 @@ MTPA_Point mtpa_table[MTPA_TABLE_POINTS] = {0};
 static float a_d = 5.59756F, b_d = 5.15426F, m = 5.0F;
 static float a_q = 6.306F, b_q = 171.571F, n = 1.0F;
 static float c_coeff = 35.90F, h = 1.0F, j = 0.0F;
+
+static volatile Park_t MTPA_Inductor= {0};
+
 
 void MTPA_Get_Parameter(float ad0, float add, float aq0, float aqq, float adq)
 {
@@ -285,6 +290,11 @@ bool MTPA_compute_for_T(float T_req, MTPA_Point* out_p)
   out_p->gamma = best_gamma;
   out_p->Id = best_Id;
   out_p->Iq = best_Iq;
+
+  float psid = best_psi * cosf(best_gamma);
+  float psiq = best_psi * sinf(best_gamma);
+  out_p->Ld = (psid / best_Id);
+  out_p->Lq = (psiq / best_Iq);
   out_p->valid = true;
   return true;
 }
@@ -306,6 +316,8 @@ void MTPA_build_table(MTPA_Point table[], int n_points, float T_min, float T_max
       table[k].gamma = 0.0f;
       table[k].Id = 0.5f;
       table[k].Iq = 0.0f;
+      table[k].Ld = 0.25f;
+      table[k].Lq = 0.09f;
       table[k].valid = true;
     }
     else
@@ -321,6 +333,8 @@ void MTPA_build_table(MTPA_Point table[], int n_points, float T_min, float T_max
         table[k].gamma = 0.0f;
         table[k].Id = 0.0f;
         table[k].Iq = 0.0f;
+        table[k].Ld = 0.0f;
+        table[k].Lq = 0.0f;
       }
       else
       {
@@ -350,5 +364,14 @@ void MTPA_interp_by_Iq(const MTPA_Point table[], int n_points, float Iq_ref, flo
   if (i >= n_points - 1) i = n_points - 2;
   float w = (Iq_ref - table[i].Iq) / (table[i + 1].Iq - table[i].Iq + 1e-9f);
   *Id_ref = table[i].Id + w * (table[i + 1].Id - table[i].Id);
+  MTPA_Inductor.d = table[i].Ld  + w * (table[i + 1].Ld - table[i].Ld);
+  MTPA_Inductor.q = table[i].Lq  + w * (table[i + 1].Lq - table[i].Lq);
+
+
   *Iq_out = Iq_ref;  // 或者也插值Iq
+}
+
+Park_t Mtpa_Get_LPark(void) 
+{ 
+return MTPA_Inductor;
 }
