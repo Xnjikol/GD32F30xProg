@@ -89,7 +89,7 @@ static inline void MainInt_Startup(void) {
 static inline void MainInt_Update_Sensorless(void) {
     Clark_t voltage = {0};
     Park_t  ref     = {0};
-    Park_t induc=Foc_Get_Inductor();
+    Park_t induc = Foc_Get_Inductor();
     Leso_Set_Inductor(induc);
 
     voltage = Foc_Get_Uclark_Ref();
