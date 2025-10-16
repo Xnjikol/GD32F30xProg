@@ -24,6 +24,7 @@ static float Leso_Prescaler        = {0};
 static float Leso_Pn               = {0};
 static float Leso_InvPn            = {0};
 static float Leso_Gain             = {0};
+static float Leso_Factor           = {0};
 static float Leso_Wc               = {0};
 static float Leso_Wc_Min           = {0};
 static float Leso_Wc_Max           = {0};
@@ -76,7 +77,7 @@ bool Leso_Initialization(const LESO_Param_t* param) {
     Leso_InvLd  = 1.0F / Leso_Ld;
     Leso_InvLq  = 1.0F / Leso_Lq;
 
-    Leso_Int_limit = 1E25F;  // 积分限幅值
+    Leso_Int_limit = 1E35F;  // 积分限幅值
 
     return true;
 }
@@ -84,6 +85,16 @@ bool Leso_Initialization(const LESO_Param_t* param) {
 void Leso_Set_Pn(float pole_pairs) {
     Leso_Pn    = pole_pairs;
     Leso_InvPn = 1.0F / pole_pairs;
+}
+
+void Leso_Set_Inductor(Park_t inductance) {
+    float leso_Ld  = inductance.d <= 0.001 ? 0.001 : inductance.d;
+    float leso_Lq  = inductance.q <= 0.001 ? 0.001 : inductance.q;
+    float leso_InvLd = 1.0F / leso_Ld;
+    float leso_InvLq = 1.0F / leso_Lq;
+    Park_t Idq=ParkTransform(Leso_Current,Leso_Theta);
+    float temp=(leso_Ld-leso_Lq)/leso_Ld*Idq.q;
+    SQRT(temp,&Leso_Factor);
 }
 
 void Leso_Set_SpeedFilter(float cutoff_freq, float sample_freq) {
@@ -154,7 +165,7 @@ static inline float clamp_f32(float val, float min, float max) {
 }
 
 void Leso_Update_Beta(void) {
-    Leso_Wc = Leso_Gain * Leso_We;
+    Leso_Wc = Leso_Gain * Leso_Factor * Leso_We;
     if (Leso_Wc > Leso_Wc_Max) {
         Leso_Wc = Leso_Wc_Max;
     }
@@ -224,19 +235,19 @@ void Leso_Update_EmfEstB(void) {
 //     return theta + comp;
 // }
 
-// static inline float pll_update(float error, bool reset) {
-//     // 更新锁相环
-//     float omega = Pid_Update(error, reset, &Leso_Theta_PID);
-//     Leso_Theta += omega * Leso_SampleTime;
-//     if (Leso_Theta > M_2PI) {
-//         Leso_Theta -= M_2PI;
-//     }
-//     if (Leso_Theta < 0.0F) {
-//         Leso_Theta += M_2PI;
-//     }
-//     Leso_Theta = wrap_theta_2pi(Leso_Theta);
-//     return omega;
-// }
+static inline float pll_update(float error, bool reset) {
+    // 更新锁相环
+    float omega = Pid_Update(error, reset, &Leso_Theta_PID);
+    Leso_Theta += omega * Leso_SampleTime;
+    if (Leso_Theta > M_2PI) {
+        Leso_Theta -= M_2PI;
+    }
+    if (Leso_Theta < 0.0F) {
+        Leso_Theta += M_2PI;
+    }
+    Leso_Theta = wrap_theta_2pi(Leso_Theta);
+    return omega;
+}
 
 static inline float calculate_error(Clark_t emf, float angle) {
     float angleErr   = 0.0F;
@@ -265,24 +276,24 @@ static inline float calculate_error(Clark_t emf, float angle) {
     return angleErr;
 }
 
-// static inline float calculate_speed(float omega) {
-//     static uint16_t leso_count = 0x0000U;
-//     static float    leso_integ = 0.0F;
-//     float           speed      = 0.0F;
-//     leso_integ += radps2rpm(omega) * Leso_InvPn * 0.1F;
-//     leso_count++;
-//     if (leso_count < 0x000AU) {
-//         return Leso_Speed;
-//     }
-//     leso_count = 0x0000U;
-//     speed      = IIR1stFilter_Update(&Leso_Speed_Filter, leso_integ);
-//     leso_integ = 0.0F;
-//     return speed;
-// }
+static inline float calculate_speed(float omega) {
+    static uint16_t leso_count = 0x0000U;
+    static float    leso_integ = 0.0F;
+    float           speed      = 0.0F;
+    leso_integ += radps2rpm(omega) * Leso_InvPn * 0.1F;
+    leso_count++;
+    if (leso_count < 0x000AU) {
+        return Leso_Speed;
+    }
+    leso_count = 0x0000U;
+    speed      = IIR1stFilter_Update(&Leso_Speed_Filter, leso_integ);
+    leso_integ = 0.0F;
+    return speed;
+}
 
 void Leso_Update(void) {
     Leso_Error = calculate_error(Leso_EmfEst, Leso_Theta);
     // 计算电动势的相位角
-    // float omega = pll_update(Leso_Error, !Leso_Enabled);
-    // Leso_Speed  = calculate_speed(omega);
+    float omega = pll_update(Leso_Error, !Leso_Enabled);
+    Leso_Speed  = calculate_speed(omega);
 }

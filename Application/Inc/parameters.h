@@ -184,19 +184,19 @@
 #define HFI_LOW_PASS_CUTOFF_FREQ 100.0F /* 误差信号截止频率：100Hz */
 
 /* 高频注入PLL跟踪器参数 */
-#define HFI_PLL_KP             12E2F  /* PLL比例系数 */
-#define HFI_PLL_KI             40E3F  /* PLL积分系数 */
+#define HFI_PLL_KP             50.0F  /* PLL比例系数 */
+#define HFI_PLL_KI             625.0F /* PLL积分系数 */
 #define HFI_PLL_KD             0.0F   /* PLL微分系数 */
 #define HFI_PLL_MAX_OUTPUT     500.0F /* PLL最大输出 */
 #define HFI_PLL_MIN_OUTPUT     (-1 * HFI_PLL_MAX_OUTPUT) /* PLL最小输出 */
 #define HFI_PLL_INTEGRAL_LIMIT HFI_PLL_MAX_OUTPUT /* PLL积分限幅值 */
 
 /* LESO参数 */
-#define LESO_WC_GAIN 10.0F   /* 观测器带宽系数 */
+#define LESO_WC_GAIN 6.5F    /* 观测器带宽系数 */
 #define LESO_WC_MAX  3140.0F /* 观测器带宽最大值 */
 #define LESO_WC_MIN  2000.0F /* 观测器带宽最小值 */
 
-/* 滑模观测器PLL跟踪器参数 */
+/* LESO观测器PLL跟踪器参数 */
 #define SMO_PLL_KP             600.0F  /* PLL比例系数 */
 #define SMO_PLL_KI             90E3F   /* PLL积分系数 */
 #define SMO_PLL_KD             0.0F    /* PLL微分系数 */
