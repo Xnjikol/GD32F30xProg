@@ -27,7 +27,7 @@ bool Initialization_Modules(void);
  * @retval true  - 初始化成功
  * @retval false - 初始化失败
  */
-bool Imitialization_MTPA(void);
+bool Initialization_MTPA(void);
 
 /**
  * @brief  执行所有初始化过程

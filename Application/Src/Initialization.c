@@ -85,8 +85,6 @@ bool init_module_foc(void) {
                                 .value     = 0.0F};
     Foc_Set_Ramp_Speed_Handler(&ramp_cfg);
 
-    
-
     return true;
 }
 
@@ -232,7 +230,7 @@ static inline void init_exti(void) {
     exti_interrupt_flag_clear(EXTI_7);
 }
 
-bool Imitialization_MTPA(void){
+bool Initialization_MTPA(void) {
     MTPA_build_table(mtpa_table, MTPA_TABLE_POINTS, 0.0f, 50.0f);
     return true;
 }
