@@ -94,6 +94,7 @@ void Leso_Set_Inductor(Park_t inductance) {
     float leso_InvLq = 1.0F / leso_Lq;
     Park_t Idq=ParkTransform(Leso_Current,Leso_Theta);
     float temp=(leso_Ld-leso_Lq)/leso_Ld*Idq.q;
+    if (temp < 0.0f) temp = 0.0f;
     SQRT(temp,&Leso_Factor);
 }
 
