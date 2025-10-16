@@ -68,7 +68,7 @@
 #define MOTOR_RS   0.65F   /* 定子电阻：0.65 Ω */
 #define MOTOR_LD   100E-3F /* d轴电感：100 mH */
 #define MOTOR_LQ   16E-3F  /* q轴电感：16 mH */
-#define MOTOR_FLUX 0.1F    /* 永磁体磁链：0.1 Wb */
+#define MOTOR_FLUX 0.0F    /* 永磁体磁链：0.1 Wb */
 #define MOTOR_PN   2.0F    /* 电机极对数：2 */
 
 /* 位置传感器配置 */
@@ -89,7 +89,7 @@
 #ifdef ENCODER_POSITION
 #    define MOTOR_THETA_FACTOR \
         (M_2PI / (float)(MOTOR_POSITION_SCALE + 1))
-#    define MOTOR_POSITION_OFFSET 9210.0F /* 位置传感器零点偏置 */
+#    define MOTOR_POSITION_OFFSET 4260.0F /* 位置传感器零点偏置 */
 #endif
 
 #define MOTOR_RESOLVER_PN 1.0F /* 旋变极对数 */

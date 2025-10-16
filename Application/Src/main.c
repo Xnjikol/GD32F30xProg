@@ -11,6 +11,7 @@ bool pin = false;
 */
 int main(void) {
     Initialization_Drivers();
+    Imitialization_MTPA();
     while (1) {
         COM_CANProtocol();
         COM_SCIProtocol();
