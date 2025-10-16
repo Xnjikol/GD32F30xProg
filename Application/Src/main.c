@@ -3,7 +3,6 @@
 #include "com.h"
 #include "hardware_interface.h"
 
-
 bool pin = false;
 
 /*!
@@ -11,6 +10,7 @@ bool pin = false;
 */
 int main(void) {
     Initialization_Drivers();
+    Initialization_MTPA();
     while (1) {
         COM_CANProtocol();
         COM_SCIProtocol();

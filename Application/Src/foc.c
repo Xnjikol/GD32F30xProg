@@ -92,6 +92,10 @@ float Foc_Get_BusVoltage(void) {
     return Foc_BusVoltage;  // 获取母线电压
 }
 
+Park_t Foc_Get_Inductor(void) {
+    return Mtpa_Get_LPark();  // 获取电感
+}
+
 void Foc_Set_BusVoltageInv(float voltage) {
     Foc_BusVoltage_Inv = voltage;  // 设置母线电压倒数
 }
@@ -328,6 +332,14 @@ static inline Park_t Foc_Update_SpeedLoop(float ref,
     float  ramp    = RampGenerator(&Foc_Ramp_Speed_Handler, reset);
     Foc_Speed_Ramp = ramp;
     output.q = Pid_Update(ramp - fdbk, reset, &Foc_Pid_Speed_Handler);
+#if defined(FOC_DEBUG_IQ)
+    static float iqtest = 0;
+    iqtest              = iqtest + 0.0002F;
+    if (iqtest > 21.0F) {
+        iqtest = 0.0F;
+    }
+    output.q = iqtest;
+#endif
     output.d = dispatch_current(output.q);
 
     return output;  // 返回DQ轴电流参考

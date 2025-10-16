@@ -9,6 +9,8 @@
 #define COS(x) arm_cos_f32(x)
 #define SIN(x) arm_sin_f32(x)
 
+#include "transformation.h"
+
 #ifdef __cplusplus
 extern "C"
 {
@@ -36,6 +38,8 @@ extern "C"
     float gamma; /* 最优角度（rad） */
     float Id;    /* d轴电流 */
     float Iq;    /* q轴电流 */
+    float Ld;     /* 对应的 Ld */
+    float Lq;     /* 对应的 Lq */
     bool valid;  /* 是否找到可行解 */
   } MTPA_Point;
 
@@ -50,6 +54,8 @@ extern "C"
      给定目标 Iq_ref，得到 Id_ref（用于实时控制环） */
   void MTPA_interp_by_Iq(const MTPA_Point table[], int n_points, float Iq_ref, float* Id_ref,
                          float* Iq_out);
+
+  Park_t Mtpa_Get_LPark(void);
 
 #ifdef __cplusplus
 }

@@ -68,7 +68,7 @@
 #define MOTOR_RS   0.65F   /* 定子电阻：0.65 Ω */
 #define MOTOR_LD   100E-3F /* d轴电感：100 mH */
 #define MOTOR_LQ   16E-3F  /* q轴电感：16 mH */
-#define MOTOR_FLUX 0.1F    /* 永磁体磁链：0.1 Wb */
+#define MOTOR_FLUX 0.0F    /* 永磁体磁链：0.1 Wb */
 #define MOTOR_PN   2.0F    /* 电机极对数：2 */
 
 /* 位置传感器配置 */
@@ -89,7 +89,7 @@
 #ifdef ENCODER_POSITION
 #    define MOTOR_THETA_FACTOR \
         (M_2PI / (float)(MOTOR_POSITION_SCALE + 1))
-#    define MOTOR_POSITION_OFFSET 9210.0F /* 位置传感器零点偏置 */
+#    define MOTOR_POSITION_OFFSET 4260.0F /* 位置传感器零点偏置 */
 #endif
 
 #define MOTOR_RESOLVER_PN 1.0F /* 旋变极对数 */
@@ -184,19 +184,19 @@
 #define HFI_LOW_PASS_CUTOFF_FREQ 100.0F /* 误差信号截止频率：100Hz */
 
 /* 高频注入PLL跟踪器参数 */
-#define HFI_PLL_KP             12E2F  /* PLL比例系数 */
-#define HFI_PLL_KI             40E3F  /* PLL积分系数 */
+#define HFI_PLL_KP             50.0F  /* PLL比例系数 */
+#define HFI_PLL_KI             625.0F /* PLL积分系数 */
 #define HFI_PLL_KD             0.0F   /* PLL微分系数 */
 #define HFI_PLL_MAX_OUTPUT     500.0F /* PLL最大输出 */
 #define HFI_PLL_MIN_OUTPUT     (-1 * HFI_PLL_MAX_OUTPUT) /* PLL最小输出 */
 #define HFI_PLL_INTEGRAL_LIMIT HFI_PLL_MAX_OUTPUT /* PLL积分限幅值 */
 
 /* LESO参数 */
-#define LESO_WC_GAIN 10.0F   /* 观测器带宽系数 */
+#define LESO_WC_GAIN 6.5F    /* 观测器带宽系数 */
 #define LESO_WC_MAX  3140.0F /* 观测器带宽最大值 */
 #define LESO_WC_MIN  2000.0F /* 观测器带宽最小值 */
 
-/* 滑模观测器PLL跟踪器参数 */
+/* LESO观测器PLL跟踪器参数 */
 #define SMO_PLL_KP             600.0F  /* PLL比例系数 */
 #define SMO_PLL_KI             90E3F   /* PLL积分系数 */
 #define SMO_PLL_KD             0.0F    /* PLL微分系数 */

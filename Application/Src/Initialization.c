@@ -85,8 +85,6 @@ bool init_module_foc(void) {
                                 .value     = 0.0F};
     Foc_Set_Ramp_Speed_Handler(&ramp_cfg);
 
-    MTPA_build_table(mtpa_table, MTPA_TABLE_POINTS, 0.0f, 50.0f);
-
     return true;
 }
 
@@ -230,6 +228,11 @@ static inline void init_exti(void) {
     gpio_exti_source_select(GPIO_PORT_SOURCE_GPIOB, GPIO_PIN_SOURCE_7);
     exti_init(EXTI_7, EXTI_INTERRUPT, EXTI_TRIG_FALLING);
     exti_interrupt_flag_clear(EXTI_7);
+}
+
+bool Initialization_MTPA(void) {
+    MTPA_build_table(mtpa_table, MTPA_TABLE_POINTS, 0.0f, 50.0f);
+    return true;
 }
 
 bool Initialization_Drivers(void) {

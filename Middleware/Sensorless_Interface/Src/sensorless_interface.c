@@ -178,6 +178,11 @@ bool Sensorless_Calculate_Err(AngleResult_t result) {
 
     error = wrap_theta_2pi(theta - Sensorless_ThetaEst + PI) - PI;
     Sensorless_ThetaErr = rad2deg(error);
+    if (Sensorless_ThetaErr > 90.0F) {
+        Sensorless_ThetaErr -= 180.0F;
+    } else if (Sensorless_ThetaErr < -90.0F) {
+        Sensorless_ThetaErr += 180.0F;
+    }
     Sensorless_SpeedErr = speed - Sensorless_SpeedEst;
 
     Hfi_Calc_ThetaErr(theta);
@@ -242,30 +247,33 @@ AngleResult_t Sensorless_Update_Position(void) {
     float error = 0.0F;
     float omega = 0.0F;
     float speed = 0.0F;
-    if (fabsf(Sensorless_SpeedRef) >= Sensorless_Switch_Speed) {
-        if (fabsf(Sensorless_SpeedFdbk) >= Sensorless_Switch_Speed) {
-            Sensorless_Method = LES_OBSERVER;
-            error             = Leso_Get_PllErr();
-        } else {
-            Sensorless_Method = HF_INJECTION;
-            error             = Hfi_Get_PllErr();
-        }
-    } else {
-        if (fabsf(Sensorless_SpeedFdbk) <= Sensorless_Switch_Speed) {
-            Sensorless_Method = HF_INJECTION;
-            error             = Hfi_Get_PllErr();
-        } else {
-            Sensorless_Method = LES_OBSERVER;
-            error             = Leso_Get_PllErr();
-        }
-    }
+    // if (fabsf(Sensorless_SpeedRef) >= Sensorless_Switch_Speed) {
+    //     if (fabsf(Sensorless_SpeedFdbk) >= Sensorless_Switch_Speed) {
+    //         Sensorless_Method = LES_OBSERVER;
+    //         error             = Leso_Get_PllErr();
+    //     } else {
+    //         Sensorless_Method = HF_INJECTION;
+    //         error             = Hfi_Get_PllErr();
+    //     }
+    // } else {
+    //     if (fabsf(Sensorless_SpeedFdbk) <= Sensorless_Switch_Speed) {
+    //         Sensorless_Method = HF_INJECTION;
+    //         error             = Hfi_Get_PllErr();
+    //     } else {
+    //         Sensorless_Method = LES_OBSERVER;
+    //         error             = Leso_Get_PllErr();
+    //     }
+    // }
+    AngleResult_t leso_result = {0};
+    AngleResult_t hfi_result  = {0};
+    leso_result               = Leso_Get_Result();
+    hfi_result                = Hfi_Get_Result();
+    // omega = pll_update(error, Sensorless_Reset);
+    // speed = calculate_speed(omega);
 
-    omega = pll_update(error, Sensorless_Reset);
-    speed = calculate_speed(omega);
-
-    Leso_Set_Theta(Sensorless_ThetaEst);
-    Leso_Set_Speed(speed);
-    Hfi_Set_Theta(Sensorless_ThetaEst);
+    // Leso_Set_Theta(Sensorless_ThetaEst);
+    // Leso_Set_Speed(speed);
+    // Hfi_Set_Theta(Sensorless_ThetaEst);
 
     return (AngleResult_t){
         .speed = Sensorless_SpeedEst,
