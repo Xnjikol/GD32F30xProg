@@ -141,12 +141,12 @@ bool init_module_smo(void) {
 
     Leso_Set_Pn(MOTOR_PN);
 
-    PID_Handler_t smo_pid = {.Kp            = SMO_PLL_KP,
-                             .Ki            = SMO_PLL_KI,
-                             .Kd            = SMO_PLL_KD,
-                             .MaxOutput     = SMO_PLL_MAX_OUTPUT,
-                             .MinOutput     = SMO_PLL_MIN_OUTPUT,
-                             .IntegralLimit = SMO_PLL_INTEGRAL_LIMIT,
+    PID_Handler_t smo_pid = {.Kp            = LESO_PLL_KP,
+                             .Ki            = LESO_PLL_KI,
+                             .Kd            = LESO_PLL_KD,
+                             .MaxOutput     = LESO_PLL_MAX_OUTPUT,
+                             .MinOutput     = LESO_PLL_MIN_OUTPUT,
+                             .IntegralLimit = LESO_PLL_INTEGRAL_LIMIT,
                              .Ts            = MAIN_LOOP_TIME};
     Leso_Set_Pid_Handler(smo_pid);
 

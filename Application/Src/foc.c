@@ -313,8 +313,8 @@ static inline float dispatch_current(float cur_ref) {
     // float out = 0.0003497F * cur_ref * cur_ref * cur_ref - 0.02016F * cur_ref * cur_ref +
     //             0.7335F * cur_ref + 0.6032F;  // 三次函数拟合
     float out = 0.0F;
-    MTPA_interp_by_Iq(
-        mtpa_table, MTPA_TABLE_POINTS, cur_ref, &out, NULL);
+    // MTPA_interp_by_Iq(
+    //     mtpa_table, MTPA_TABLE_POINTS, cur_ref, &out, NULL);
     return out;
 }
 
