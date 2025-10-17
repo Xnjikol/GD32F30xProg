@@ -1,4 +1,5 @@
 #include "Initialization.h"
+#include "Buffer.h"
 #include "MTPA.h"
 #include "adc.h"
 #include "can.h"
@@ -34,7 +35,8 @@ MotorParam_t motor_param = {.Rs              = MOTOR_RS,
                             .Position_Scale  = MOTOR_POSITION_SCALE,
                             .theta_factor    = MOTOR_THETA_FACTOR};
 
-bool init_module_foc(void) {
+bool init_module_foc(void)
+{
     Foc_Set_SampleTime(&sys_time_cfg);
 
     Foc_Set_ResetFlag(true);  // 初始为复位状态
@@ -88,7 +90,14 @@ bool init_module_foc(void) {
     return true;
 }
 
-bool init_module_motor(void) {
+bool init_module_buffer(void)
+{
+    Buffer_Init(BUFFER_CAPACITY, BUFFER_PRESCALER);
+    return true;
+}
+
+bool init_module_motor(void)
+{
     Motor_Initialization(&motor_param);
     Motor_Set_SampleTime(&sys_time_cfg);
     Motor_Set_SpeedPrescaler(SPEED_LOOP_PRESCALER);
@@ -96,7 +105,8 @@ bool init_module_motor(void) {
     return true;
 }
 
-bool init_module_protect(void) {
+bool init_module_protect(void)
+{
     Protect_Parameter_t protect_param
         = {.Udc_rate        = PROTECT_VOLTAGE_RATE,
            .Udc_fluctuation = PROTECT_VOLTAGE_FLUCTUATION,
@@ -106,7 +116,8 @@ bool init_module_protect(void) {
     return Protect_Initialization(&protect_param);
 }
 
-bool init_module_sensorless(void) {
+bool init_module_sensorless(void)
+{
     Sensorless_Param_t sensorless_param
         = {.switch_speed = SENSORLESS_SWITCH_SPEED,
            .hysteresis   = SENSORLESS_HYSTERESIS};
@@ -128,7 +139,8 @@ bool init_module_sensorless(void) {
     return true;
 }
 
-bool init_module_smo(void) {
+bool init_module_smo(void)
+{
     Leso_Set_SampleTime(&sys_time_cfg);
 
     LESO_Param_t smo_param = {.wc_gain = LESO_WC_GAIN,
@@ -156,7 +168,8 @@ bool init_module_smo(void) {
     return true;
 }
 
-bool init_module_hfi(void) {
+bool init_module_hfi(void)
+{
     Hfi_Set_SampleTime(&sys_time_cfg);
 
     hf_injection_params_t hfi_param
@@ -181,8 +194,10 @@ bool init_module_hfi(void) {
     return true;
 }
 
-bool Initialization_Modules(void) {
+bool Initialization_Modules(void)
+{
     init_module_foc();
+    init_module_buffer();
     init_module_protect();
     init_module_motor();
     init_module_sensorless();
@@ -192,12 +207,14 @@ bool Initialization_Modules(void) {
 }
 
 /* open fan and relay */
-static inline void init_fan_relay(void) {
+static inline void init_fan_relay(void)
+{
     gpio_bit_set(SOFT_OPEN_PORT, SOFT_OPEN_PIN);
     // gpio_bit_set(FAN_OPEN_PORT, FAN_OPEN_PIN);
 }
 
-static inline void init_dwt(void) {
+static inline void init_dwt(void)
+{
     CoreDebug->DEMCR |= CoreDebug_DEMCR_TRCENA_Msk;  // 使能DWT模块
     DWT->CYCCNT = 0;                                 // 清零
     DWT->CTRL |= DWT_CTRL_CYCCNTENA_Msk;             // 启用CYCCNT
@@ -209,7 +226,8 @@ static inline void init_dwt(void) {
     \param[out] none
     \retval     none
 */
-static inline void init_nvic(void) {
+static inline void init_nvic(void)
+{
     // 设置中断优先级分组
     nvic_priority_group_set(NVIC_PRIGROUP_PRE2_SUB2);
     nvic_irq_enable(TIMER0_BRK_IRQn, 0, 0);
@@ -224,18 +242,21 @@ static inline void init_nvic(void) {
     adc_interrupt_enable(ADC0, ADC_INT_EOIC);
 }
 
-static inline void init_exti(void) {
+static inline void init_exti(void)
+{
     gpio_exti_source_select(GPIO_PORT_SOURCE_GPIOB, GPIO_PIN_SOURCE_7);
     exti_init(EXTI_7, EXTI_INTERRUPT, EXTI_TRIG_FALLING);
     exti_interrupt_flag_clear(EXTI_7);
 }
 
-bool Initialization_MTPA(void) {
+bool Initialization_MTPA(void)
+{
     MTPA_build_table(mtpa_table, MTPA_TABLE_POINTS, 0.0f, 50.0f);
     return true;
 }
 
-bool Initialization_Drivers(void) {
+bool Initialization_Drivers(void)
+{
     systick_config();  // systick provides delay_ms
     TIM1_Init();       // TIM1 provides delay_us
     init_dwt();

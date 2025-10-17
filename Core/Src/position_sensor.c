@@ -17,7 +17,8 @@ static inline uint8_t spi_send_receive_byte(uint32_t spi_periph,
 static inline void Encoder_Init(void);
 #endif
 
-void Position_Sensor_Init(void) {
+void Position_Sensor_Init(void)
+{
 #ifdef Resolver_Position
     SPI_Init();
     AD2S1210_Init();
@@ -28,8 +29,10 @@ void Position_Sensor_Init(void) {
 }
 
 #ifdef Resolver_Position
-void ReadPositionSensor(uint16_t* position_data) {
-    if (AD2S1210_Ready == SUCCESS) {
+void ReadPositionSensor(uint16_t* position_data)
+{
+    if (AD2S1210_Ready == SUCCESS)
+    {
         gpio_bit_reset(SAMPLEPORT, SAMPLEPin);  // Reset SAMPLE
         delay_us(1);
         gpio_bit_reset(WRPORT, WRPin);  // Reset WR
@@ -43,19 +46,23 @@ void ReadPositionSensor(uint16_t* position_data) {
         Resolver_Fault = Fault;
         gpio_bit_set(WRPORT, WRPin);          // Set WR
         gpio_bit_set(SAMPLEPORT, SAMPLEPin);  // Set SAMPLE
-    } else {
+    }
+    else
+    {
         *position_data = 0;     // If not ready, set position data to 0
         Resolver_Fault = 0xFF;  // All fault if not ready
     }
 }
 #endif
 #ifdef Encoder_Position
-void ReadPositionSensor(uint16_t* position_data) {
+void ReadPositionSensor(uint16_t* position_data)
+{
     *position_data = TIMER_CNT(TIMER3);
 }
 #endif
 #ifdef Resolver_Position
-static inline void SPI_Init(void) {
+static inline void SPI_Init(void)
+{
     spi_parameter_struct spi_init_struct;
     /* SPI2 use CK_APB1(60M) */
     rcu_periph_clock_enable(RCU_GPIOB);
@@ -88,7 +95,8 @@ static inline void SPI_Init(void) {
     spi_enable(SPI2);
 }
 
-static inline void AD2S1210_Init(void) {
+static inline void AD2S1210_Init(void)
+{
     gpio_init(A0PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, A0Pin);
     gpio_init(A1PORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, A1Pin);
     gpio_init(RESETPORT, GPIO_MODE_OUT_PP, GPIO_OSPEED_50MHZ, RESETPin);
@@ -139,9 +147,12 @@ static inline void AD2S1210_Init(void) {
     delay_us(5);
 
     if (Excitation_Frequency
-        == spi_send_receive_byte(SPI2, CONTROL_REG)) {
+        == spi_send_receive_byte(SPI2, CONTROL_REG))
+    {
         AD2S1210_Config = SUCCESS;
-    } else {
+    }
+    else
+    {
         AD2S1210_Config &= ERROR;
     }
     gpio_bit_set(WRPORT, WRPin);  // Set WR
@@ -159,10 +170,12 @@ static inline void AD2S1210_Init(void) {
     // # Use the ERROR Register to read back Data and exit #//
     gpio_bit_reset(WRPORT, WRPin);  // Reset WR
     delay_us(5);
-    if (Control_Register_Data
-        == spi_send_receive_byte(SPI2, ERROR_REG)) {
+    if (Control_Register_Data == spi_send_receive_byte(SPI2, ERROR_REG))
+    {
         AD2S1210_Config &= SUCCESS;
-    } else {
+    }
+    else
+    {
         AD2S1210_Config &= ERROR;
     }
     gpio_bit_set(WRPORT, WRPin);  // Set WR
@@ -173,13 +186,15 @@ static inline void AD2S1210_Init(void) {
     gpio_bit_reset(A0PORT, A0Pin);
     gpio_bit_reset(A1PORT, A1Pin);
 
-    if (AD2S1210_Config == SUCCESS) {
+    if (AD2S1210_Config == SUCCESS)
+    {
         AD2S1210_Ready = SUCCESS;
     }
 }
 
 static inline uint8_t spi_send_receive_byte(uint32_t spi_periph,
-                                            uint8_t  byte) {
+                                            uint8_t  byte)
+{
     /* 等待发送缓冲区空 */
     while (RESET == spi_i2s_flag_get(spi_periph, SPI_FLAG_TBE))
         ;
@@ -196,7 +211,8 @@ static inline uint8_t spi_send_receive_byte(uint32_t spi_periph,
 }
 #endif
 
-static inline void Encoder_Init(void) {
+static inline void Encoder_Init(void)
+{
     timer_parameter_struct    timer_initpara;
     timer_ic_parameter_struct timer_icinitpara;
 
@@ -217,7 +233,7 @@ static inline void Encoder_Init(void) {
     timer_initpara.prescaler         = 1 - 1;
     timer_initpara.alignedmode       = TIMER_COUNTER_EDGE;
     timer_initpara.counterdirection  = TIMER_COUNTER_UP;
-    timer_initpara.period            = 4000 - 1;
+    timer_initpara.period            = 4096 - 1;
     timer_initpara.clockdivision     = TIMER_CKDIV_DIV1;
     timer_initpara.repetitioncounter = 0;
     timer_init(TIMER3, &timer_initpara);

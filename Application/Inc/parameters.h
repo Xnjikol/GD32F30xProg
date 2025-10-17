@@ -77,7 +77,7 @@
 #    define MOTOR_POSITION_SCALE (65536U - 1U) /* 旋变分辨率：16位 */
 #endif
 #ifdef ENCODER_POSITION
-#    define MOTOR_POSITION_SCALE (4000U - 1U) /* 编码器分辨率：4000线 */
+#    define MOTOR_POSITION_SCALE (4096U - 1U) /* 编码器分辨率：4000线 */
 #endif
 
 /* 角度计算因子 */
@@ -115,8 +115,8 @@
 #define RAMP_SPEED_TIME      (SPEED_LOOP_TIME) /* 转速环采样周期 */
 
 /* 转速环PID参数配置 */
-#define PID_SPEED_LOOP_KP 0.018F /* 转速环比例系数 */
-#define PID_SPEED_LOOP_KI 0.060F /* 转速环积分系数 */
+#define PID_SPEED_LOOP_KP 0.060F /* 转速环比例系数 */
+#define PID_SPEED_LOOP_KI 0.120F /* 转速环积分系数 */
 #define PID_SPEED_LOOP_KD 0.00F  /* 转速环微分系数 */
 
 /* 转速环输出限制 */
@@ -219,5 +219,11 @@
 // #define SMO_LPF_ORDER       2      /* 低通滤波器阶数：2 */
 #define SMO_SAMPLING_FREQ \
     MAIN_LOOP_FREQ /* 采样频率：与主循环频率相同 */
+
+/*********************************************************************/
+/*                        Buffer参数配置                            */
+/*********************************************************************/
+#define BUFFER_CAPACITY  9U  /* 默认缓冲区容量 */
+#define BUFFER_PRESCALER 40U /* 默认缓冲区预分频器 */
 
 #endif

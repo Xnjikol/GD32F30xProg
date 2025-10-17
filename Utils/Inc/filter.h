@@ -53,7 +53,8 @@
 /**
  * @brief Low pass filter structure
  */
-typedef struct {
+typedef struct
+{
     float alpha;        // Filter coefficient
     float prev_output;  // Previous output value
     bool  initialized;  // Initialization flag
@@ -63,7 +64,8 @@ typedef struct {
  * @brief Band pass filter structure (using two cascaded
  * filters)
  */
-typedef struct {
+typedef struct
+{
     // 滤波器系数
     float b0, b1, b2;  // 分子系数
     float a1, a2;      // 分母系数（a0固定为1）
@@ -77,7 +79,8 @@ typedef struct {
 /**
  * @brief High pass filter structure
  */
-typedef struct {
+typedef struct
+{
     float alpha;        // Filter coefficient
     float prev_input;   // Previous input value
     float prev_output;  // Previous output value
@@ -87,7 +90,8 @@ typedef struct {
 /**
  * @brief Band stop (notch) filter structure
  */
-typedef struct {
+typedef struct
+{
     // 滤波器系数
     float b0;
     float b1;
@@ -102,7 +106,8 @@ typedef struct {
     float y2;  // 前两个输出
 } BandStopFilter_t;
 
-typedef struct {
+typedef struct
+{
     // 滤波器系数
     float a1;
     float a2;
@@ -130,8 +135,8 @@ void IIR1stFilter_Init(IIR1stFilter_t* filter,
  * @param input: input value
  * @return filtered output value
  */
-static inline float IIR1stFilter_Update(IIR1stFilter_t* filter,
-                                        float           x) {
+static inline float IIR1stFilter_Update(IIR1stFilter_t* filter, float x)
+{
     float y = filter->alpha * filter->prev_output
               + (1.0F - filter->alpha) * x;
     filter->prev_output = y;
@@ -151,13 +156,16 @@ void HighPassFilter_Init(HighPassFilter_t* filter,
  * @return filtered output value
  */
 static inline float HighPassFilter_Update(HighPassFilter_t* filter,
-                                          float             input) {
-    if (filter == NULL) {
+                                          float             input)
+{
+    if (filter == NULL)
+    {
         return input;
     }
 
     // Initialize with first input value
-    if (!filter->initialized) {
+    if (!filter->initialized)
+    {
         filter->prev_input  = input;
         filter->prev_output = 0.0f;
         filter->initialized = true;
@@ -187,8 +195,10 @@ void BandPassFilter_Init(BandPassFilter_t* filter,
  * @return filtered output value
  */
 static inline float BandPassFilter_Update(BandPassFilter_t* filter,
-                                          float             input) {
-    if (filter == NULL) {
+                                          float             input)
+{
+    if (filter == NULL)
+    {
         return input;  // 如果滤波器指针无效，返回原始输入
     }
 
@@ -221,8 +231,10 @@ void BandStopFilter_Init(BandStopFilter_t* filter,
  * @return filtered output value
  */
 static inline float BandStopFilter_Update(BandStopFilter_t* filter,
-                                          float             input) {
-    if (filter == NULL) {
+                                          float             input)
+{
+    if (filter == NULL)
+    {
         return input;  // 如果滤波器指针无效，返回原始输入
     }
 
@@ -247,8 +259,10 @@ void IIR2ndFilter_Init(IIR2ndFilter_t* filter,
                        float           sample_freq);
 
 static inline float IIR2ndFilter_Update(IIR2ndFilter_t* filter,
-                                        float           input) {
-    if (filter == NULL) {
+                                        float           input)
+{
+    if (filter == NULL)
+    {
         return input;  // 无效指针处理
     }
 

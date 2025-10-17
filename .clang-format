@@ -7,10 +7,8 @@ TabWidth: 4
 UseTab: Never
 ColumnLimit: 72 # 适配嵌入式窄屏环境
 
-# 大括号风格
-BreakBeforeBraces: Attach
-BraceWrapping:
-  AfterFunction: false
+# 大括号风格（Allman：函数、控制语句、结构体、枚举等全部在新行放置 '{'）
+BreakBeforeBraces: Allman
 
 # 函数和语句格式
 AllowShortFunctionsOnASingleLine: None

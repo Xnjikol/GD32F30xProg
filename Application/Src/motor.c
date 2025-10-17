@@ -1,5 +1,6 @@
 #include "motor.h"
 #include <stdbool.h>
+#include "Buffer.h"
 #include "filter.h"
 #include "reciprocal.h"
 #include "theta_calc.h"
@@ -27,10 +28,12 @@ static uint16_t Motor_Speed_Prescaler = 0;
 
 static IIR1stFilter_t Motor_Speed_Filter = {0};
 
-static inline void Motor_Update_Theta(void) {
+static inline void Motor_Update_Theta(void)
+{
     // 位置传感器数据处理
     float delta = Motor_Position - Motor_Position_Offset;
-    if (delta < 0) {
+    if (delta < 0)
+    {
         delta += (Motor_Position_Scale + 1.0F);
     }
 
@@ -38,13 +41,19 @@ static inline void Motor_Update_Theta(void) {
 
     Motor_Theta_Elec = Motor_Theta_Mech * Motor_Pn;
     Motor_Theta_Elec = wrap_theta_2pi(Motor_Theta_Elec);
+
+    Buffer_Put(Motor_Position, 5);
+    Buffer_Put(Motor_Theta_Mech, 6);
+    Buffer_Put(Motor_Theta_Elec, 7);
 }
 
-static inline void calculate_speed(void) {
+static inline void calculate_speed(void)
+{
     static uint16_t cnt_speed  = 0x0000;
     static float    last_theta = 0.0F;
     cnt_speed++;
-    if (cnt_speed < Motor_Speed_Prescaler) {
+    if (cnt_speed < Motor_Speed_Prescaler)
+    {
         return;
     }
     cnt_speed = 0x0000;
@@ -55,15 +64,18 @@ static inline void calculate_speed(void) {
     last_theta  = Motor_Theta_Mech;
 }
 
-bool Motor_Set_SampleTime(const SystemTimeConfig_t* time_config) {
-    if (time_config == NULL) {
+bool Motor_Set_SampleTime(const SystemTimeConfig_t* time_config)
+{
+    if (time_config == NULL)
+    {
         return false;
     }
     Motor_SampleFreq = time_config->speed.inv;
     return true;
 }
 
-bool Motor_Initialization(const MotorParam_t* motor_params) {
+bool Motor_Initialization(const MotorParam_t* motor_params)
+{
     Motor_Rs              = motor_params->Rs;
     Motor_Ld              = motor_params->Ld;
     Motor_Lq              = motor_params->Lq;
@@ -79,8 +91,10 @@ bool Motor_Initialization(const MotorParam_t* motor_params) {
     return true;
 }
 
-bool Motor_Set_SpeedPrescaler(uint16_t prescaler) {
-    if (prescaler == 0) {
+bool Motor_Set_SpeedPrescaler(uint16_t prescaler)
+{
+    if (prescaler == 0)
+    {
         Motor_Speed_Prescaler = MOTOR_DEFAULT_PRESCALER;
         return false;  // 分频数不能为0
     }
@@ -88,37 +102,45 @@ bool Motor_Set_SpeedPrescaler(uint16_t prescaler) {
     return true;
 }
 
-bool Motor_Set_Filter(float cutoff_freq, float sample_freq) {
+bool Motor_Set_Filter(float cutoff_freq, float sample_freq)
+{
     IIR1stFilter_Init(&Motor_Speed_Filter, cutoff_freq, sample_freq);
     return true;
 }
 
-void Motor_Set_Position(uint16_t position) {
+void Motor_Set_Position(uint16_t position)
+{
     Motor_Position = position;
     Motor_Update_Theta();
 }
 
-void Motor_Set_Theta_Elec(float theta) {
+void Motor_Set_Theta_Elec(float theta)
+{
     Motor_Theta_Elec = theta;
 }
 
-float Motor_Get_ThetaElec(void) {
+float Motor_Get_ThetaElec(void)
+{
     return Motor_Theta_Elec;
 }
 
-void Motor_Set_Theta_Mech(float theta) {
+void Motor_Set_Theta_Mech(float theta)
+{
     Motor_Theta_Mech = theta;
 }
 
-float Motor_Get_Theta_Mech(void) {
+float Motor_Get_Theta_Mech(void)
+{
     return Motor_Theta_Mech;
 }
 
-void Motor_Set_Speed(float speed) {
+void Motor_Set_Speed(float speed)
+{
     Motor_Speed = speed;
 }
 
-float Motor_Get_Speed(void) {
+float Motor_Get_Speed(void)
+{
     calculate_speed();
     return Motor_Speed;
 }
