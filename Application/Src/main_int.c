@@ -6,6 +6,7 @@
 #include "reciprocal.h"
 #include "sensorless_interface.h"
 #include "transformation.h"
+#include "leso.h"
 
 static DeviceStateEnum_t MainInt_State        = RUNNING;
 static float             Data_Buffer[5]       = {0};
@@ -88,6 +89,8 @@ static inline void MainInt_Startup(void) {
 static inline void MainInt_Update_Sensorless(void) {
     Clark_t voltage = {0};
     Park_t  ref     = {0};
+    Park_t induc=Foc_Get_Inductor();
+    Leso_Set_Inductor(induc);
 
     voltage = Foc_Get_Uclark_Ref();
 

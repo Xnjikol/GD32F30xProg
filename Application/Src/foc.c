@@ -92,6 +92,10 @@ float Foc_Get_BusVoltage(void) {
     return Foc_BusVoltage;  // 获取母线电压
 }
 
+Park_t Foc_Get_Inductor(void) {
+    return Mtpa_Get_LPark();  // 获取电感
+}
+
 void Foc_Set_BusVoltageInv(float voltage) {
     Foc_BusVoltage_Inv = voltage;  // 设置母线电压倒数
 }

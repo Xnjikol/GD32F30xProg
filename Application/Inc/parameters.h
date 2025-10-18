@@ -192,9 +192,9 @@
 #define HFI_PLL_INTEGRAL_LIMIT HFI_PLL_MAX_OUTPUT /* PLL积分限幅值 */
 
 /* LESO参数 */
-#define LESO_WC_GAIN 10.0F   /* 观测器带宽系数 */
+#define LESO_WC_GAIN 11.0F   /* 观测器带宽系数 */
 #define LESO_WC_MAX  3140.0F /* 观测器带宽最大值 */
-#define LESO_WC_MIN  2000.0F /* 观测器带宽最小值 */
+#define LESO_WC_MIN  500.0F /* 观测器带宽最小值 */
 
 /* 滑模观测器PLL跟踪器参数 */
 #define SMO_PLL_KP             600.0F  /* PLL比例系数 */

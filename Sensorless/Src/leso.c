@@ -1,6 +1,6 @@
 #include "leso.h"
 #include <stdbool.h>
-#include "arm_math.h" /* CMSIS-DSP math */ // IWYU pragma: export
+#include "arm_math.h" /* CMSIS-DSP math */  // IWYU pragma: export
 #include "filter.h"
 #include "pid.h"
 #include "theta_calc.h"
@@ -24,6 +24,7 @@ static float Leso_Prescaler        = {0};
 static float Leso_Pn               = {0};
 static float Leso_InvPn            = {0};
 static float Leso_Gain             = {0};
+static float Leso_Factor           = {0};
 static float Leso_Wc               = {0};
 static float Leso_Wc_Min           = {0};
 static float Leso_Wc_Max           = {0};
@@ -84,6 +85,20 @@ bool Leso_Initialization(const LESO_Param_t* param) {
 void Leso_Set_Pn(float pole_pairs) {
     Leso_Pn    = pole_pairs;
     Leso_InvPn = 1.0F / pole_pairs;
+}
+
+void Leso_Set_Inductor(Park_t inductance) {
+    Leso_Ld           = inductance.d <= 0.001 ? 0.001 : inductance.d;
+    Leso_Lq           = inductance.q <= 0.001 ? 0.001 : inductance.q;
+    Leso_InvLd        = 1.0F / Leso_Ld;
+    Leso_InvLq        = 1.0F / Leso_Lq;
+    float  leso_Ld    = inductance.d <= 0.001 ? 0.001 : inductance.d;
+    float  leso_Lq    = inductance.q <= 0.001 ? 0.001 : inductance.q;
+    float  leso_InvLd = 1.0F / leso_Ld;
+    float  leso_InvLq = 1.0F / leso_Lq;
+    Park_t Idq        = ParkTransform(Leso_Current, Leso_Theta);
+    float  temp       = (leso_Ld - leso_Lq) / leso_Ld * Idq.q;
+    SQRT(temp, &Leso_Factor);
 }
 
 void Leso_Set_SpeedFilter(float cutoff_freq, float sample_freq) {
@@ -154,12 +169,16 @@ static inline float clamp_f32(float val, float min, float max) {
 }
 
 void Leso_Update_Beta(void) {
-    Leso_Wc = Leso_Gain * Leso_We;
-    if (Leso_Wc > Leso_Wc_Max) {
-        Leso_Wc = Leso_Wc_Max;
-    }
-    if (Leso_Wc < Leso_Wc_Min) {
+    Leso_Wc = Leso_Gain * Leso_Factor * Leso_We;
+    if (Leso_Speed < 700.0F) {
         Leso_Wc = Leso_Wc_Min;
+    } else {
+        if (Leso_Wc > Leso_Wc_Max) {
+            Leso_Wc = Leso_Wc_Max;
+        }
+        if (Leso_Wc < Leso_Wc_Min) {
+            Leso_Wc = Leso_Wc_Min;
+        }
     }
 
     // 根据带宽计算观测器增益
