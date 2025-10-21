@@ -192,7 +192,7 @@
 #define HFI_PLL_INTEGRAL_LIMIT HFI_PLL_MAX_OUTPUT /* PLL积分限幅值 */
 
 /* LESO参数 */
-#define LESO_WC_GAIN 8.0F   /* 观测器带宽系数 */
+#define LESO_WC_GAIN 8.0F    /* 观测器带宽系数 */
 #define LESO_WC_MAX  4000.0F /* 观测器带宽最大值 */
 #define LESO_WC_MIN  600.0F  /* 观测器带宽最小值 */
 
@@ -209,5 +209,11 @@
 #define SMO_LPF_ORDER       2      /* 低通滤波器阶数：2 */
 #define SMO_SAMPLING_FREQ \
     MAIN_LOOP_FREQ /* 采样频率：与主循环频率相同 */
+
+/*********************************************************************/
+/*                        Buffer参数配置                            */
+/*********************************************************************/
+#define BUFFER_CAPACITY  9U /* 默认缓冲区容量 */
+#define BUFFER_PRESCALER 1U /* 默认缓冲区预分频器 */
 
 #endif

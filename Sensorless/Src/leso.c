@@ -1,6 +1,7 @@
 #include "leso.h"
 #include <stdbool.h>
 #include "arm_math.h" /* CMSIS-DSP math */  // IWYU pragma: export
+#include "buffer.h"
 #include "filter.h"
 #include "pid.h"
 #include "theta_calc.h"
@@ -236,6 +237,9 @@ void Leso_Update_EmfEstA(void)
         = clamp_f32(Leso_CurEst.a, -Leso_Int_limit, Leso_Int_limit);
 
     Leso_EmfEst.a = -Leso_Lq * leso_f1a;
+
+    Buffer_Put(Leso_CurEst.a, 5);
+    Buffer_Put(Leso_EmfEst.a, 6);
 }
 
 void Leso_Update_EmfEstB(void)
@@ -261,6 +265,9 @@ void Leso_Update_EmfEstB(void)
         = clamp_f32(Leso_CurEst.b, -Leso_Int_limit, Leso_Int_limit);
 
     Leso_EmfEst.b = -Leso_Lq * leso_f1b;
+
+    Buffer_Put(Leso_CurEst.b, 7);
+    Buffer_Put(Leso_EmfEst.b, 8);
 }
 
 // static inline float compensate_theta(float theta, float omega) {

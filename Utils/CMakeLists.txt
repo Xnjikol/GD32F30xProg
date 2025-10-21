@@ -7,6 +7,7 @@ set(Utils_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/pid.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/pll.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/signal.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Src/buffer.c
 )
 
 add_library(Utils STATIC
@@ -21,6 +22,7 @@ target_include_directories(Utils PUBLIC
 # 链接依赖库
 target_link_libraries(Utils PUBLIC
     MCU # 链接到MCU库以获取GD32F30x头文件和基本类型定义
+    Communication
 )
 
 # 编译选项
