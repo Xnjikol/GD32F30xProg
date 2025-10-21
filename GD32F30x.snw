@@ -19,11 +19,11 @@
     </window_attributes>
     <ordered_windows>
       <window type="NS_Snoop.FrmWatch" title="Param" />
-      <window type="NS_Snoop.FrmHardwareInterface" title="CAN1" />
-      <window type="NS_Snoop.FrmEcuConfig" title="ECU1" />
-      <window type="NS_Snoop.FrmWatch" title="OpenLoop" />
       <window type="NS_Snoop.FrmWatch" title="Sensorless" />
+      <window type="NS_Snoop.FrmWatch" title="OpenLoop" />
+      <window type="NS_Snoop.FrmEcuConfig" title="ECU1" />
       <window type="NS_Snoop.FrmWatch" title="Watch4" />
+      <window type="NS_Snoop.FrmHardwareInterface" title="CAN1" />
       <window type="NS_Snoop.FrmWatch" title="Watch5" />
     </ordered_windows>
   </snoop_main_window>
@@ -50,7 +50,7 @@
     <hardware_channel>CAN1</hardware_channel>
     <calibration_area include_gaps="true" />
     <file path="E:\Doc\Work\FRECON\Prj\GD32F30xProg\build\GD32F30xProg.a2l" relative="build\GD32F30xProg.a2l" symbols="true" prompt_before_overwrite="true" enabled="true" load="false" download="false" flash="false" upload="false" save="false" percent_complete="0" operation_in_progress="false">
-      <properties load_memory_type="file_data" time_operation_started="2013-05-01T02:09:15.0440000+08:00" last_time_loaded="2013-05-01T02:09:15.0440000+08:00" disk_properties_error="" exists_on_disk="true" time_disk_modified="2025-10-17T18:08:25.9564391+08:00" size_bytes_on_disk="200234">
+      <properties load_memory_type="file_data" time_operation_started="2013-05-02T02:03:50.7080000+08:00" last_time_loaded="2013-05-02T02:03:50.7080000+08:00" disk_properties_error="" exists_on_disk="true" time_disk_modified="2025-10-18T18:01:08.1868296+08:00" size_bytes_on_disk="201446">
         <upload_area type="manually_defined" manual_regions_contiguous="true" const_regions_contiguous="false">
           <upload_region start_address="Calibration" byte_length="" />
           <upload_region start_address=".cal_sec" byte_length="" />
@@ -68,7 +68,7 @@
   <snoop_asap3_config />
   <snoop_watch name="Param">
     <window_attributes window_state="maximized">
-      <rectangle top="175" left="467" width="624" height="526" />
+      <rectangle top="896" left="0" width="170" height="97" />
     </window_attributes>
     <display scope_showing="true" scope_horizontal="false" autohide_buttons="true" scope_split_vertical="0.236154649947753" scope_split_horizontal="0.5" enums="decimal_and_label" pointers="label_or_hex" scope_timebase_sec="1" scope_acq_period_ms="10" scope_exclude_cals_from_daq="true" scope_exclude_unselected_signals_from_daq="true" scope_black_background="false" scope_show_points="true" scope_use_steps="false" scope_autoscale_mode="stacked_separated" />
     <can_signals dbc_to_timeout_mult="10" no_dbc_period_timeout_ms="3000" />
@@ -88,7 +88,7 @@
       <row displayed_name="adc_ch1_offset" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="adc_value" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="MainInt_State" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Flag" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Protect_Flag" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Foc_Mode" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Stop" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
       <row displayed_name="Adc_Temperature" nesting_depth="0" ecu="ECU1" scope_on="false" />
@@ -99,14 +99,14 @@
       <row displayed_name="Foc_Uclark_Ref.a" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="40" scope_zero_divs="14" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
       <row displayed_name="Foc_Uclark_Ref.b" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="40" scope_zero_divs="14" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
       <row displayed_name="Foc_Udq_Ref.d" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="50" scope_zero_divs="12" scope_colour_set="true" scope_colour_user="false" scope_colour="-7722014" />
-      <row displayed_name="Foc_Udq_Ref.q" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="50" scope_zero_divs="12" scope_colour_set="true" scope_colour_user="false" scope_colour="-65281" />
+      <row displayed_name="Foc_Udq_Ref.q" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="50" scope_zero_divs="9" scope_colour_set="true" scope_colour_user="false" scope_colour="-65281" />
       <row displayed_name="Foc_BusVoltage" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Foc_Iclark_Fdbk.a" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
       <row displayed_name="Foc_Iclark_Fdbk.b" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10496" />
       <row displayed_name="Foc_Idq_Fdbk.d" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-16711936" />
-      <row displayed_name="Foc_Idq_Fdbk.q" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10496" />
+      <row displayed_name="Foc_Idq_Fdbk.q" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="1" scope_zero_divs="0" scope_colour_set="true" scope_colour_user="false" scope_colour="-10496" />
       <row displayed_name="Foc_Idq_Ref.d" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="10" scope_zero_divs="5.6" scope_colour_set="true" scope_colour_user="false" scope_colour="-10496" />
-      <row displayed_name="Foc_Idq_Ref.q" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="10" scope_zero_divs="5.6" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
+      <row displayed_name="Foc_Idq_Ref.q" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="1" scope_zero_divs="5.6" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
       <row displayed_name="Motor_Speed" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="500" scope_zero_divs="4.12" scope_colour_set="true" scope_colour_user="false" scope_colour="-10185235" />
       <row displayed_name="Motor_Theta_Elec" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="6" scope_zero_divs="4" scope_colour_set="true" scope_colour_user="false" scope_colour="-16711936" />
       <row displayed_name="MainInt_UseRealTheta" nesting_depth="0" ecu="ECU1" scope_on="false" />
@@ -138,7 +138,7 @@
     <rows>
       <row displayed_name="Foc_Mode" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Stop" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Flag" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Protect_Flag" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Foc_VfParam.freq" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Foc_VfParam.vol_ref.d" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Foc_VfParam.vol_ref.q" nesting_depth="0" ecu="ECU1" scope_on="false" />
@@ -147,7 +147,7 @@
       <row displayed_name="Foc_IfParam.freq" nesting_depth="0" ecu="ECU1" scope_on="false" scope_colour_set="true" scope_colour_user="false" scope_colour="-16711936" />
       <row displayed_name="Foc_IfParam.use_sensor" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Motor_Position_Offset" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Motor_Position" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="4000" scope_zero_divs="10" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
+      <row displayed_name="Motor_Position" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="4096" scope_zero_divs="10" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
       <row displayed_name="Foc_Sweep" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Motor_Theta_Elec" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
       <row displayed_name="Motor_Theta_Mech" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
@@ -192,9 +192,9 @@
       <row displayed_name="Sensorless_SpeedEst" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
       <row displayed_name="Sensorless_ThetaErr" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-32944" />
       <row displayed_name="Sensorless_ThetaEst" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10496" />
-      <row displayed_name="Sensorless_Theta_PID.integral" nesting_depth="0" ecu="ECU1" scope_on="false" scope_colour_set="true" scope_colour_user="false" scope_colour="-16711936" />
-      <row displayed_name="Sensorless_Theta_PID.output" nesting_depth="0" ecu="ECU1" scope_on="false" scope_colour_set="true" scope_colour_user="false" scope_colour="-10185235" />
-      <row displayed_name="Sensorless_Theta_PID.previous_error" nesting_depth="0" ecu="ECU1" scope_on="false" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
+      <row displayed_name="Sensorless_Theta_PID.integral" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-16711936" />
+      <row displayed_name="Sensorless_Theta_PID.output" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-10185235" />
+      <row displayed_name="Sensorless_Theta_PID.previous_error" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
     </rows>
   </snoop_watch>
   <snoop_watch name="Watch4">

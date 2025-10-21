@@ -110,14 +110,14 @@
 /*********************************************************************/
 /* 转速斜坡控制参数 */
 #define RAMP_SPEED_SLOPE     20.0F    /* 速度变化率限制 (rpm/s) */
-#define RAMP_SPEED_LIMIT_MAX 1800.0F  /* 最大转速限制 (rpm) */
-#define RAMP_SPEED_LIMIT_MIN -1800.0F /* 最小转速限制 (rpm) */
+#define RAMP_SPEED_LIMIT_MAX 3000.0F  /* 最大转速限制 (rpm) */
+#define RAMP_SPEED_LIMIT_MIN -3000.0F /* 最小转速限制 (rpm) */
 #define RAMP_SPEED_TIME      (SPEED_LOOP_TIME) /* 转速环采样周期 */
 
 /* 转速环PID参数配置 */
-#define PID_SPEED_LOOP_KP 0.060F /* 转速环比例系数 */
-#define PID_SPEED_LOOP_KI 0.120F /* 转速环积分系数 */
-#define PID_SPEED_LOOP_KD 0.00F  /* 转速环微分系数 */
+#define PID_SPEED_LOOP_KP 0.10F /* 转速环比例系数 */
+#define PID_SPEED_LOOP_KI 2.00F /* 转速环积分系数 */
+#define PID_SPEED_LOOP_KD 0.00F /* 转速环微分系数 */
 
 /* 转速环输出限制 */
 #define PID_SPEED_LOOP_MAX_OUTPUT \

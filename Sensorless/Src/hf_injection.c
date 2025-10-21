@@ -49,8 +49,10 @@ static IIR1stFilter_t Hfi_Error_Filter = {0};
 static IIR2ndFilter_t Hfi_Speed_Filter = {0};
 static PID_Handler_t  Hfi_Theta_Pid    = {0};
 
-bool Hfi_Set_SampleTime(const SystemTimeConfig_t* time_config) {
-    if (time_config == NULL) {
+bool Hfi_Set_SampleTime(const SystemTimeConfig_t* time_config)
+{
+    if (time_config == NULL)
+    {
         Hfi_ParamError = true;
         return false;
     }
@@ -61,8 +63,10 @@ bool Hfi_Set_SampleTime(const SystemTimeConfig_t* time_config) {
     return true;
 }
 
-bool Hfi_Initialization(const hf_injection_params_t* params) {
-    if (params == NULL) {
+bool Hfi_Initialization(const hf_injection_params_t* params)
+{
+    if (params == NULL)
+    {
         Hfi_ParamError = true;
         return false;
     }
@@ -80,41 +84,50 @@ bool Hfi_Initialization(const hf_injection_params_t* params) {
     return true;
 }
 
-void Hfi_Set_PidParams(const PID_Handler_t* pid_handler) {
-    if (pid_handler == NULL) {
+void Hfi_Set_PidParams(const PID_Handler_t* pid_handler)
+{
+    if (pid_handler == NULL)
+    {
         Hfi_ParamError = true;
         return;
     }
     Hfi_Theta_Pid = *pid_handler;
 }
 
-void Hfi_Set_Current(Clark_t current) {
+void Hfi_Set_Current(Clark_t current)
+{
     Hfi_IClarkFdbk = current;
     Hfi_IParkFdbk  = ParkTransform(current, Hfi_Theta);
 }
 
-void Hfi_Set_Enabled(bool enabled) {
+void Hfi_Set_Enabled(bool enabled)
+{
     Hfi_Enabled = enabled;
 }
 
-bool Hfi_Get_Enabled(void) {
+bool Hfi_Get_Enabled(void)
+{
     return Hfi_Enabled;
 }
 
-void Hfi_Calc_ThetaErr(float ref) {
+void Hfi_Calc_ThetaErr(float ref)
+{
     float err     = wrap_theta_2pi(ref - Hfi_Theta + PI) - PI;
     Hfi_Theta_Err = rad2deg(err);
 }
 
-void Hfi_Set_Theta(float theta) {
+void Hfi_Set_Theta(float theta)
+{
     Hfi_Theta = theta;
 }
 
-void Hfi_Calc_SpeedErr(float ref) {
+void Hfi_Calc_SpeedErr(float ref)
+{
     Hfi_Speed_Err = ref - Hfi_Speed;
 }
 
-Clark_t Hfi_Process_Current(Clark_t current) {
+Clark_t Hfi_Process_Current(Clark_t current)
+{
     static Clark_t current_last = {0};
     static Clark_t cur_high_old = {0};
     Clark_t        cur_high_new = {0};
@@ -143,7 +156,8 @@ Clark_t Hfi_Process_Current(Clark_t current) {
     return cur_base;
 }
 
-static inline void generate_signal(void) {
+static inline void generate_signal(void)
+{
     Park_t inj_dq = {0};
     /* 更新高频注入信号 */
     inj_dq.d = Hfi_InjVolt * (Hfi_InjectSign ? 1.0F : -1.0F);
@@ -152,17 +166,20 @@ static inline void generate_signal(void) {
     Hfi_VoltageInj = inj_dq;
 }
 
-static inline void update_signal(void) {
+static inline void update_signal(void)
+{
     Hfi_InjectSign = !Hfi_InjectSign;
 }
 
-Park_t Hfi_Get_Inject_Voltage(void) {
+Park_t Hfi_Get_Inject_Voltage(void)
+{
     update_signal();
     generate_signal();
     return Hfi_VoltageInj;
 }
 
-static inline float pll_update(float error, bool reset) {
+static inline float pll_update(float error, bool reset)
+{
     // 更新锁相环
     float omega = Pid_Update(error, reset, &Hfi_Theta_Pid);
     Hfi_Theta += omega * Hfi_SampleTime;
@@ -172,12 +189,14 @@ static inline float pll_update(float error, bool reset) {
     return omega;
 }
 
-static inline float calculate_error(Clark_t response, float angle) {
+static inline float calculate_error(Clark_t response, float angle)
+{
     float angleErr   = 0.0F;
     float errorAlpha = 0.0F;
     float errorBeta  = 0.0F;
 
-    if (!Hfi_Enabled) {
+    if (!Hfi_Enabled)
+    {
         return angleErr;
     }
 
@@ -190,28 +209,34 @@ static inline float calculate_error(Clark_t response, float angle) {
 
     float norm = 0.0F;
     SQRT(response.a * response.a + response.b * response.b, &norm);
-    if (norm > 0.0001F) {
+    if (norm > 0.0001F)
+    {
         angleErr /= norm;
-    } else {
+    }
+    else
+    {
         angleErr = 0.0F;
     }
 
     return angleErr;
 }
 
-static inline float calculate_omega(float error) {
+static inline float calculate_omega(float error)
+{
     float omega = pll_update(error, !Hfi_Enabled);
 
     return omega;
 }
 
-static inline float calculate_speed(float omega) {
+static inline float calculate_speed(float omega)
+{
     static uint16_t hfi_count = 0x0000U;
     static float    hfi_integ = 0.0F;
     float           speed     = 0.0F;
     hfi_integ += radps2rpm(omega) * Hfi_InvPn * 0.1F;
     hfi_count++;
-    if (hfi_count < 0x000AU) {
+    if (hfi_count < 0x000AU)
+    {
         return Hfi_Speed;
     }
     hfi_count = 0x0000U;
@@ -220,24 +245,28 @@ static inline float calculate_speed(float omega) {
     return speed;
 }
 
-void Hfi_Update(void) {
-    Hfi_Error   = calculate_error(Hfi_IClarkResp, Hfi_Theta);
-    float omega = calculate_omega(Hfi_Error);
-    Hfi_Speed   = calculate_speed(omega);
+void Hfi_Update(void)
+{
+    Hfi_Error = calculate_error(Hfi_IClarkResp, Hfi_Theta);
+    // float omega = calculate_omega(Hfi_Error);
+    // Hfi_Speed   = calculate_speed(omega);
 }
 
-void Hfi_Set_InitialPosition(float theta) {
+void Hfi_Set_InitialPosition(float theta)
+{
     Hfi_Theta = theta;
     PID_SetIntegral(&Hfi_Theta_Pid, !Hfi_Enabled, theta);
 }
 
-AngleResult_t Hfi_Get_Result(void) {
+AngleResult_t Hfi_Get_Result(void)
+{
     AngleResult_t angle_result;
     angle_result.theta = Hfi_Theta;
     angle_result.speed = Hfi_Speed;
     return angle_result;
 }
 
-float Hfi_Get_PllErr(void) {
+float Hfi_Get_PllErr(void)
+{
     return Hfi_Error;
 }

@@ -26,9 +26,13 @@ static inline void MainInt_Update_FocCurrent(void)
 
 static inline void MainInt_Check_ProtectFlag(void)
 {
+    // 保护检测
     bool stop = Peripheral_Update_Break();
+    if (Foc_Get_Mode() == IDLE)
+    {
+        stop = true;
+    }
     Foc_Set_ResetFlag(stop);
-    stop = Foc_Get_ResetFlag();
     Peripheral_Set_Stop(stop);
     Sensorless_Set_ResetFlag(stop);
 }
