@@ -202,12 +202,12 @@ bool MTPA_compute_for_T(float T_req, MTPA_Point* out_p) {
     if (!out_p)
         return false;
 
-    /* 特殊处理：T_req == 0 要求 Iq=0, Id=0.5 按题目要求 */
+    /* 特殊处理：T_req == 0 要求 Iq=0, Id=1.3 */ 
     if (T_req <= 0.0f) {
         out_p->T_req = 0.0f;
         out_p->Psi_s = 0.0f; /* 可以置 0 或者最小 */
         out_p->gamma = 0.0f;
-        out_p->Id    = 0.5f; /* 题目特定规定 */
+        out_p->Id    = 1.55f; 
         out_p->Iq    = 0.0f;
         out_p->valid = true;
         return true;
@@ -350,7 +350,7 @@ void MTPA_build_table(MTPA_Point table[],
             table[k].T_req = 0.0f;
             table[k].Psi_s = 0.0f;
             table[k].gamma = 0.0f;
-            table[k].Id    = 0.5f;
+            table[k].Id    = 1.55f;
             table[k].Iq    = 0.0f;
             table[k].Ld    = 0.25f;
             table[k].Lq    = 0.09f;

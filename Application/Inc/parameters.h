@@ -99,7 +99,7 @@
 /*********************************************************************/
 /* 电压保护参数 */
 #define PROTECT_VOLTAGE_RATE        560.0F /* 额定电压：560V */
-#define PROTECT_VOLTAGE_FLUCTUATION 60.0F  /* 允许电压波动：±60V */
+#define PROTECT_VOLTAGE_FLUCTUATION 120.0F  /* 允许电压波动：±60V */
 
 /* 电流和温度保护参数 */
 #define PROTECT_CURRENT_MAX 30.0F /* 最大电流限制：30A */
@@ -162,7 +162,7 @@
 
 /* 无位置PLL跟踪器参数 */
 #define SENSORLESS_PLL_KP         50.0F  /* PLL比例系数 */
-#define SENSORLESS_PLL_KI         625.0F /* PLL积分系数 */
+#define SENSORLESS_PLL_KI         1000.0F /* PLL积分系数 */
 #define SENSORLESS_PLL_KD         0.0F   /* PLL微分系数 */
 #define SENSORLESS_PLL_MAX_OUTPUT 500.0F /* PLL最大输出 */
 #define SENSORLESS_PLL_MIN_OUTPUT \

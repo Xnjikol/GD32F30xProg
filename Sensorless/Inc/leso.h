@@ -9,7 +9,8 @@
 /**
  * @brief 无传感器控制状态机
  */
-typedef struct {
+typedef struct
+{
     float wc_gain; /*!< 观测器带宽系数 */
     float wc_max;  /*!< 观测器带宽最大值 */
     float wc_min;  /*!< 观测器带宽最小值 */
@@ -30,6 +31,8 @@ void Leso_Set_Pn(float inv_Pn);
 void Leso_Set_Inductor(Park_t inductance);
 
 void Leso_Set_SpeedFilter(float cutoff_freq, float sample_freq);
+
+void Leso_Set_Wc_Filter(float cutoff_freq, float sample_freq);
 
 void Leso_Set_Pid_Handler(PID_Handler_t config);
 

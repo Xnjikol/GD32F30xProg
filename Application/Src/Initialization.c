@@ -164,6 +164,7 @@ bool init_module_smo(void)
 
     // Leso_Set_EmfFilter(SMO_LPF_CUTOFF_FREQ, SMO_SAMPLING_FREQ);
     Leso_Set_SpeedFilter(10.0F, SPEED_LOOP_FREQ);
+    Leso_Set_Wc_Filter(10.0F, SPEED_LOOP_FREQ);
 
     return true;
 }

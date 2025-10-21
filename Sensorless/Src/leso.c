@@ -27,6 +27,7 @@ static float Leso_InvPn            = {0};
 static float Leso_Gain             = {0};
 static float Leso_Factor           = {0};
 static float Leso_Wc               = {0};
+static float Leso_Wc_Filtered      = {0};
 static float Leso_Wc_Min           = {0};
 static float Leso_Wc_Max           = {0};
 static float Leso_We               = {0};
@@ -44,6 +45,7 @@ static Clark_t Leso_CurEst  = {0};
 static Clark_t Leso_EmfEst  = {0};
 
 static IIR1stFilter_t Leso_Speed_Filter = {0};
+static IIR2ndFilter_t Leso_Wc_Filter    = {0};
 static PID_Handler_t  Leso_Theta_PID    = {0};
 
 /**
@@ -111,6 +113,11 @@ void Leso_Set_Inductor(Park_t inductance)
 void Leso_Set_SpeedFilter(float cutoff_freq, float sample_freq)
 {
     IIR1stFilter_Init(&Leso_Speed_Filter, cutoff_freq, sample_freq);
+}
+
+void Leso_Set_Wc_Filter(float cutoff_freq, float sample_freq)
+{
+    IIR2ndFilter_Init(&Leso_Wc_Filter, cutoff_freq, sample_freq);
 }
 
 void Leso_Set_Pid_Handler(PID_Handler_t config)
@@ -193,25 +200,29 @@ static inline float clamp_f32(float val, float min, float max)
 
 void Leso_Update_Beta(void)
 {
+    static uint16_t wc_cnt = 0x0000U;
+
+    // 自适应带宽计算
     Leso_Wc = Leso_Gain * Leso_Factor * Leso_We;
-    // if (Leso_Speed < 400.0F) {
-    //     Leso_Wc = Leso_Wc_Min;
-    // } else {
-    if (Leso_Wc > Leso_Wc_Max)
+
+    wc_cnt++;
+
+    if (wc_cnt < 10U)
     {
-        Leso_Wc = Leso_Wc_Max;
+        return;
     }
-    if (Leso_Wc < Leso_Wc_Min)
-    {
-        Leso_Wc = Leso_Wc_Min;
-    }
-    // }
+
+    wc_cnt = 0x0000U;
+    // 计算自适应带宽
+    Leso_Wc_Filtered = IIR2ndFilter_Update(&Leso_Wc_Filter, Leso_Wc);
 
     // 根据带宽计算观测器增益
     Leso_Beta1 = 2.0F * Leso_Wc;
     Leso_Beta2 = Leso_Wc * Leso_Wc;
 
     Leso_InvLq = 1.0F / Leso_Lq;
+
+    return;
 }
 
 void Leso_Update_EmfEstA(void)
