@@ -157,8 +157,8 @@
 /*                        无位置运行参数配置                            */
 /*********************************************************************/
 /* 无位置传感器策略控制 */
-#define SENSORLESS_HYSTERESIS   50.0F  /* 无传感器滞环宽度：50rpm */
-#define SENSORLESS_SWITCH_SPEED 460.0F /* 无传感器切换速度：460rpm */
+#define SENSORLESS_HYSTERESIS   60.0F  /* 无传感器滞环宽度：50rpm */
+#define SENSORLESS_SWITCH_SPEED 400.0F /* 无传感器切换速度：460rpm */
 
 /* 无位置PLL跟踪器参数 */
 #define SENSORLESS_PLL_KP         50.0F  /* PLL比例系数 */
@@ -192,9 +192,9 @@
 #define HFI_PLL_INTEGRAL_LIMIT HFI_PLL_MAX_OUTPUT /* PLL积分限幅值 */
 
 /* LESO参数 */
-#define LESO_WC_GAIN 11.0F   /* 观测器带宽系数 */
-#define LESO_WC_MAX  3140.0F /* 观测器带宽最大值 */
-#define LESO_WC_MIN  500.0F /* 观测器带宽最小值 */
+#define LESO_WC_GAIN 8.0F   /* 观测器带宽系数 */
+#define LESO_WC_MAX  4000.0F /* 观测器带宽最大值 */
+#define LESO_WC_MIN  600.0F  /* 观测器带宽最小值 */
 
 /* 滑模观测器PLL跟踪器参数 */
 #define SMO_PLL_KP             600.0F  /* PLL比例系数 */

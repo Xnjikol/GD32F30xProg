@@ -108,6 +108,10 @@ float Foc_Get_SpeedRamp(void) {
     return Foc_Speed_Ramp;
 }
 
+float Foc_Get_SpeedTarget(void) {
+    return Foc_Speed_Ref;
+} 
+
 void Foc_Set_Speed_and_Angle(AngleResult_t* angle_speed) {
     Foc_Theta      = wrap_theta_2pi(angle_speed->theta);
     Foc_Speed_Fdbk = angle_speed->speed;

@@ -7,7 +7,8 @@
 #include "signal.h"
 #include "transformation.h"
 
-typedef enum {
+typedef enum
+{
     IDLE,
     VF_MODE,
     IF_MODE,
@@ -16,13 +17,15 @@ typedef enum {
     IDENTIFY
 } FocMode_t;
 
-typedef struct {
+typedef struct
+{
     Park_t vol_ref;  // 电压参考
     float  freq;
     float  offset;
 } VF_Parameter_t;
 
-typedef struct {
+typedef struct
+{
     Park_t cur_ref;  // DQ轴电流参考
     float  freq;
     float  offset;
@@ -41,6 +44,7 @@ void      Foc_Set_BusVoltageInv(float voltage);
 void      Foc_Set_Angle(float angle);
 void      Foc_Set_Speed(float speed);
 float     Foc_Get_SpeedRamp(void);
+float     Foc_Get_SpeedTarget(void);
 void      Foc_Set_Speed_and_Angle(AngleResult_t* angle_speed);
 void      Foc_Set_Iclark_Fdbk(Clark_t current);
 Clark_t   Foc_Get_Iclark_Fdbk(void);

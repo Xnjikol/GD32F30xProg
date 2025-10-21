@@ -42,6 +42,7 @@ static inline void MainInt_Update_Angle_and_Speed(void) {
     AngleResult_t est       = {0};
     AngleResult_t real      = {0};
     float         speed_ref = Foc_Get_SpeedRamp();
+    float         speed_target = Foc_Get_SpeedTarget();
 
     real = Peripheral_Update_Position();
     est  = Sensorless_Update_Position();
@@ -58,6 +59,7 @@ static inline void MainInt_Update_Angle_and_Speed(void) {
     Foc_Set_Angle(res.theta);
 
     Sensorless_Set_SpeedRef(speed_ref);
+    Sensorless_Set_SpeedTarget(speed_target);
     Sensorless_Set_SpeedFdbk(res.speed);
     //Sensorless_Set_Angle(res.theta);
 
