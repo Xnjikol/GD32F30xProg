@@ -90,6 +90,12 @@ bool init_module_foc(void)
     return true;
 }
 
+bool init_module_buffer(void)
+{
+    Buffer_Init(BUFFER_CAPACITY, BUFFER_PRESCALER);
+    return true;
+}
+
 bool init_module_motor(void)
 {
     Motor_Initialization(&motor_param);
@@ -191,6 +197,7 @@ bool init_module_hfi(void)
 bool Initialization_Modules(void)
 {
     init_module_foc();
+    init_module_buffer();
     init_module_protect();
     init_module_motor();
     init_module_sensorless();
