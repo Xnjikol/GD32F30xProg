@@ -97,7 +97,7 @@ void Hfi_Set_PidParams(const PID_Handler_t* pid_handler)
 void Hfi_Set_Current(Clark_t current)
 {
     Hfi_IClarkFdbk = current;
-    Hfi_IParkFdbk  = ParkTransform(current, Hfi_Theta);
+    Hfi_IParkFdbk  = ParkeTransform(current, Hfi_Theta);
 }
 
 void Hfi_Set_Enabled(bool enabled)

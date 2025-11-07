@@ -10,6 +10,7 @@ set(User_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/identification.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/MTPA.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/Buffer.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Src/FlyingStart.c
 )
 
 add_library(User STATIC

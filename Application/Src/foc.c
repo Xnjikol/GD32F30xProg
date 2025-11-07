@@ -26,18 +26,18 @@ static float     Foc_Speed_Ramp      = 0.0F;  // 实际指令转速
 static volatile float Foc_Id_Min = 0.3F;  // D轴电流最小值
 static volatile bool  Foc_Sweep  = true;  // FOC扫频标志
 
-static VF_Parameter_t  Foc_VfParam            = {0};
-static IF_Parameter_t  Foc_IfParam            = {0};
-static Clark_t         Foc_Iclark_Fdbk        = {0};
-static Park_t          Foc_Idq_Ref            = {0};
-static Park_t          Foc_Idq_Fdbk           = {0};
-static Clark_t         Foc_Uclark_Ref         = {0};
-static Park_t          Foc_Udq_Ref            = {0};
-static PID_Handler_t   Foc_Pid_Speed_Handler  = {0};
-static PID_Handler_t   Foc_Pid_CurD_Handler   = {0};
-static PID_Handler_t   Foc_Pid_CurQ_Handler   = {0};
-static RampGenerator_t Foc_Ramp_Speed_Handler = {0};
-static SawtoothWave_t  Foc_Sawtooth_Handler   = {0};
+VF_Parameter_t  Foc_VfParam            = {0};
+IF_Parameter_t  Foc_IfParam            = {0};
+Clark_t         Foc_Iclark_Fdbk        = {0};
+Park_t          Foc_Idq_Ref            = {0};
+Park_t          Foc_Idq_Fdbk           = {0};
+Clark_t         Foc_Uclark_Ref         = {0};
+Park_t          Foc_Udq_Ref            = {0};
+PID_Handler_t   Foc_Pid_Speed_Handler  = {0};
+PID_Handler_t   Foc_Pid_CurD_Handler   = {0};
+PID_Handler_t   Foc_Pid_CurQ_Handler   = {0};
+RampGenerator_t Foc_Ramp_Speed_Handler = {0};
+SawtoothWave_t  Foc_Sawtooth_Handler   = {0};
 
 FluxExperiment_t Experiment = {0};
 
@@ -438,7 +438,7 @@ static inline Park_t Foc_Update_VfMode(bool reset)
     }
     Foc_Theta = wrap_theta_2pi(phase_prev + Foc_VfParam.offset);
 
-    Foc_Idq_Fdbk = ParkTransform(Foc_Iclark_Fdbk, Foc_Theta);
+    Foc_Idq_Fdbk = ParkeTransform(Foc_Iclark_Fdbk, Foc_Theta);
     reset_prev   = reset;
     return output;
 }
@@ -485,7 +485,7 @@ static inline Park_t Foc_Update_IfMode(bool reset)
         Foc_Theta = wrap_theta_2pi(phase_prev + Foc_IfParam.offset);
     }
 
-    Foc_Idq_Fdbk = ParkTransform(Foc_Iclark_Fdbk, Foc_Theta);
+    Foc_Idq_Fdbk = ParkeTransform(Foc_Iclark_Fdbk, Foc_Theta);
 
     output = Foc_Update_CurrentLoop(
         Foc_IfParam.cur_ref, Foc_Idq_Fdbk, reset);
@@ -502,7 +502,7 @@ static inline Park_t Foc_Update_SpeedMode(bool reset)
         Foc_Speed_Ref = 0.0F;
     }
 
-    Foc_Idq_Fdbk = ParkTransform(Foc_Iclark_Fdbk, Foc_Theta);
+    Foc_Idq_Fdbk = ParkeTransform(Foc_Iclark_Fdbk, Foc_Theta);
 
     Park_t output = {0};
     // 更新转速环
@@ -570,7 +570,7 @@ Park_t Foc_Update_Main(void)
             Foc_Mode = IDLE;
             break;
         }
-        Foc_Idq_Fdbk = ParkTransform(Foc_Iclark_Fdbk, Foc_Theta);
+        Foc_Idq_Fdbk = ParkeTransform(Foc_Iclark_Fdbk, Foc_Theta);
         Experiment_Step(&Experiment,
                         Foc_Idq_Fdbk.d,
                         Foc_Idq_Fdbk.q,

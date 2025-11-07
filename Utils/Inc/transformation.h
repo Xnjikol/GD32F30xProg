@@ -79,7 +79,7 @@ typedef struct
     float q;
 } Park_t;
 
-static inline Clark_t ClarkeTransform(const Phase_t in)
+static inline Clark_t ClarkTransform(const Phase_t in)
 {
     Clark_t out;
 #if (defined(TWO_PHASE_CURRENT_SENSING))
@@ -92,7 +92,7 @@ static inline Clark_t ClarkeTransform(const Phase_t in)
 #endif
     return out;
 }
-static inline Park_t ParkTransform(const Clark_t in, float theta)
+static inline Park_t ParkeTransform(const Clark_t in, float theta)
 {
     Park_t  out;
     float_t cos_theta = COS(theta);

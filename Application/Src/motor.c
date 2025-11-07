@@ -7,22 +7,22 @@
 
 #define MOTOR_DEFAULT_PRESCALER 10U
 
-static bool  Motor_Initialized     = false;
-static float Motor_Rs              = 0.0F;
-static float Motor_Ld              = 0.0F;
-static float Motor_Lq              = 0.0F;
-static float Motor_Flux            = 0.0F;
-static float Motor_Pn              = 0.0F;
-static float Resolver_Pn           = 0.0F;
-static float Motor_MotorPn_inv     = 0.0F;
-static float Motor_Position_Scale  = 0.0F;
-static float Motor_Position_Offset = 0.0F;
-static float Motor_Theta_Factor    = 0.0F;
-static float Motor_SampleFreq      = 0.0F;
-static float Motor_Position        = 0.0F;
-static float Motor_Theta_Elec      = 0.0F;
-static float Motor_Theta_Mech      = 0.0F;
-static float Motor_Speed           = 0.0F;
+bool  Motor_Initialized     = false;
+float Motor_Rs              = 0.0F;
+float Motor_Ld              = 0.0F;
+float Motor_Lq              = 0.0F;
+float Motor_Flux            = 0.0F;
+float Motor_Pn              = 0.0F;
+float Resolver_Pn           = 0.0F;
+float Motor_MotorPn_inv     = 0.0F;
+float Motor_Position_Scale  = 0.0F;
+float Motor_Position_Offset = 0.0F;
+float Motor_Theta_Factor    = 0.0F;
+float Motor_SampleFreq      = 0.0F;
+float Motor_Position        = 0.0F;
+float Motor_Theta_Elec      = 0.0F;
+float Motor_Theta_Mech      = 0.0F;
+float Motor_Speed           = 0.0F;
 
 static uint16_t Motor_Speed_Prescaler = 0;
 

@@ -4,7 +4,24 @@
 #include <stdint.h>
 #include "reciprocal.h"
 
-typedef struct {
+extern float Motor_Rs;
+extern float Motor_Ld;
+extern float Motor_Lq;
+extern float Motor_Flux;
+extern float Motor_Pn;
+extern float Resolver_Pn;
+extern float Motor_MotorPn_inv;
+extern float Motor_Position_Scale;
+extern float Motor_Position_Offset;
+extern float Motor_Theta_Factor;
+extern float Motor_SampleFreq;
+extern float Motor_Position;
+extern float Motor_Theta_Elec;
+extern float Motor_Theta_Mech;
+extern float Motor_Speed;
+
+typedef struct
+{
     float Rs;
     float Ld;
     float Lq;

@@ -1,5 +1,6 @@
 #include "main_int.h"
 #include "Buffer.h"
+#include "FlyingStart.h"
 #include "Initialization.h"
 #include "foc.h"
 #include "hardware_interface.h"
@@ -13,12 +14,18 @@ static DeviceStateEnum_t MainInt_State        = RUNNING;
 static volatile bool     MainInt_UseRealTheta = true;
 //static volatile uint16_t MainInt_DataFlag     = 0x000U;
 
+FS_Handler_t Fs_Hnd = {0};
+
 static inline void MainInt_Update_FocCurrent(void)
 {
     Phase_t current_phase = Peripheral_Get_PhaseCurrent();
     Clark_t current_clark = {0};
 
-    current_clark = ClarkeTransform(current_phase);
+    Buffer_Put(current_phase.a, 0);
+    Buffer_Put(current_phase.b, 1);
+    Buffer_Put(current_phase.c, 2);
+
+    current_clark = ClarkTransform(current_phase);
     current_clark = Sensorless_FilterCurrent(current_clark);
     Sensorless_Set_Current(current_clark);
     Foc_Set_Iclark_Fdbk(current_clark);
@@ -26,13 +33,18 @@ static inline void MainInt_Update_FocCurrent(void)
 
 static inline void MainInt_Check_ProtectFlag(void)
 {
+    if (FlyingStartEnabled)
+    {
+        FlyingStart_Update(&Fs_Hnd, Foc_Iclark_Fdbk);
+    }
+
     // 保护检测
     bool stop = Peripheral_Update_Break();
     if (Foc_Get_Mode() == IDLE)
     {
         stop = true;
     }
-    Foc_Set_ResetFlag(stop);
+    Foc_Set_ResetFlag(stop || FlyingStartEnabled);
     Peripheral_Set_Stop(stop);
     Sensorless_Set_ResetFlag(stop);
 }
@@ -72,15 +84,16 @@ static inline void MainInt_Update_Angle_and_Speed(void)
     Sensorless_Set_SpeedFdbk(res.speed);
     //Sensorless_Set_Angle(res.theta);
 
-    Buffer_Put(res.theta, 0);
-    Buffer_Put(est.theta, 1);
-    Buffer_Put(res.speed, 2);
-    Buffer_Put(est.speed, 3);
+    // Buffer_Put(res.theta, 0);
+    // Buffer_Put(est.theta, 1);
+    // Buffer_Put(res.speed, 2);
+    // Buffer_Put(est.speed, 3);
     Buffer_Put(Sensorless_Get_Error().theta, 4);
 }
 
 static inline void MainInt_Initialization(void)
 {
+    FlyingStart_Init(&Fs_Hnd, 3U, 5U, 1U, 2E-4F);
     Initialization_Modules();
     Peripheral_CalibrateADC();
     if (Foc_Get_BusVoltage() > 200.0F)
@@ -147,6 +160,12 @@ static inline void MainInt_Exit(void)
 static inline void MainInt_SVPWM(void)
 {
     Phase_t tcm = Foc_Get_Tcm();  // 获取三相PWM时间
+    if (FlyingStartEnabled)
+    {
+        tcm.a = 1.0F;
+        tcm.b = 1.0F;
+        tcm.c = 1.0F;
+    }
     Peripheral_Set_PWMChangePoint(tcm);
 }
 

@@ -7,7 +7,10 @@
 #include "signal.h"
 #include "transformation.h"
 
-typedef enum {
+extern Clark_t Foc_Iclark_Fdbk;
+
+typedef enum
+{
     IDLE,
     VF_MODE,
     IF_MODE,
@@ -16,13 +19,15 @@ typedef enum {
     IDENTIFY
 } FocMode_t;
 
-typedef struct {
+typedef struct
+{
     Park_t vol_ref;  // 电压参考
     float  freq;
     float  offset;
 } VF_Parameter_t;
 
-typedef struct {
+typedef struct
+{
     Park_t cur_ref;  // DQ轴电流参考
     float  freq;
     float  offset;

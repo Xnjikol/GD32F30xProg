@@ -13,6 +13,8 @@
 #include "transformation.h"
 #include "usart.h"
 
+volatile bool ShutFlag = false;
+
 static volatile bool Stop           = true;
 static bool          Software_BRK   = false;
 static volatile bool usart_dma_busy = false;
@@ -98,7 +100,7 @@ bool Peripheral_Update_Break(void)
     {
         Stop = true;
     }
-    if (Stop)
+    if (Stop || ShutFlag)
     {
         // 软件触发 BRK
         Software_BRK = true;
