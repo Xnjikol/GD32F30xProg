@@ -19,12 +19,12 @@
     </window_attributes>
     <ordered_windows>
       <window type="NS_Snoop.FrmWatch" title="Param" />
+      <window type="NS_Snoop.FrmWatch" title="OpenLoop" />
       <window type="NS_Snoop.FrmEcuConfig" title="ECU1" />
       <window type="NS_Snoop.FrmHardwareInterface" title="CAN1" />
-      <window type="NS_Snoop.FrmWatch" title="OpenLoop" />
+      <window type="NS_Snoop.FrmWatch" title="Watch5" />
       <window type="NS_Snoop.FrmWatch" title="Sensorless" />
       <window type="NS_Snoop.FrmWatch" title="Watch4" />
-      <window type="NS_Snoop.FrmWatch" title="Watch5" />
     </ordered_windows>
   </snoop_main_window>
   <snoop_hardware_channel name="CAN1">
@@ -50,7 +50,7 @@
     <hardware_channel>CAN1</hardware_channel>
     <calibration_area include_gaps="true" />
     <file path="E:\Doc\Work\FRECON\Prj\GD32F30xProg\build\GD32F30xProg.a2l" relative="build\GD32F30xProg.a2l" symbols="true" prompt_before_overwrite="true" enabled="true" load="false" download="false" flash="false" upload="false" save="false" percent_complete="0" operation_in_progress="false">
-      <properties load_memory_type="file_data" time_operation_started="2013-05-01T00:10:59.4680000+08:00" last_time_loaded="2013-05-01T00:10:59.4680000+08:00" disk_properties_error="" exists_on_disk="true" time_disk_modified="2025-11-11T09:22:11.4206355+08:00" size_bytes_on_disk="206405" last_time_downloaded="0001-01-01T00:00:00.0000000" last_time_flashed="0001-01-01T00:00:00.0000000" last_time_saved="0001-01-01T00:00:00.0000000">
+      <properties load_memory_type="file_data" time_operation_started="2013-05-01T05:58:48.8700000+08:00" last_time_loaded="2013-05-01T05:58:48.8700000+08:00" disk_properties_error="" exists_on_disk="true" time_disk_modified="2025-11-11T15:14:34.6350073+08:00" size_bytes_on_disk="206405" last_time_downloaded="0001-01-01T00:00:00.0000000" last_time_flashed="0001-01-01T00:00:00.0000000" last_time_saved="0001-01-01T00:00:00.0000000">
         <upload_area type="manually_defined" manual_regions_contiguous="true" const_regions_contiguous="false">
           <upload_region start_address="Calibration" byte_length="" />
           <upload_region start_address=".cal_sec" byte_length="" />
@@ -74,13 +74,13 @@
     <logging target_period_ms="100" filename_style="date_time_sortable" format="compact" can_format="with_variables" enums="decimal" pointers="label_or_hex" logfile_absolute="E:\Doc\Work\FRECON\Prj\GD32F30xProg\" logfile_relative="" paused_loaded_from_file="false" />
     <columns>
       <column name="ColAddress" index="0" visible="false" visible_scope_on="false" width="40" width_scope_on="40" font_name="Courier New" font_size="8.25" />
-      <column name="ColHex" index="1" visible="false" visible_scope_on="true" width="130" width_scope_on="82" font_name="等距更纱黑体 SC" font_size="7.8" />
+      <column name="ColHex" index="1" visible="false" visible_scope_on="true" width="130" width_scope_on="80" font_name="等距更纱黑体 SC" font_size="7.8" />
       <column name="ColValue" index="2" visible="true" visible_scope_on="true" width="173" width_scope_on="134" font_name="等距更纱黑体 SC" font_size="7.8" />
-      <column name="ColName" index="3" visible="true" visible_scope_on="true" width="588" width_scope_on="234" font_name="等距更纱黑体 SC" font_size="7.8" />
+      <column name="ColName" index="3" visible="true" visible_scope_on="true" width="588" width_scope_on="239" font_name="等距更纱黑体 SC" font_size="7.8" />
       <column name="ColType" index="4" visible="false" visible_scope_on="false" width="66" width_scope_on="66" font_name="Arial Narrow" font_size="8.25" />
       <column name="ColUnits" index="5" visible="false" visible_scope_on="false" width="37" width_scope_on="37" font_name="Arial Narrow" font_size="8.25" />
       <column name="ColDescription" index="6" visible="false" visible_scope_on="false" width="105" width_scope_on="105" font_name="Arial Narrow" font_size="8.25" />
-      <column name="ColScope" index="7" visible="true" visible_scope_on="true" width="127" width_scope_on="30" font_name="Arial" font_size="8.25" />
+      <column name="ColScope" index="7" visible="true" visible_scope_on="true" width="127" width_scope_on="27" font_name="Arial" font_size="8.25" />
     </columns>
     <rows>
       <row displayed_name="adc_ch0_offset" nesting_depth="0" ecu="ECU1" scope_on="false" />
@@ -89,8 +89,8 @@
       <row displayed_name="MainInt_State" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Protect_Flag" nesting_depth="0" ecu="ECU1" scope_on="false" />
       <row displayed_name="Foc_Mode" nesting_depth="0" ecu="ECU1" scope_on="false" />
-      <row displayed_name="Stop" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
       <row displayed_name="Adc_Temperature" nesting_depth="0" ecu="ECU1" scope_on="false" />
+      <row displayed_name="Stop" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="true" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
       <row displayed_name="Foc_Speed_Ref" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="500" scope_zero_divs="10" scope_colour_set="true" scope_colour_user="false" scope_colour="-65536" />
       <row displayed_name="Foc_Speed_Ramp" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="500" scope_zero_divs="10" scope_colour_set="true" scope_colour_user="false" scope_colour="-65281" />
       <row displayed_name="Foc_Speed_Fdbk" nesting_depth="0" ecu="ECU1" scope_on="true" scope_autoscaled="false" scope_units_per_div="500" scope_zero_divs="10" scope_colour_set="true" scope_colour_user="false" scope_colour="-10185235" />

@@ -135,6 +135,14 @@ void FlyingStart_Update(FS_Handler_t* hnd, Clark_t current)
             ATAN2(current.b, current.a, &hnd->ThetaI3);
             float delta_theta
                 = hnd->ThetaI1 + hnd->ThetaI3 - 2 * hnd->ThetaI2;
+            if (delta_theta > M_PI)
+            {
+                delta_theta -= M_2PI;
+            }
+            else if (delta_theta < -M_PI)
+            {
+                delta_theta += M_2PI;
+            }
             hnd->WeI3   = delta_theta / (hnd->Ts * hnd->DeltaCnt);
             float theta = (hnd->WeI3) * hnd->Ts * hnd->ShortCnt;
             float respd = Motor_Ld * SIN(theta);
