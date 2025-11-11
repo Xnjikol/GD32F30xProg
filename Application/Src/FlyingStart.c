@@ -56,6 +56,7 @@ void FlyingStart_Update(FS_Handler_t* hnd, Clark_t current)
     switch (hnd->state)
     {
     case FS_STATE_IDLE:
+        Peripheral_Set_Stop(false);
         ShutFlag = true;
         if (current.a <= 0.1F && current.b <= 0.1F)
         {
@@ -138,7 +139,7 @@ void FlyingStart_Update(FS_Handler_t* hnd, Clark_t current)
             float theta = (hnd->WeI3) * hnd->Ts * hnd->ShortCnt;
             float respd = Motor_Ld * SIN(theta);
             float respq = Motor_Lq * (1 - COS(theta));
-            ATAN2(-respq, -respd, &hnd->Thetad3);
+            ATAN2(-respd, -respq, &hnd->Thetad3);
             hnd->ThetaE = wrap_theta_2pi(hnd->ThetaI3 - hnd->Thetad3);
 
             hnd->SpeedErr = Motor_Get_Speed()
