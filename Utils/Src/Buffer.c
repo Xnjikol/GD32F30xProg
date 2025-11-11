@@ -41,4 +41,5 @@ void Buffer_Send(void)
     }
     justfloat(Buffer_Pool, Buffer_Capacity);
     buffer_cnt = 0x0000U;
+    return;
 }

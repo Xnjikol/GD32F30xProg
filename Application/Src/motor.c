@@ -42,8 +42,8 @@ static inline void Motor_Update_Theta(void)
     Motor_Theta_Elec = Motor_Theta_Mech * Motor_Pn;
     Motor_Theta_Elec = wrap_theta_2pi(Motor_Theta_Elec);
 
-    Buffer_Put(Motor_Position, 5);
-    Buffer_Put(Motor_Theta_Mech, 6);
+    // Buffer_Put(Motor_Position, 5);
+    // Buffer_Put(Motor_Theta_Mech, 6);
     Buffer_Put(Motor_Theta_Elec, 7);
 }
 
@@ -62,6 +62,10 @@ static inline void calculate_speed(void)
         = calc_speed(Motor_Theta_Mech, last_theta, Motor_SampleFreq);
     Motor_Speed = IIR1stFilter_Update(&Motor_Speed_Filter, Motor_Speed);
     last_theta  = Motor_Theta_Mech;
+
+    Buffer_Put(Motor_Speed, 5);
+
+    return;
 }
 
 bool Motor_Set_SampleTime(const SystemTimeConfig_t* time_config)
