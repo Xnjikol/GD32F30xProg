@@ -9,6 +9,7 @@
 #include "sensorless_interface.h"
 
 #include <stdbool.h>
+#include "Buffer.h"
 #include "filter.h"
 #include "flying.h"
 #include "hf_injection.h"
@@ -245,6 +246,9 @@ static inline float pll_update(float error, bool reset)
         Sensorless_ThetaEst += M_2PI;
     }
     Sensorless_ThetaEst = wrap_theta_2pi(Sensorless_ThetaEst);
+
+    Buffer_Put(Sensorless_ThetaEst, 9);
+
     return omega;
 }
 
@@ -272,6 +276,9 @@ static inline float calculate_speed(float omega)
     // }
     speed_int           = 0.0F;
     Sensorless_SpeedEst = speed;
+
+    Buffer_Put(Sensorless_SpeedEst, 8);
+
     return speed;
 }
 

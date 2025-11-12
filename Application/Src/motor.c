@@ -11,6 +11,8 @@ bool  Motor_Initialized     = false;
 float Motor_Rs              = 0.0F;
 float Motor_Ld              = 0.0F;
 float Motor_Lq              = 0.0F;
+float Motor_InvLd           = 0.0F;
+float Motor_InvLq           = 0.0F;
 float Motor_Flux            = 0.0F;
 float Motor_Pn              = 0.0F;
 float Resolver_Pn           = 0.0F;
@@ -44,7 +46,7 @@ static inline void Motor_Update_Theta(void)
 
     // Buffer_Put(Motor_Position, 5);
     // Buffer_Put(Motor_Theta_Mech, 6);
-    Buffer_Put(Motor_Theta_Elec, 7);
+    Buffer_Put(Motor_Theta_Elec, 5);
 }
 
 static inline void calculate_speed(void)
@@ -63,7 +65,7 @@ static inline void calculate_speed(void)
     Motor_Speed = IIR1stFilter_Update(&Motor_Speed_Filter, Motor_Speed);
     last_theta  = Motor_Theta_Mech;
 
-    Buffer_Put(Motor_Speed, 5);
+    Buffer_Put(Motor_Speed, 4);
 
     return;
 }
@@ -82,7 +84,9 @@ bool Motor_Initialization(const MotorParam_t* motor_params)
 {
     Motor_Rs              = motor_params->Rs;
     Motor_Ld              = motor_params->Ld;
+    Motor_InvLd           = 1.0F / Motor_Ld;
     Motor_Lq              = motor_params->Lq;
+    Motor_InvLq           = 1.0F / Motor_Lq;
     Motor_Flux            = motor_params->Flux;
     Motor_Pn              = motor_params->Pn;
     Resolver_Pn           = motor_params->Resolver_Pn;

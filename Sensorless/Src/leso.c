@@ -1,21 +1,27 @@
 #include "leso.h"
 #include <stdbool.h>
+#include "Buffer.h"
 #include "arm_math.h" /* CMSIS-DSP math */  // IWYU pragma: export
 #include "filter.h"
+#include "motor.h"
 #include "pid.h"
 #include "theta_calc.h"
 #include "transformation.h"
 
 #define SQRT(x, y) arm_sqrt_f32(x, y)
 
-static bool  Leso_Enabled          = {0};
-static float Leso_Beta1            = {0};
-static float Leso_Beta2            = {0};
-static float Leso_Rs               = {0};
-static float Leso_Ld               = {0};
-static float Leso_Lq               = {0};
-static float Leso_InvLd            = {0};
-static float Leso_InvLq            = {0};
+static bool  Leso_Enabled = {0};
+static float Leso_Beta1   = {0};
+static float Leso_Beta2   = {0};
+static float Leso_Rs      = {0};
+// static float Motor_Ld      = {0};
+// static float Motor_Lq      = {0};
+// static float Motor_InvLd   = {0};
+// static float Motor_InvLq   = {0};
+// static float Leso_Ld               = {0};
+// static float Leso_Lq               = {0};
+// static float Leso_InvLd            = {0};
+// static float Leso_InvLq            = {0};
 static float Leso_SampleTime       = {0};
 static float Leso_SampleFreq_Speed = {0};
 static float Leso_Prescaler        = {0};
@@ -73,10 +79,10 @@ bool Leso_Initialization(const LESO_Param_t* param)
     Leso_Wc_Max = param->wc_max;
     Leso_Wc_Min = param->wc_min;
     Leso_Rs     = param->Rs;
-    Leso_Ld     = param->Ld;
-    Leso_Lq     = param->Lq;
-    Leso_InvLd  = 1.0F / Leso_Ld;
-    Leso_InvLq  = 1.0F / Leso_Lq;
+    // Leso_Ld     = param->Ld;
+    // Leso_Lq     = param->Lq;
+    // Leso_InvLd  = 1.0F / Leso_Ld;
+    // Leso_InvLq  = 1.0F / Leso_Lq;
 
     Leso_Int_limit = 1E35F;  // 积分限幅值
 
@@ -201,7 +207,7 @@ void Leso_Update_Beta(void)
     Leso_Beta1 = 2.0F * Leso_Wc;
     Leso_Beta2 = Leso_Wc * Leso_Wc;
 
-    Leso_InvLq = 1.0F / Leso_Lq;
+    Motor_InvLq = 1.0F / Motor_Lq;
 }
 
 void Leso_Update_EmfEstA(void)
@@ -216,13 +222,16 @@ void Leso_Update_EmfEstA(void)
     if (!Leso_Enabled)
     {
         leso_f1a      = 0.0F;
-        Leso_EmfEst.a = -Leso_Lq * leso_f1a;
+        Leso_EmfEst.a = -Motor_Lq * leso_f1a;
         return;
     }
 
     leso_err = Leso_CurEst.a - Leso_Current.a;
-    leso_f0  = -Leso_Current.a * Leso_Rs * Leso_InvLq;
-    leso_b0u = Leso_Voltage.a * Leso_InvLq;
+
+    Buffer_Put(Leso_CurEst.a, 2);
+
+    leso_f0  = -Leso_Current.a * Leso_Rs * Motor_InvLq;
+    leso_b0u = Leso_Voltage.a * Motor_InvLq;
     leso_f1a -= Leso_Beta2 * Leso_SampleTime * leso_err;
 
     leso_f1a = clamp_f32(leso_f1a, -Leso_Int_limit, Leso_Int_limit);
@@ -232,8 +241,7 @@ void Leso_Update_EmfEstA(void)
 
     Leso_CurEst.a
         = clamp_f32(Leso_CurEst.a, -Leso_Int_limit, Leso_Int_limit);
-
-    Leso_EmfEst.a = -Leso_Lq * leso_f1a;
+    Leso_EmfEst.a = -Motor_Lq * leso_f1a;
 
     return;
 }
@@ -250,13 +258,16 @@ void Leso_Update_EmfEstB(void)
     if (!Leso_Enabled)
     {
         leso_f1b      = 0.0F;
-        Leso_EmfEst.b = -Leso_Lq * leso_f1b;
+        Leso_EmfEst.b = -Motor_Lq * leso_f1b;
         return;
     }
 
     leso_err = Leso_CurEst.b - Leso_Current.b;
-    leso_f0  = -Leso_Current.b * Leso_Rs * Leso_InvLq;
-    leso_b0u = Leso_Voltage.b * Leso_InvLq;
+
+    Buffer_Put(Leso_CurEst.b, 3);
+
+    leso_f0  = -Leso_Current.b * Leso_Rs * Motor_InvLq;
+    leso_b0u = Leso_Voltage.b * Motor_InvLq;
     leso_f1b -= Leso_Beta2 * Leso_SampleTime * leso_err;
 
     leso_f1b = clamp_f32(leso_f1b, -Leso_Int_limit, Leso_Int_limit);
@@ -266,8 +277,7 @@ void Leso_Update_EmfEstB(void)
 
     Leso_CurEst.b
         = clamp_f32(Leso_CurEst.b, -Leso_Int_limit, Leso_Int_limit);
-
-    Leso_EmfEst.b = -Leso_Lq * leso_f1b;
+    Leso_EmfEst.b = -Motor_Lq * leso_f1b;
 
     return;
 }

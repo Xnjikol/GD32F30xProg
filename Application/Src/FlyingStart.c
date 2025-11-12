@@ -7,6 +7,8 @@
 
 volatile bool FlyingStartEnabled = false;
 
+FS_Handler_t Fs_Hnd = {0};
+
 bool FlyingStart_Init(FS_Handler_t* hnd,
                       uint16_t      ShortCnt,
                       uint16_t      ReleaseCnt,
@@ -154,7 +156,7 @@ void FlyingStart_Update(FS_Handler_t* hnd, Clark_t current)
             ATAN2(-respd, -respq, &hnd->Thetad3);
             hnd->ThetaE = wrap_theta_2pi(hnd->ThetaI3 - hnd->Thetad3);
 
-            Buffer_Put(hnd->ThetaE, 8);
+            Buffer_Put(hnd->ThetaE, 7);
 
             hnd->SpeedErr = Motor_Get_Speed() - speedI3;
             hnd->ThetaErr = Motor_Get_ThetaElec() - hnd->ThetaE;

@@ -14,24 +14,18 @@ static DeviceStateEnum_t MainInt_State        = RUNNING;
 static volatile bool     MainInt_UseRealTheta = true;
 //static volatile uint16_t MainInt_DataFlag     = 0x000U;
 
-FS_Handler_t Fs_Hnd = {0};
-
 static inline void MainInt_Update_FocCurrent(void)
 {
     Phase_t current_phase = Peripheral_Get_PhaseCurrent();
     Clark_t current_clark = {0};
-
-    Buffer_Put(current_phase.a, 0);
-    Buffer_Put(current_phase.b, 1);
-    Buffer_Put(current_phase.c, 2);
 
     current_clark = ClarkTransform(current_phase);
     current_clark = Sensorless_FilterCurrent(current_clark);
     Sensorless_Set_Current(current_clark);
     Foc_Set_Iclark_Fdbk(current_clark);
 
-    Buffer_Put(current_clark.a, 3);
-    Buffer_Put(current_clark.b, 4);
+    Buffer_Put(current_clark.a, 0);
+    Buffer_Put(current_clark.b, 1);
 }
 
 static inline void MainInt_Check_ProtectFlag(void)
@@ -96,7 +90,6 @@ static inline void MainInt_Update_Angle_and_Speed(void)
 
 static inline void MainInt_Initialization(void)
 {
-    FlyingStart_Init(&Fs_Hnd, 3U, 5U, 1U, 2E-4F);
     Initialization_Modules();
     Peripheral_CalibrateADC();
     if (Foc_Get_BusVoltage() > 200.0F)

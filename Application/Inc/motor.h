@@ -7,6 +7,8 @@
 extern float Motor_Rs;
 extern float Motor_Ld;
 extern float Motor_Lq;
+extern float Motor_InvLd;
+extern float Motor_InvLq;
 extern float Motor_Flux;
 extern float Motor_Pn;
 extern float Resolver_Pn;

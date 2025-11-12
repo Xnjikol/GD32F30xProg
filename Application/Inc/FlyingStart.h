@@ -64,6 +64,8 @@ extern "C"
                           uint16_t      DeltaCnt,
                           float         Ts);
 
+    extern FS_Handler_t Fs_Hnd;
+
     void FlyingStart_Update(FS_Handler_t* hnd, Clark_t current);
 
 #ifdef __cplusplus

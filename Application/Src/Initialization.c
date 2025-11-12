@@ -1,5 +1,6 @@
 #include "Initialization.h"
 #include "Buffer.h"
+#include "FlyingStart.h"
 #include "MTPA.h"
 #include "adc.h"
 #include "can.h"
@@ -101,7 +102,7 @@ bool init_module_motor(void)
     Motor_Initialization(&motor_param);
     Motor_Set_SampleTime(&sys_time_cfg);
     Motor_Set_SpeedPrescaler(SPEED_LOOP_PRESCALER);
-    Motor_Set_Filter(10.0F, SPEED_LOOP_FREQ);
+    Motor_Set_Filter(SPEED_LOOP_PRESCALER, SPEED_LOOP_FREQ);
     return true;
 }
 
@@ -116,6 +117,16 @@ bool init_module_protect(void)
     return Protect_Initialization(&protect_param);
 }
 
+bool init_module_flying_start(void)
+{
+    FlyingStart_Init(&Fs_Hnd,
+                     SHORT_COUNT,
+                     RELEASE_COUNT,
+                     DELTA_COUNT,
+                     MAIN_LOOP_TIME);
+    return true;
+}
+
 bool init_module_sensorless(void)
 {
     Sensorless_Param_t sensorless_param
@@ -123,7 +134,7 @@ bool init_module_sensorless(void)
            .hysteresis   = SENSORLESS_HYSTERESIS};
     Sensorless_Initialization(&sensorless_param);
     Sensorless_Set_SampleTime(&sys_time_cfg);
-    Sensorless_Set_SpeedFilter(10.0F, SPEED_LOOP_FREQ);
+    Sensorless_Set_SpeedFilter(SPEED_LOOP_PRESCALER, SPEED_LOOP_FREQ);
 
     PID_Handler_t sensorless_pid
         = {.Kp            = SENSORLESS_PLL_KP,
@@ -163,7 +174,7 @@ bool init_module_smo(void)
     Leso_Set_Pid_Handler(smo_pid);
 
     // Leso_Set_EmfFilter(SMO_LPF_CUTOFF_FREQ, SMO_SAMPLING_FREQ);
-    Leso_Set_SpeedFilter(10.0F, SPEED_LOOP_FREQ);
+    Leso_Set_SpeedFilter(SPEED_LOOP_PRESCALER, SPEED_LOOP_FREQ);
 
     return true;
 }
@@ -200,6 +211,7 @@ bool Initialization_Modules(void)
     init_module_buffer();
     init_module_protect();
     init_module_motor();
+    init_module_flying_start();
     init_module_sensorless();
     init_module_smo();
     init_module_hfi();
