@@ -12,36 +12,37 @@
 #include "Buffer.h"
 #include "filter.h"
 #include "flying.h"
+#include "foc.h"
 #include "hf_injection.h"
 #include "leso.h"
 #include "motor.h"
 #include "reciprocal.h"
+#include "smo.h"
 #include "transformation.h"
 #include <math.h>
 
-static volatile bool Sensorless_Enabled = {0};
+volatile bool Sensorless_Enabled = {0};
 
-static bool  Sensorless_Reset          = {0};
-static bool  Sensorless_Reset_Prev     = {0};
-static float Sensorless_Threshold_Hfi  = {0};
-static float Sensorless_Threshold_Leso = {0};
-static float Sensorless_Switch_Speed   = {0};
-static float Sensorless_SpeedRef       = {0};
-static float Sensorless_SpeedFdbk      = {0};
-static float Sensorless_SpeedEst       = {0};
-static float Sensorless_ThetaEst       = {0};
-static float Sensorless_SampleTime     = {0};
-static float Sensorless_InvPn          = {0};
-static float Sensorless_ThetaErr       = {0};
-static float Sensorless_SpeedErr       = {0};
+bool  Sensorless_Reset          = {0};
+bool  Sensorless_Reset_Prev     = {0};
+float Sensorless_Threshold_Hfi  = {0};
+float Sensorless_Threshold_Leso = {0};
+float Sensorless_Switch_Speed   = {0};
+float Sensorless_SpeedRef       = {0};
+float Sensorless_SpeedFdbk      = {0};
+float Sensorless_SpeedEst       = {0};
+float Sensorless_ThetaEst       = {0};
+float Sensorless_InvPn          = {0};
+float Sensorless_ThetaErr       = {0};
+float Sensorless_SpeedErr       = {0};
 
 volatile float Sensorless_ThetAdj = {0};
 
-static PID_Handler_t  Sensorless_Theta_PID    = {0};
-static IIR1stFilter_t Sensorless_SpeedFilter1 = {0};
-static IIR2ndFilter_t Sensorless_SpeedFilter2 = {0};
+PID_Handler_t  Sensorless_Theta_PID    = {0};
+IIR1stFilter_t Sensorless_SpeedFilter1 = {0};
+IIR2ndFilter_t Sensorless_SpeedFilter2 = {0};
 
-static sensorless_method_t Sensorless_Method = FLYING;
+sensorless_method_t Sensorless_Method = {0};
 
 bool restore_states(void)
 {
@@ -60,8 +61,6 @@ bool Sensorless_Set_SampleTime(const SystemTimeConfig_t* config)
     {
         return false;
     }
-
-    Sensorless_SampleTime = config->current.val;  // 采样时间
 
     return true;
 }
@@ -114,31 +113,6 @@ bool Sensorless_Set_MotorParams(const MotorParam_t* motor_param)
     return true;
 }
 
-bool Sensorless_Set_ResetFlag(bool reset)
-{
-    Sensorless_Reset = reset;
-    return Sensorless_Reset;
-}
-
-bool Sensorless_Get_Reset(void)
-{
-    return Sensorless_Reset;
-}
-
-bool Sensorless_Set_Method(sensorless_method_t method, bool enable)
-{
-    if (enable)
-    {
-        Sensorless_Method |= method;
-    }
-    else
-    {
-        Sensorless_Method &= ~method;
-    }
-
-    return true;
-}
-
 sensorless_method_t Sensorless_Get_Method(void)
 {
     return Sensorless_Method;
@@ -184,17 +158,13 @@ void Sensorless_Set_SpeedRef(float ref)
     Sensorless_SpeedRef = ref;
 }
 
-// void Sensorless_Set_Angle(float angle) {
-//     // Sensorless_ThetaEst = angle;
-// }
-
-AngleResult_t Sensorless_Get_Error(void)
+MotorState_t Sensorless_Get_Error(void)
 {
-    return (AngleResult_t){.theta = Sensorless_ThetaErr,
-                           .speed = Sensorless_SpeedErr};
+    return (MotorState_t){.theta = Sensorless_ThetaErr,
+                          .speed = Sensorless_SpeedErr};
 }
 
-bool Sensorless_Calculate_Err(AngleResult_t result)
+bool Sensorless_Calculate_Err(MotorState_t result)
 {
     if (!Sensorless_Enabled)
     {
@@ -236,7 +206,7 @@ static inline float pll_update(float error, bool reset)
         return omega;
     }
 
-    Sensorless_ThetaEst += omega * Sensorless_SampleTime;
+    Sensorless_ThetaEst += omega * SampleTime;
     if (Sensorless_ThetaEst > M_2PI)
     {
         Sensorless_ThetaEst -= M_2PI;
@@ -269,7 +239,7 @@ static inline float calculate_speed(float omega)
     // speed1 = IIR1stFilter_Update(&Sensorless_SpeedFilter1, speed_int);
     // speed2 = IIR2ndFilter_Update(&Sensorless_SpeedFilter2, speed_int);
     speed = IIR2ndFilter_Update(&Sensorless_SpeedFilter2, speed_int);
-    // if (Sensorless_Method == LES_OBSERVER) {
+    // if (Sensorless_Method == SENSORLESS_LOW2HIGH) {
     //     speed = speed2;
     // } else {
     //     speed = speed2;
@@ -282,45 +252,47 @@ static inline float calculate_speed(float omega)
     return speed;
 }
 
-AngleResult_t Sensorless_Update_Position(void)
+MotorState_t Sensorless_Update_Position(void)
 {
+    MotorState_t default_result
+        = {.speed = Sensorless_SpeedEst,
+           .theta = Sensorless_ThetaEst + Sensorless_ThetAdj};
     if (!Sensorless_Enabled)
     {
-        return (AngleResult_t){
-            .speed = Sensorless_SpeedEst,
-            .theta = Sensorless_ThetaEst + Sensorless_ThetAdj};
+        return default_result;
     }
     float error = 0.0F;
     float omega = 0.0F;
     float speed = 0.0F;
-    if (fabsf(Sensorless_SpeedRef) >= Sensorless_Switch_Speed)
+    switch (Sensorless_Method)
     {
-        if (fabsf(Sensorless_SpeedFdbk) >= Sensorless_Switch_Speed)
-        {
-            Sensorless_Method = LES_OBSERVER;
-            error             = Leso_Get_PllErr();
-        }
-        else
-        {
-            Sensorless_Method = HF_INJECTION;
-            error             = Hfi_Get_PllErr();
-        }
+    case SENSORLESS_START:
+        Sensorless_Method = SENSORLESS_HIGH_SMO;
+
+        error = SmoHandle.state.pll_err;
+        return default_result;
+        break;
+
+    case SENSORLESS_LOW:
+        return default_result;
+        break;
+
+    case SENSORLESS_HIGH_LESO:
+        error = Leso_Get_PllErr();
+        break;
+
+    case SENSORLESS_HIGH_SMO:
+        error = SmoHandle.state.pll_err;
+        break;
+
+    default:
+        Sensorless_Method = SENSORLESS_HIGH_SMO;
+
+        error = SmoHandle.state.pll_err;
+        break;
     }
-    else
-    {
-        if (fabsf(Sensorless_SpeedFdbk) <= Sensorless_Switch_Speed)
-        {
-            Sensorless_Method = HF_INJECTION;
-            error             = Hfi_Get_PllErr();
-        }
-        else
-        {
-            Sensorless_Method = LES_OBSERVER;
-            error             = Leso_Get_PllErr();
-        }
-    }
-    AngleResult_t leso_result = {0};
-    AngleResult_t hfi_result  = {0};
+    MotorState_t leso_result = {0};
+    MotorState_t hfi_result  = {0};
 
     leso_result = Leso_Get_Result();
     hfi_result  = Hfi_Get_Result();
@@ -330,8 +302,10 @@ AngleResult_t Sensorless_Update_Position(void)
     Leso_Set_Theta(Sensorless_ThetaEst);
     Leso_Set_Speed(speed);
     Hfi_Set_Theta(Sensorless_ThetaEst);
+    SmoHandle.state.theta = Sensorless_ThetaEst;
+    SmoHandle.state.speed = speed;
 
-    return (AngleResult_t){
+    return (MotorState_t){
         .speed = Sensorless_SpeedEst,
         .theta = Sensorless_ThetaEst + Sensorless_ThetAdj};
 }
@@ -380,73 +354,21 @@ static inline void enable_hfi(bool enable)
     }
 }
 
-static inline void judge_strategy(float ramp, float fdbk)
-{
-    enable_leso(fabsf(ramp) >= Sensorless_Threshold_Leso);
-    enable_hfi(fabsf(ramp) <= Sensorless_Threshold_Hfi);
-    // if (fabsf(ramp) >= Sensorless_Threshold_Leso)
-    // {
-    //     enable_leso(true);
-    // }
-    // else
-    // {
-    //     enable_leso(false);
-    // }
-    // if (fabsf(ramp) <= Sensorless_Threshold_Hfi)
-    // {
-    //     enable_hfi(true);
-    // }
-    // else
-    // {
-    //     enable_hfi(false);
-    // }
-}
-
 bool Sensorless_Calculate(void)
 {
-    if (Sensorless_Reset)
-    {
-        if (!Sensorless_Reset_Prev)
-        {
-            // restore_states();
-        }
-        return false;
-    }
-    else if (Sensorless_Reset_Prev)
-    {
-        Sensorless_Set_Method(FLYING, true);
-        Flying_Set_Enabled(true);
-    }
+    enable_leso(fabsf(Foc_Speed_Ramp) >= Sensorless_Threshold_Leso);
+    enable_hfi(fabsf(Foc_Speed_Ramp) <= Sensorless_Threshold_Hfi);
 
-    if (Flying_Is_Completed())
-    {
-        Sensorless_Set_Method(FLYING, false);
-    }
-    else
-    {
-        Flying_Update(Sensorless_Reset);
-    }
-
-    judge_strategy(Sensorless_SpeedRef, Sensorless_SpeedFdbk);
-
-    // if (Hfi_Get_Enabled())
-    // {
-    //     Hfi_Update();
-    // }
+    SmoHandle.enabled = Leso_Enabled;
 
     Hfi_Update();
-
-    // if (Leso_Get_Enabled()) {
-    //     Leso_Update_Beta();
-    //     Leso_Update_EmfEstA();
-    //     Leso_Update_EmfEstB();
-    //     Leso_Update();
-    // }
 
     Leso_Update_Beta();
     Leso_Update_EmfEstA();
     Leso_Update_EmfEstB();
     Leso_Update();
+
+    SMO_Update(&SmoHandle, Foc_Iclark_Fdbk, Foc_Uclark_Ref);
 
     Sensorless_Reset_Prev = Sensorless_Reset;
 

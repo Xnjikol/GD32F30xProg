@@ -10,44 +10,40 @@
 
 #define SQRT(x, y) arm_sqrt_f32(x, y)
 
-static bool  Leso_Enabled = {0};
-static float Leso_Beta1   = {0};
-static float Leso_Beta2   = {0};
-static float Leso_Rs      = {0};
-// static float Motor_Ld      = {0};
-// static float Motor_Lq      = {0};
-// static float Motor_InvLd   = {0};
-// static float Motor_InvLq   = {0};
-// static float Leso_Ld               = {0};
-// static float Leso_Lq               = {0};
-// static float Leso_InvLd            = {0};
-// static float Leso_InvLq            = {0};
-static float Leso_SampleTime       = {0};
-static float Leso_SampleFreq_Speed = {0};
-static float Leso_Prescaler        = {0};
-static float Leso_Pn               = {0};
-static float Leso_InvPn            = {0};
-static float Leso_Gain             = {0};
-static float Leso_Factor           = {0};
-static float Leso_Wc               = {0};
-static float Leso_Wc_Min           = {0};
-static float Leso_Wc_Max           = {0};
-static float Leso_We               = {0};
-static float Leso_Theta            = {0};
-static float Leso_Speed            = {0};
-static float Leso_Error            = {0};
+bool  Leso_Enabled = {0};
+float Leso_Beta1   = {0};
+float Leso_Beta2   = {0};
+float Leso_Rs      = {0};
+// float Motor_Ld      = {0};
+// float Motor_Lq      = {0};
+// float Motor_InvLd   = {0};
+// float Motor_InvLq   = {0};
+// float Leso_Ld               = {0};
+// float Leso_Lq               = {0};
+// float Leso_InvLd            = {0};
+// float Leso_InvLq            = {0};
+float Motor_InvPn = {0};
+float Leso_Gain   = {0};
+float Leso_Factor = {0};
+float Leso_Wc     = {0};
+float Leso_Wc_Min = {0};
+float Leso_Wc_Max = {0};
+float Leso_We     = {0};
+float Leso_Theta  = {0};
+float Leso_Speed  = {0};
+float Leso_Error  = {0};
 
-static volatile float Leso_Theta_Err = {0};
-static volatile float Leso_Speed_Err = {0};
-static volatile float Leso_Int_limit = {0};
+volatile float Leso_Theta_Err = {0};
+volatile float Leso_Speed_Err = {0};
+volatile float Leso_Int_limit = {0};
 
-static Clark_t Leso_Voltage = {0};
-static Clark_t Leso_Current = {0};
-static Clark_t Leso_CurEst  = {0};
-static Clark_t Leso_EmfEst  = {0};
+Clark_t Leso_Voltage = {0};
+Clark_t Leso_Current = {0};
+Clark_t Leso_CurEst  = {0};
+Clark_t Leso_EmfEst  = {0};
 
-static IIR2ndFilter_t Leso_Speed_Filter = {0};
-static PID_Handler_t  Leso_Theta_PID    = {0};
+IIR2ndFilter_t Leso_Speed_Filter = {0};
+PID_Handler_t  Leso_Theta_PID    = {0};
 
 /**
  * @brief 设置SMO采样时间相关参数
@@ -60,10 +56,6 @@ bool Leso_Set_SampleTime(const SystemTimeConfig_t* config)
     {
         return false;
     }
-
-    Leso_SampleTime       = config->current.val;  // 采样时间
-    Leso_SampleFreq_Speed = config->speed.inv;    // 速度频率倒数
-    Leso_Prescaler        = config->prescaler;    // 预分频系数
 
     return true;
 }
@@ -87,12 +79,6 @@ bool Leso_Initialization(const LESO_Param_t* param)
     Leso_Int_limit = 1E35F;  // 积分限幅值
 
     return true;
-}
-
-void Leso_Set_Pn(float pole_pairs)
-{
-    Leso_Pn    = pole_pairs;
-    Leso_InvPn = 1.0F / pole_pairs;
 }
 
 void Leso_Set_Inductor(Park_t inductance)
@@ -136,7 +122,7 @@ void Leso_Set_Theta(float theta)
 void Leso_Set_Speed(float speed)
 {
     Leso_Speed = speed;
-    Leso_We    = rpm2radps(speed) * Leso_Pn;
+    Leso_We    = rpm2radps(speed) * Motor_Pn;
 }
 
 void Leso_Calc_ThetaErr(float ref)
@@ -160,11 +146,11 @@ bool Leso_Get_Enabled(void)
     return Leso_Enabled;
 }
 
-AngleResult_t Leso_Get_Result(void)
+MotorState_t Leso_Get_Result(void)
 {
-    AngleResult_t result = {0};
-    result.theta         = Leso_Theta;
-    result.speed         = Leso_Speed;
+    MotorState_t result = {0};
+    result.theta        = Leso_Theta;
+    result.speed        = Leso_Speed;
     return result;
 }
 
@@ -232,12 +218,12 @@ void Leso_Update_EmfEstA(void)
 
     leso_f0  = -Leso_Current.a * Leso_Rs * Motor_InvLq;
     leso_b0u = Leso_Voltage.a * Motor_InvLq;
-    leso_f1a -= Leso_Beta2 * Leso_SampleTime * leso_err;
+    leso_f1a -= Leso_Beta2 * SampleTime * leso_err;
 
     leso_f1a = clamp_f32(leso_f1a, -Leso_Int_limit, Leso_Int_limit);
 
     leso_dcur = leso_f0 + leso_b0u + leso_f1a - Leso_Beta1 * leso_err;
-    Leso_CurEst.a += leso_dcur * Leso_SampleTime;
+    Leso_CurEst.a += leso_dcur * SampleTime;
 
     Leso_CurEst.a
         = clamp_f32(Leso_CurEst.a, -Leso_Int_limit, Leso_Int_limit);
@@ -268,12 +254,12 @@ void Leso_Update_EmfEstB(void)
 
     leso_f0  = -Leso_Current.b * Leso_Rs * Motor_InvLq;
     leso_b0u = Leso_Voltage.b * Motor_InvLq;
-    leso_f1b -= Leso_Beta2 * Leso_SampleTime * leso_err;
+    leso_f1b -= Leso_Beta2 * SampleTime * leso_err;
 
     leso_f1b = clamp_f32(leso_f1b, -Leso_Int_limit, Leso_Int_limit);
 
     leso_dcur = leso_f0 + leso_b0u + leso_f1b - Leso_Beta1 * leso_err;
-    Leso_CurEst.b += leso_dcur * Leso_SampleTime;
+    Leso_CurEst.b += leso_dcur * SampleTime;
 
     Leso_CurEst.b
         = clamp_f32(Leso_CurEst.b, -Leso_Int_limit, Leso_Int_limit);
@@ -293,7 +279,7 @@ static inline float pll_update(float error, bool reset)
 {
     // 更新锁相环
     float omega = Pid_Update(error, reset, &Leso_Theta_PID);
-    Leso_Theta += omega * Leso_SampleTime;
+    Leso_Theta += omega * SampleTime;
     if (Leso_Theta > M_2PI)
     {
         Leso_Theta -= M_2PI;
@@ -352,7 +338,7 @@ static inline float calculate_speed(float omega)
         return Leso_Speed;
     }
 
-    leso_integ += radps2rpm(omega) * Leso_InvPn * 0.1F;
+    leso_integ += radps2rpm(omega) * Motor_InvPn * 0.1F;
     leso_count++;
     if (leso_count < 0x000AU)
     {

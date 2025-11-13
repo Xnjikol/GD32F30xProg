@@ -1,30 +1,27 @@
 #include "foc.h"
+#include "MTPA.h"
+#include "identification.h"
+#include "motor.h"
 #include "pid.h"
 #include "signal.h"
 #include "stdint.h"
 #include "transformation.h"
 
-#include "MTPA.h"
-#include "identification.h"
+FocMode_t Foc_Mode           = IDLE;   // 当前FOC模式
+bool      Foc_Reset          = false;  // FOC复位标志
+float     Foc_Current_Ts     = 0.0F;   // 电流环采样周期
+float     Foc_Current_Freq   = 0.0F;   // 电流环频率
+float     Foc_Speed_Ts       = 0.0F;   // 转速环采样周期
+float     Foc_Speed_Freq     = 0.0F;   // 转速环频率
+float     Foc_Speed_Ref      = 0.0F;   // 参考速度
+float     Foc_Speed_Fdbk     = 0.0F;   // 实际转速反馈
+float     Foc_Speed_Ramp     = 0.0F;   // 实际指令转速
+float     Foc_Theta          = 0.0F;
+float     Foc_BusVoltage     = 0.0F;
+float     Foc_BusVoltage_Inv = 0.0F;
 
-// static FocMode_t Foc_Mode_Prev = IDLE;  // 上一次FOC模式
-
-static FocMode_t Foc_Mode            = IDLE;   // 当前FOC模式
-static bool      Foc_Reset           = false;  // FOC复位标志
-static float     Foc_Current_Ts      = 0.0F;   // 电流环采样周期
-static float     Foc_Current_Freq    = 0.0F;   // 电流环频率
-static uint16_t  Foc_Speed_Prescaler = 0U;     // 电流环分频数
-static float     Foc_Speed_Ts        = 0.0F;   // 转速环采样周期
-static float     Foc_Speed_Freq      = 0.0F;   // 转速环频率
-static float     Foc_Speed_Ref       = 0.0F;   // 参考速度
-static float     Foc_Speed_Fdbk      = 0.0F;   // 实际转速反馈
-static float     Foc_Theta           = 0.0F;
-static float     Foc_BusVoltage      = 0.0F;
-static float     Foc_BusVoltage_Inv  = 0.0F;
-static float     Foc_Speed_Ramp      = 0.0F;  // 实际指令转速
-
-static volatile float Foc_Id_Min = 0.3F;  // D轴电流最小值
-static volatile bool  Foc_Sweep  = true;  // FOC扫频标志
+volatile float Foc_Id_Min = 0.3F;  // D轴电流最小值
+volatile bool  Foc_Sweep  = true;  // FOC扫频标志
 
 VF_Parameter_t  Foc_VfParam            = {0};
 IF_Parameter_t  Foc_IfParam            = {0};
@@ -43,11 +40,10 @@ FluxExperiment_t Experiment = {0};
 
 void Foc_Set_SampleTime(const SystemTimeConfig_t* config)
 {
-    Foc_Current_Ts      = config->current.val;  // 电流环采样周期
-    Foc_Current_Freq    = config->current.inv;  // 电流环频率
-    Foc_Speed_Ts        = config->speed.val;    // 转速环采样周期
-    Foc_Speed_Freq      = config->speed.inv;    // 转速环频率
-    Foc_Speed_Prescaler = (uint16_t)config->prescaler;  // 转速环分频数
+    Foc_Current_Ts   = config->current.time;  // 电流环采样周期
+    Foc_Current_Freq = config->current.freq;  // 电流环频率
+    Foc_Speed_Ts     = config->speed.time;    // 转速环采样周期
+    Foc_Speed_Freq   = config->speed.freq;    // 转速环频率
 }
 
 void Foc_Set_Mode(FocMode_t mode)
@@ -122,7 +118,7 @@ float Foc_Get_SpeedRamp(void)
     return Foc_Speed_Ramp;
 }
 
-void Foc_Set_Speed_and_Angle(AngleResult_t* angle_speed)
+void Foc_Set_Speed_and_Angle(MotorState_t* angle_speed)
 {
     Foc_Theta      = wrap_theta_2pi(angle_speed->theta);
     Foc_Speed_Fdbk = angle_speed->speed;
@@ -365,7 +361,7 @@ static inline Park_t Foc_Update_SpeedLoop(float ref,
 {
     static uint16_t counter = 0x0000U;
     counter++;
-    if (counter < Foc_Speed_Prescaler)
+    if (counter < Speed_Prescaler)
     {
         return Foc_Idq_Ref;  // 如果未到达分频点，直接返回参考值
     }

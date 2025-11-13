@@ -34,6 +34,17 @@ typedef struct
     bool   use_sensor;  // 是否使用传感器
 } IF_Parameter_t;
 
+extern Clark_t Foc_Iclark_Fdbk;
+extern Park_t  Foc_Idq_Ref;
+extern Park_t  Foc_Idq_Fdbk;
+extern Clark_t Foc_Uclark_Ref;
+extern Park_t  Foc_Udq_Ref;
+
+extern float Foc_Speed_Ref;
+extern float Foc_Speed_Fdbk;
+extern float Foc_Speed_Ramp;
+extern float Foc_Theta;
+
 void      Foc_Set_SampleTime(const SystemTimeConfig_t* config);
 void      Foc_Set_Mode(FocMode_t mode);
 FocMode_t Foc_Get_Mode(void);
@@ -46,7 +57,7 @@ void      Foc_Set_BusVoltageInv(float voltage);
 void      Foc_Set_Angle(float angle);
 void      Foc_Set_Speed(float speed);
 float     Foc_Get_SpeedRamp(void);
-void      Foc_Set_Speed_and_Angle(AngleResult_t* angle_speed);
+void      Foc_Set_Speed_and_Angle(MotorState_t* angle_speed);
 void      Foc_Set_Iclark_Fdbk(Clark_t current);
 Clark_t   Foc_Get_Iclark_Fdbk(void);
 void      Foc_Set_Idq_Ref(Park_t idq_ref);

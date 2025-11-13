@@ -16,11 +16,16 @@ extern float Motor_MotorPn_inv;
 extern float Motor_Position_Scale;
 extern float Motor_Position_Offset;
 extern float Motor_Theta_Factor;
-extern float Motor_SampleFreq;
+extern float Speed_Time;
+extern float Speed_Freq;
+extern float SampleTime;
+extern float SampleFreq;
 extern float Motor_Position;
-extern float Motor_Theta_Elec;
-extern float Motor_Theta_Mech;
+extern float Motor_ThetaElec;
+extern float Motor_ThetaMech;
 extern float Motor_Speed;
+
+extern uint16_t Speed_Prescaler;
 
 typedef struct
 {
@@ -36,9 +41,6 @@ typedef struct
     float theta_factor;
 } MotorParam_t;
 
-bool  Motor_Set_SampleTime(const SystemTimeConfig_t* time_config);
-bool  Motor_Initialization(const MotorParam_t* motor_params);
-bool  Motor_Set_SpeedPrescaler(uint16_t prescaler);
 bool  Motor_Set_Filter(float sample_freq, float cutoff_freq);
 void  Motor_Set_Position(uint16_t position);
 void  Motor_Set_Theta_Elec(float theta);

@@ -58,8 +58,8 @@ bool Hfi_Set_SampleTime(const SystemTimeConfig_t* time_config)
     }
 
     /* 设置采样时间 */
-    Hfi_SampleTime = time_config->current.val;
-    Hfi_SampleFreq = time_config->current.inv;
+    Hfi_SampleTime = time_config->current.time;
+    Hfi_SampleFreq = time_config->current.freq;
     return true;
 }
 
@@ -258,9 +258,9 @@ void Hfi_Set_InitialPosition(float theta)
     PID_SetIntegral(&Hfi_Theta_Pid, !Hfi_Enabled, theta);
 }
 
-AngleResult_t Hfi_Get_Result(void)
+MotorState_t Hfi_Get_Result(void)
 {
-    AngleResult_t angle_result;
+    MotorState_t angle_result;
     angle_result.theta = Hfi_Theta;
     angle_result.speed = Hfi_Speed;
     return angle_result;

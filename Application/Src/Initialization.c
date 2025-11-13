@@ -20,9 +20,9 @@
 #include "usart.h"
 
 volatile uint32_t  DWT_Count = 0;
-SystemTimeConfig_t sys_time_cfg
-    = {.current   = {.val = MAIN_LOOP_TIME, .inv = MAIN_LOOP_FREQ},
-       .speed     = {.val = SPEED_LOOP_TIME, .inv = SPEED_LOOP_FREQ},
+SystemTimeConfig_t SysClk
+    = {.current   = {.time = MAIN_LOOP_TIME, .freq = MAIN_LOOP_FREQ},
+       .speed     = {.time = SPEED_LOOP_TIME, .freq = SPEED_LOOP_FREQ},
        .prescaler = SPEED_LOOP_PRESCALER};
 
 MotorParam_t motor_param = {.Rs              = MOTOR_RS,
@@ -38,7 +38,7 @@ MotorParam_t motor_param = {.Rs              = MOTOR_RS,
 
 bool init_module_foc(void)
 {
-    Foc_Set_SampleTime(&sys_time_cfg);
+    Foc_Set_SampleTime(&SysClk);
 
     Foc_Set_ResetFlag(true);  // 初始为复位状态
 
@@ -99,9 +99,6 @@ bool init_module_buffer(void)
 
 bool init_module_motor(void)
 {
-    Motor_Initialization(&motor_param);
-    Motor_Set_SampleTime(&sys_time_cfg);
-    Motor_Set_SpeedPrescaler(SPEED_LOOP_PRESCALER);
     Motor_Set_Filter(SPEED_LOOP_PRESCALER, SPEED_LOOP_FREQ);
     return true;
 }
@@ -133,7 +130,7 @@ bool init_module_sensorless(void)
         = {.switch_speed = SENSORLESS_SWITCH_SPEED,
            .hysteresis   = SENSORLESS_HYSTERESIS};
     Sensorless_Initialization(&sensorless_param);
-    Sensorless_Set_SampleTime(&sys_time_cfg);
+    Sensorless_Set_SampleTime(&SysClk);
     Sensorless_Set_SpeedFilter(SPEED_LOOP_PRESCALER, SPEED_LOOP_FREQ);
 
     PID_Handler_t sensorless_pid
@@ -152,7 +149,7 @@ bool init_module_sensorless(void)
 
 bool init_module_smo(void)
 {
-    Leso_Set_SampleTime(&sys_time_cfg);
+    Leso_Set_SampleTime(&SysClk);
 
     LESO_Param_t smo_param = {.wc_gain = LESO_WC_GAIN,
                               .wc_max  = LESO_WC_MAX,
@@ -161,8 +158,6 @@ bool init_module_smo(void)
                               .Lq      = MOTOR_LQ,
                               .Rs      = MOTOR_RS};
     Leso_Initialization(&smo_param);
-
-    Leso_Set_Pn(MOTOR_PN);
 
     PID_Handler_t smo_pid = {.Kp            = LESO_PLL_KP,
                              .Ki            = LESO_PLL_KI,
@@ -181,7 +176,7 @@ bool init_module_smo(void)
 
 bool init_module_hfi(void)
 {
-    Hfi_Set_SampleTime(&sys_time_cfg);
+    Hfi_Set_SampleTime(&SysClk);
 
     hf_injection_params_t hfi_param
         = {.injection_freq    = HF_INJECTION_FREQ,

@@ -60,26 +60,30 @@
 
 #endif
 
-typedef struct {
+typedef struct
+{
     float_t theta; /*!< 当前角度（弧度） */
     float_t speed;
-} AngleResult_t;
+} MotorState_t;
 
 /**
  * @brief 将角度限制在 [-π, π) 区间
  * @param theta 输入角度（弧度）
  * @return 限幅后的角度（弧度）
  */
-static inline float_t wrap_theta_pi(float_t theta) {
+static inline float_t wrap_theta_pi(float_t theta)
+{
     // 先将角度归一化到 [-2π, 2π) 范围
     theta = fmodf(theta, M_2PI);
 
     // 如果角度大于π，则减去2π使其落入[-π, π)
-    if (theta >= M_PI) {
+    if (theta >= M_PI)
+    {
         theta -= M_2PI;
     }
     // 如果角度小于-π，则加上2π使其落入[-π, π)
-    else if (theta < -M_PI) {
+    else if (theta < -M_PI)
+    {
         theta += M_2PI;
     }
 
@@ -91,9 +95,11 @@ static inline float_t wrap_theta_pi(float_t theta) {
  * @param theta 输入角度（弧度）
  * @return 限幅后的角度（弧度）
  */
-static inline float_t wrap_theta_2pi(float_t theta) {
+static inline float_t wrap_theta_2pi(float_t theta)
+{
     theta = fmodf(theta, M_2PI);
-    if (theta < 0.0F) {
+    if (theta < 0.0F)
+    {
         theta += M_2PI;
     }
     return theta;
@@ -104,7 +110,8 @@ static inline float_t wrap_theta_2pi(float_t theta) {
  * @param deg 角度值
  * @return 弧度值
  */
-static inline float_t deg2rad(float_t deg) {
+static inline float_t deg2rad(float_t deg)
+{
     return deg * (M_2PI / 360.0F);
 }
 
@@ -113,7 +120,8 @@ static inline float_t deg2rad(float_t deg) {
  * @param rad 弧度值
  * @return 角度值
  */
-static inline float_t rad2deg(float_t rad) {
+static inline float_t rad2deg(float_t rad)
+{
     return rad * (360.0F * M_1_2PI);
 }
 
@@ -122,7 +130,8 @@ static inline float_t rad2deg(float_t rad) {
  * @param rpm 转速（每分钟转数）
  * @return 角速度（弧度/秒）
  */
-static inline float_t rpm2radps(float_t rpm) {
+static inline float_t rpm2radps(float_t rpm)
+{
     return rpm * M_2PI_60;
 }
 
@@ -131,7 +140,8 @@ static inline float_t rpm2radps(float_t rpm) {
  * @param radps 角速度（弧度/秒）
  * @return 转速（每分钟转数）
  */
-static inline float_t radps2rpm(float_t radps) {
+static inline float_t radps2rpm(float_t radps)
+{
     return radps * M_60_2PI;
 }
 
@@ -145,11 +155,15 @@ static inline float_t radps2rpm(float_t radps) {
  * @param freq 两次角度采样之间的频率（Hz）
  * @return speed 计算得到的转速（RPM）
  */
-static inline float calc_speed(float_t new, float_t old, float_t freq) {
+static inline float calc_speed(float_t new, float_t old, float_t freq)
+{
     float err = new - old;
-    if (err > M_PI) {
+    if (err > M_PI)
+    {
         err -= M_2PI;  // 处理正向跨越0点的情况
-    } else if (err < -M_PI) {
+    }
+    else if (err < -M_PI)
+    {
         err += M_2PI;  // 处理反向跨越0点的情况
     }
     float speed = radps2rpm(err * freq);

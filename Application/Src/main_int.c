@@ -43,7 +43,7 @@ static inline void MainInt_Check_ProtectFlag(void)
     }
     Foc_Set_ResetFlag(stop || FlyingStartEnabled);
     Peripheral_Set_Stop(stop);
-    Sensorless_Set_ResetFlag(stop);
+    Sensorless_Reset = stop;
 }
 
 static inline void MainInt_Update_BusVoltage(void)
@@ -55,10 +55,10 @@ static inline void MainInt_Update_BusVoltage(void)
 
 static inline void MainInt_Update_Angle_and_Speed(void)
 {
-    AngleResult_t res       = {0};
-    AngleResult_t est       = {0};
-    AngleResult_t real      = {0};
-    float         speed_ref = Foc_Get_SpeedRamp();
+    MotorState_t res       = {0};
+    MotorState_t est       = {0};
+    MotorState_t real      = {0};
+    float        speed_ref = Foc_Get_SpeedRamp();
 
     real = Peripheral_Update_Position();
     est  = Sensorless_Update_Position();
@@ -77,15 +77,8 @@ static inline void MainInt_Update_Angle_and_Speed(void)
     Foc_Set_Speed(res.speed);
     Foc_Set_Angle(res.theta);
 
-    Sensorless_Set_SpeedRef(speed_ref);
-    Sensorless_Set_SpeedFdbk(res.speed);
-    //Sensorless_Set_Angle(res.theta);
-
-    // Buffer_Put(res.theta, 0);
-    // Buffer_Put(est.theta, 1);
-    // Buffer_Put(res.speed, 2);
-    // Buffer_Put(est.speed, 3);
-    // Buffer_Put(Sensorless_Get_Error().theta, 4);
+    Sensorless_SpeedRef  = speed_ref;
+    Sensorless_SpeedFdbk = real.speed;
 }
 
 static inline void MainInt_Initialization(void)
@@ -102,7 +95,7 @@ static inline void MainInt_Initialization(void)
 
 static inline void MainInt_Startup(void)
 {
-    if (Sensorless_Get_Method() & FLYING)
+    if (Sensorless_Method == SENSORLESS_START)
     {
         Foc_Set_Mode(STARTUP);
     }

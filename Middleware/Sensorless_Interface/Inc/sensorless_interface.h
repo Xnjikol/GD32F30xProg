@@ -12,81 +12,106 @@
 #define __SENSORLESS_INTERFACE_H__
 
 #ifdef __cplusplus
-extern "C" {
+extern "C"
+{
 #endif
 
 #include <stdbool.h>
+#include "filter.h"
 #include "motor.h"
 #include "pid.h"
 #include "reciprocal.h"
 #include "theta_calc.h"
 #include "transformation.h"
 
-/**
+    /**
  * @brief 无传感器控制方法枚举
  */
-typedef enum {
-    FLYING       = 0, /*!< 无传感器控制初始辨识 */
-    LES_OBSERVER = 1, /*!< 线性扩张状态观测器 */
-    HF_INJECTION = 2, /*!< 高频注入 */
-} sensorless_method_t;
+    typedef enum
+    {
+        SENSORLESS_START,     /*!< 启动阶段 */
+        SENSORLESS_LOW,       /*!< 高频注入 */
+        SENSORLESS_LOW2HIGH,  /*!< 低速切高速 */
+        SENSORLESS_HIGH2LOW,  /*!< 高速切低速 */
+        SENSORLESS_HIGH_LESO, /*!< 线性扩张状态guan */
+        SENSORLESS_HIGH_SMO,  /*!< 滑模观测器 */
+    } sensorless_method_t;
 
-/**
+    /**
  * @brief 无传感器控制状态枚举
  */
-typedef enum {
-    SENSORLESS_STATE_STOPPED = 0, /*!< 停止状态 */
-    SENSORLESS_STATE_STARTING,    /*!< 启动状态 */
-    SENSORLESS_STATE_RUNNING,     /*!< 运行状态 */
-    SENSORLESS_STATE_ERROR        /*!< 错误状态 */
-} sensorless_state_t;
+    typedef enum
+    {
+        SENSORLESS_STATE_STOPPED = 0, /*!< 停止状态 */
+        SENSORLESS_STATE_STARTING,    /*!< 启动状态 */
+        SENSORLESS_STATE_RUNNING,     /*!< 运行状态 */
+        SENSORLESS_STATE_ERROR        /*!< 错误状态 */
+    } sensorless_state_t;
 
-typedef struct {
-    float hysteresis;    // 滞环宽度
-    float switch_speed;  // 切换速度
-} Sensorless_Param_t;
+    typedef struct
+    {
+        float hysteresis;    // 滞环宽度
+        float switch_speed;  // 切换速度
+    } Sensorless_Param_t;
 
-bool Sensorless_Set_SampleTime(const SystemTimeConfig_t* config);
+    extern sensorless_method_t Sensorless_Method;
 
-bool Sensorless_Initialization(const Sensorless_Param_t* param);
+    extern volatile bool Sensorless_Enabled;
 
-bool Sensorless_Set_SpeedFilter(float cutoff_freq, float sample_freq);
+    extern bool  Sensorless_Reset;
+    extern bool  Sensorless_Reset_Prev;
+    extern float Sensorless_Threshold_Hfi;
+    extern float Sensorless_Threshold_Leso;
+    extern float Sensorless_Switch_Speed;
+    extern float Sensorless_SpeedRef;
+    extern float Sensorless_SpeedFdbk;
+    extern float Sensorless_SpeedEst;
+    extern float Sensorless_ThetaEst;
+    extern float Sensorless_ThetaErr;
+    extern float Sensorless_SpeedErr;
 
-bool Sensorless_Set_PidParams(const PID_Handler_t* pid_handler);
+    extern volatile float Sensorless_ThetAdj;
 
-bool Sensorless_Set_MotorParams(const MotorParam_t* motor_param);
+    extern PID_Handler_t  Sensorless_Theta_PID;
+    extern IIR1stFilter_t Sensorless_SpeedFilter1;
+    extern IIR2ndFilter_t Sensorless_SpeedFilter2;
 
-bool Sensorless_Set_Voltage(Clark_t voltage);
+    bool Sensorless_Set_SampleTime(const SystemTimeConfig_t* config);
 
-bool Sensorless_Set_Current(Clark_t current);
+    bool Sensorless_Initialization(const Sensorless_Param_t* param);
 
-void Sensorless_Set_SpeedFdbk(float fdbk);
+    bool Sensorless_Set_SpeedFilter(float cutoff_freq,
+                                    float sample_freq);
 
-void Sensorless_Set_SpeedRef(float ref);
+    bool Sensorless_Set_PidParams(const PID_Handler_t* pid_handler);
 
-//void Sensorless_Set_Angle(float angle);
+    bool Sensorless_Set_MotorParams(const MotorParam_t* motor_param);
 
-bool Sensorless_Set_ResetFlag(bool enabled);
+    bool Sensorless_Set_Voltage(Clark_t voltage);
 
-bool Sensorless_Get_Reset(void);
+    bool Sensorless_Set_Current(Clark_t current);
 
-bool Sensorless_Set_Method(sensorless_method_t method, bool enable);
+    void Sensorless_Set_SpeedFdbk(float fdbk);
 
-sensorless_method_t Sensorless_Get_Method(void);
+    void Sensorless_Set_SpeedRef(float ref);
 
-Clark_t Sensorless_Get_SmoEmf(void);
+    bool Sensorless_Set_Method(sensorless_method_t method, bool enable);
 
-bool Sensorless_Calculate_Err(AngleResult_t result);
+    sensorless_method_t Sensorless_Get_Method(void);
 
-AngleResult_t Sensorless_Get_Error(void);
+    Clark_t Sensorless_Get_SmoEmf(void);
 
-AngleResult_t Sensorless_Update_Position(void);
+    bool Sensorless_Calculate_Err(MotorState_t result);
 
-bool Sensorless_Calculate(void);
+    MotorState_t Sensorless_Get_Error(void);
 
-Park_t Sensorless_Inject_Voltage(Park_t voltage);
+    MotorState_t Sensorless_Update_Position(void);
 
-Clark_t Sensorless_FilterCurrent(Clark_t current);
+    bool Sensorless_Calculate(void);
+
+    Park_t Sensorless_Inject_Voltage(Park_t voltage);
+
+    Clark_t Sensorless_FilterCurrent(Clark_t current);
 
 #ifdef __cplusplus
 }

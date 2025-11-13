@@ -2,31 +2,37 @@
 #include <stdbool.h>
 #include "Buffer.h"
 #include "filter.h"
+#include "parameters.h"
 #include "reciprocal.h"
 #include "theta_calc.h"
 
 #define MOTOR_DEFAULT_PRESCALER 10U
 
-bool  Motor_Initialized     = false;
-float Motor_Rs              = 0.0F;
-float Motor_Ld              = 0.0F;
-float Motor_Lq              = 0.0F;
-float Motor_InvLd           = 0.0F;
-float Motor_InvLq           = 0.0F;
-float Motor_Flux            = 0.0F;
-float Motor_Pn              = 0.0F;
-float Resolver_Pn           = 0.0F;
-float Motor_MotorPn_inv     = 0.0F;
-float Motor_Position_Scale  = 0.0F;
-float Motor_Position_Offset = 0.0F;
-float Motor_Theta_Factor    = 0.0F;
-float Motor_SampleFreq      = 0.0F;
+float Motor_Rs    = MOTOR_RS;
+float Motor_Ld    = MOTOR_LD;
+float Motor_Lq    = MOTOR_LQ;
+float Motor_InvLd = 1 / MOTOR_LD;
+float Motor_InvLq = 1 / MOTOR_LQ;
+float Motor_Flux  = MOTOR_FLUX;
+
+float Motor_Pn          = MOTOR_PN;
+float Resolver_Pn       = MOTOR_RESOLVER_PN;
+float Motor_MotorPn_inv = 1 / MOTOR_RESOLVER_PN;
+
+float Speed_Time = SPEED_LOOP_TIME;
+float Speed_Freq = SPEED_LOOP_FREQ;
+float SampleTime = MAIN_LOOP_TIME;
+float SampleFreq = MAIN_LOOP_FREQ;
+
+float Motor_Position_Scale  = MOTOR_POSITION_SCALE;
+float Motor_Position_Offset = MOTOR_POSITION_OFFSET;
 float Motor_Position        = 0.0F;
-float Motor_Theta_Elec      = 0.0F;
-float Motor_Theta_Mech      = 0.0F;
+float Motor_Theta_Factor    = MOTOR_THETA_FACTOR;
+float Motor_ThetaElec       = 0.0F;
+float Motor_ThetaMech       = 0.0F;
 float Motor_Speed           = 0.0F;
 
-static uint16_t Motor_Speed_Prescaler = 0;
+uint16_t Speed_Prescaler = SPEED_LOOP_PRESCALER;
 
 static IIR1stFilter_t Motor_Speed_Filter = {0};
 
@@ -39,14 +45,14 @@ static inline void Motor_Update_Theta(void)
         delta += (Motor_Position_Scale + 1.0F);
     }
 
-    Motor_Theta_Mech = delta * Motor_Theta_Factor;
+    Motor_ThetaMech = delta * Motor_Theta_Factor;
 
-    Motor_Theta_Elec = Motor_Theta_Mech * Motor_Pn;
-    Motor_Theta_Elec = wrap_theta_2pi(Motor_Theta_Elec);
+    Motor_ThetaElec = Motor_ThetaMech * Motor_Pn;
+    Motor_ThetaElec = wrap_theta_2pi(Motor_ThetaElec);
 
     // Buffer_Put(Motor_Position, 5);
-    // Buffer_Put(Motor_Theta_Mech, 6);
-    Buffer_Put(Motor_Theta_Elec, 5);
+    // Buffer_Put(Motor_ThetaMech, 6);
+    Buffer_Put(Motor_ThetaElec, 5);
 }
 
 static inline void calculate_speed(void)
@@ -54,16 +60,15 @@ static inline void calculate_speed(void)
     static uint16_t cnt_speed  = 0x0000;
     static float    last_theta = 0.0F;
     cnt_speed++;
-    if (cnt_speed < Motor_Speed_Prescaler)
+    if (cnt_speed < Speed_Prescaler)
     {
         return;
     }
     cnt_speed = 0x0000;
 
-    Motor_Speed
-        = calc_speed(Motor_Theta_Mech, last_theta, Motor_SampleFreq);
+    Motor_Speed = calc_speed(Motor_ThetaMech, last_theta, SampleFreq);
     Motor_Speed = IIR1stFilter_Update(&Motor_Speed_Filter, Motor_Speed);
-    last_theta  = Motor_Theta_Mech;
+    last_theta  = Motor_ThetaMech;
 
     Buffer_Put(Motor_Speed, 4);
 
@@ -76,37 +81,7 @@ bool Motor_Set_SampleTime(const SystemTimeConfig_t* time_config)
     {
         return false;
     }
-    Motor_SampleFreq = time_config->speed.inv;
-    return true;
-}
-
-bool Motor_Initialization(const MotorParam_t* motor_params)
-{
-    Motor_Rs              = motor_params->Rs;
-    Motor_Ld              = motor_params->Ld;
-    Motor_InvLd           = 1.0F / Motor_Ld;
-    Motor_Lq              = motor_params->Lq;
-    Motor_InvLq           = 1.0F / Motor_Lq;
-    Motor_Flux            = motor_params->Flux;
-    Motor_Pn              = motor_params->Pn;
-    Resolver_Pn           = motor_params->Resolver_Pn;
-    Motor_MotorPn_inv     = motor_params->inv_MotorPn;
-    Motor_Position_Scale  = motor_params->Position_Scale;
-    Motor_Position_Offset = motor_params->Position_Offset;
-    Motor_Theta_Factor    = motor_params->theta_factor;
-
-    Motor_Initialized = true;
-    return true;
-}
-
-bool Motor_Set_SpeedPrescaler(uint16_t prescaler)
-{
-    if (prescaler == 0)
-    {
-        Motor_Speed_Prescaler = MOTOR_DEFAULT_PRESCALER;
-        return false;  // 分频数不能为0
-    }
-    Motor_Speed_Prescaler = prescaler;
+    SampleFreq = time_config->speed.freq;
     return true;
 }
 
@@ -124,22 +99,22 @@ void Motor_Set_Position(uint16_t position)
 
 void Motor_Set_Theta_Elec(float theta)
 {
-    Motor_Theta_Elec = theta;
+    Motor_ThetaElec = theta;
 }
 
 float Motor_Get_ThetaElec(void)
 {
-    return Motor_Theta_Elec;
+    return Motor_ThetaElec;
 }
 
 void Motor_Set_Theta_Mech(float theta)
 {
-    Motor_Theta_Mech = theta;
+    Motor_ThetaMech = theta;
 }
 
 float Motor_Get_Theta_Mech(void)
 {
-    return Motor_Theta_Mech;
+    return Motor_ThetaMech;
 }
 
 void Motor_Set_Speed(float speed)

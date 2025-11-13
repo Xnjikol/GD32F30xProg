@@ -17,15 +17,23 @@
  *         在电机控制中，某些参数的倒数会被频繁使用
  *         预先计算并存储可以提高运行效率
  */
-typedef struct {
+typedef struct
+{
     float val; /* 原始浮点数值 */
     float inv; /* 对应的倒数值(1/val) */
 } FloatWithInv_t;
 
-typedef struct {
-    FloatWithInv_t current;
-    FloatWithInv_t speed;
-    float          prescaler;  // 转速环分频数
+typedef struct
+{
+    float time; /* 原始浮点数值 */
+    float freq; /* 对应的倒数值(1/val) */
+} TimeCfg_t;
+
+typedef struct
+{
+    TimeCfg_t current;
+    TimeCfg_t speed;
+    float     prescaler;  // 转速环分频数
 } SystemTimeConfig_t;
 
 #endif /* UTILS_RECIPROCAL_H */

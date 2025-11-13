@@ -9,7 +9,8 @@
 /**
  * @brief 无传感器控制状态机
  */
-typedef struct {
+typedef struct
+{
     float wc_gain; /*!< 观测器带宽系数 */
     float wc_max;  /*!< 观测器带宽最大值 */
     float wc_min;  /*!< 观测器带宽最小值 */
@@ -18,14 +19,14 @@ typedef struct {
     float Lq;      /*!< 定子电感 */
 } LESO_Param_t;
 
+extern bool Leso_Enabled;
+
 /**
  * @brief SMO参数设置与获取接口
  */
 bool Leso_Set_SampleTime(const SystemTimeConfig_t* config);
 
 bool Leso_Initialization(const LESO_Param_t* param);
-
-void Leso_Set_Pn(float inv_Pn);
 
 void Leso_Set_Inductor(Park_t inductance);
 
@@ -49,7 +50,7 @@ void Leso_Set_Enabled(bool enabled);
 
 bool Leso_Get_Enabled(void);
 
-AngleResult_t Leso_Get_Result(void);
+MotorState_t Leso_Get_Result(void);
 
 float Leso_Get_PllErr(void);
 
