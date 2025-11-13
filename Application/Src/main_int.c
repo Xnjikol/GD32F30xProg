@@ -67,9 +67,13 @@ static inline void MainInt_Update_Angle_and_Speed(void)
     {
         res = real;
     }
-    else
+    else if (Foc_Speed_Ramp >= Sensorless_Switch_Speed)
     {
         res = est;
+    }
+    else
+    {
+        res = real;
     }
 
     Foc_Speed_Fdbk = res.speed;

@@ -22,9 +22,9 @@ extern float SampleTime;
 extern float SampleFreq;
 extern float Motor_Position;
 
-extern volatile float Motor_ThetaElec;
-extern volatile float Motor_ThetaMech;
-extern volatile float Motor_Speed;
+extern float Motor_ThetaElec;
+extern float Motor_ThetaMech;
+extern float Motor_Speed;
 
 extern uint16_t Speed_Prescaler;
 

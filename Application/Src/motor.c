@@ -29,33 +29,13 @@ float Motor_Position_Offset = MOTOR_POSITION_OFFSET;
 float Motor_Position        = 0.0F;
 float Motor_Theta_Factor    = MOTOR_THETA_FACTOR;
 
-volatile float Motor_ThetaElec = 0.0F;
-volatile float Motor_ThetaMech = 0.0F;
-volatile float Motor_Speed     = 0.0F;
+float Motor_ThetaElec = 0.0F;
+float Motor_ThetaMech = 0.0F;
+float Motor_Speed     = 0.0F;
 
 uint16_t Speed_Prescaler = SPEED_LOOP_PRESCALER;
 
 static IIR1stFilter_t Motor_Speed_Filter = {0};
-
-static inline void calculate_speed(void)
-{
-    static uint16_t cnt_speed  = 0x0000;
-    static float    last_theta = 0.0F;
-    cnt_speed++;
-    if (cnt_speed < Speed_Prescaler)
-    {
-        return;
-    }
-    cnt_speed = 0x0000;
-
-    Motor_Speed = calc_speed(Motor_ThetaMech, last_theta, Speed_Freq);
-    Motor_Speed = IIR1stFilter_Update(&Motor_Speed_Filter, Motor_Speed);
-    last_theta  = Motor_ThetaMech;
-
-    Buffer_Put(Motor_Speed, 4);
-
-    return;
-}
 
 void Motor_Update(void)
 {
@@ -70,9 +50,24 @@ void Motor_Update(void)
 
     Motor_ThetaElec = Motor_ThetaMech * Motor_Pn;
     Motor_ThetaElec = wrap_theta_2pi(Motor_ThetaElec);
+
     Buffer_Put(Motor_ThetaElec, 5);
 
-    calculate_speed();
+    static uint16_t cnt_speed  = 0x0000;
+    static float    last_theta = 0.0F;
+    cnt_speed++;
+    if (cnt_speed < Speed_Prescaler)
+    {
+        return;
+    }
+    cnt_speed = 0x0000;
+
+    Motor_Speed = calc_speed(Motor_ThetaMech, last_theta, Speed_Freq);
+    Motor_Speed = IIR1stFilter_Update(&Motor_Speed_Filter, Motor_Speed);
+    last_theta  = Motor_ThetaMech;
+
+    Buffer_Put(Motor_Speed, 4);
+    return;
 }
 
 bool Motor_Set_Filter(float cutoff_freq, float sample_freq)

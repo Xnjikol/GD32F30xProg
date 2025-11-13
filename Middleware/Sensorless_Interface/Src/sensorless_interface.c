@@ -368,7 +368,7 @@ bool Sensorless_Calculate(void)
     Leso_Update_EmfEstB();
     Leso_Update();
 
-    SMO_Update(&SmoHandle, Foc_Iclark_Fdbk, Foc_Uclark_Ref);
+    SMO_Update(&SmoHandle, Foc_Uclark_Ref, Foc_Iclark_Fdbk);
 
     Sensorless_Reset_Prev = Sensorless_Reset;
 
