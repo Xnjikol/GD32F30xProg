@@ -146,7 +146,7 @@ void FlyingStart_Update(FS_Handler_t* hnd, Clark_t current)
                 delta_theta += M_2PI;
             }
             hnd->WeI3     = delta_theta / (hnd->Ts * hnd->DeltaCnt);
-            float speedI3 = radps2rpm(hnd->WeI3 * Motor_MotorPn_inv);
+            float speedI3 = radps2rpm(hnd->WeI3 * Motor_InvPn);
 
             Buffer_Put(speedI3, 6);
 
@@ -158,8 +158,8 @@ void FlyingStart_Update(FS_Handler_t* hnd, Clark_t current)
 
             Buffer_Put(hnd->ThetaE, 7);
 
-            hnd->SpeedErr = Motor_Get_Speed() - speedI3;
-            hnd->ThetaErr = Motor_Get_ThetaElec() - hnd->ThetaE;
+            hnd->SpeedErr = Motor_Speed - speedI3;
+            hnd->ThetaErr = Motor_ThetaElec - hnd->ThetaE;
             hnd->ThetaErr = wrap_theta_pi(hnd->ThetaErr);
             hnd->ThetaErr = rad2deg(hnd->ThetaErr);
         }

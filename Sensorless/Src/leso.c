@@ -22,7 +22,6 @@ float Leso_Rs      = {0};
 // float Leso_Lq               = {0};
 // float Leso_InvLd            = {0};
 // float Leso_InvLq            = {0};
-float Motor_InvPn = {0};
 float Leso_Gain   = {0};
 float Leso_Factor = {0};
 float Leso_Wc     = {0};

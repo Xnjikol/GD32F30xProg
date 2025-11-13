@@ -34,6 +34,7 @@ typedef struct
     bool   use_sensor;  // 是否使用传感器
 } IF_Parameter_t;
 
+extern Phase_t Foc_IPhase;
 extern Clark_t Foc_Iclark_Fdbk;
 extern Park_t  Foc_Idq_Ref;
 extern Park_t  Foc_Idq_Fdbk;

@@ -176,8 +176,6 @@ bool init_module_smo(void)
 
 bool init_module_hfi(void)
 {
-    Hfi_Set_SampleTime(&SysClk);
-
     hf_injection_params_t hfi_param
         = {.injection_freq    = HF_INJECTION_FREQ,
            .injection_voltage = HF_INJECTION_AMP,

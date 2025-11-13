@@ -16,16 +16,15 @@ static volatile bool     MainInt_UseRealTheta = true;
 
 static inline void MainInt_Update_FocCurrent(void)
 {
-    Phase_t current_phase = Peripheral_Get_PhaseCurrent();
-    Clark_t current_clark = {0};
+    Foc_IPhase = Peripheral_Get_PhaseCurrent();
 
-    current_clark = ClarkTransform(current_phase);
-    current_clark = Sensorless_FilterCurrent(current_clark);
-    Sensorless_Set_Current(current_clark);
-    Foc_Set_Iclark_Fdbk(current_clark);
+    Foc_Iclark_Fdbk = ClarkTransform(Foc_IPhase);
+    Foc_Iclark_Fdbk = Sensorless_FilterCurrent(Foc_Iclark_Fdbk);
+    Sensorless_Set_Current(Foc_Iclark_Fdbk);
+    Foc_Set_Iclark_Fdbk(Foc_Iclark_Fdbk);
 
-    Buffer_Put(current_clark.a, 0);
-    Buffer_Put(current_clark.b, 1);
+    Buffer_Put(Foc_Iclark_Fdbk.a, 0);
+    Buffer_Put(Foc_Iclark_Fdbk.b, 1);
 }
 
 static inline void MainInt_Check_ProtectFlag(void)
@@ -55,10 +54,9 @@ static inline void MainInt_Update_BusVoltage(void)
 
 static inline void MainInt_Update_Angle_and_Speed(void)
 {
-    MotorState_t res       = {0};
-    MotorState_t est       = {0};
-    MotorState_t real      = {0};
-    float        speed_ref = Foc_Get_SpeedRamp();
+    MotorState_t res  = {0};
+    MotorState_t est  = {0};
+    MotorState_t real = {0};
 
     real = Peripheral_Update_Position();
     est  = Sensorless_Update_Position();
@@ -74,10 +72,10 @@ static inline void MainInt_Update_Angle_and_Speed(void)
         res = est;
     }
 
-    Foc_Set_Speed(res.speed);
-    Foc_Set_Angle(res.theta);
+    Foc_Speed_Fdbk = res.speed;
+    Foc_Theta      = res.theta;
 
-    Sensorless_SpeedRef  = speed_ref;
+    Sensorless_SpeedRef  = Foc_Speed_Ramp;
     Sensorless_SpeedFdbk = real.speed;
 }
 

@@ -12,7 +12,7 @@ extern float Motor_InvLq;
 extern float Motor_Flux;
 extern float Motor_Pn;
 extern float Resolver_Pn;
-extern float Motor_MotorPn_inv;
+extern float Motor_InvPn;
 extern float Motor_Position_Scale;
 extern float Motor_Position_Offset;
 extern float Motor_Theta_Factor;
@@ -21,9 +21,10 @@ extern float Speed_Freq;
 extern float SampleTime;
 extern float SampleFreq;
 extern float Motor_Position;
-extern float Motor_ThetaElec;
-extern float Motor_ThetaMech;
-extern float Motor_Speed;
+
+extern volatile float Motor_ThetaElec;
+extern volatile float Motor_ThetaMech;
+extern volatile float Motor_Speed;
 
 extern uint16_t Speed_Prescaler;
 
@@ -41,12 +42,8 @@ typedef struct
     float theta_factor;
 } MotorParam_t;
 
-bool  Motor_Set_Filter(float sample_freq, float cutoff_freq);
-void  Motor_Set_Position(uint16_t position);
-void  Motor_Set_Theta_Elec(float theta);
-float Motor_Get_ThetaElec(void);
-void  Motor_Set_Theta_Mech(float theta);
-float Motor_Get_Theta_Mech(void);
-void  Motor_Set_Speed(float speed);
-float Motor_Get_Speed(void);
+void Motor_Update(void);
+
+bool Motor_Set_Filter(float sample_freq, float cutoff_freq);
+
 #endif  // MOTOR_H_

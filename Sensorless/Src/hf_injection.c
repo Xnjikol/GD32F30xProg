@@ -14,54 +14,36 @@
 #include <stddef.h>
 #include "arm_math.h" /* CMSIS-DSP math */  // IWYU pragma: export
 #include "filter.h"
+#include "motor.h"
 #include "reciprocal.h"
 #include "theta_calc.h"
 #include "transformation.h"
 
 #define SQRT(x, y) arm_sqrt_f32(x, y)
 
-static bool  Hfi_Enabled    = {0};
-static bool  Hfi_ParamError = {0};
-static bool  Hfi_InjectSign = {0};
-static float Hfi_InjFreq    = {0};
-static float Hfi_InjVolt    = {0};
-static float Hfi_Ld         = {0};
-static float Hfi_Lq         = {0};
-static float Hfi_Delta_L    = {0};
-static float Hfi_InvPn      = {0};
-static float Hfi_SampleTime = {0};
-static float Hfi_SampleFreq = {0};
+bool  Hfi_Enabled    = {0};
+bool  Hfi_ParamError = {0};
+bool  Hfi_InjectSign = {0};
+float Hfi_InjFreq    = {0};
+float Hfi_InjVolt    = {0};
+float Hfi_Delta_L    = {0};
 
-static volatile float Hfi_Theta_Err = {0};
-static volatile float Hfi_Speed_Err = {0};
+volatile float Hfi_Theta_Err = {0};
+volatile float Hfi_Speed_Err = {0};
 
-static float   Hfi_Theta      = {0};
-static float   Hfi_Omega      = {0};
-static float   Hfi_Speed      = {0};
-static float   Hfi_Error      = {0};
-static Clark_t Hfi_IClarkFdbk = {0};
-static Park_t  Hfi_IParkFdbk  = {0};
-static Clark_t Hfi_IClarkResp = {0};  // 提取的高频响应电流
-static Clark_t Hfi_IClarkFilt = {0};  // 滤波后的静止坐标系电流
-static Park_t  Hfi_VoltageInj = {0};  // 将要注入的高频电压
+float   Hfi_Theta      = {0};
+float   Hfi_Omega      = {0};
+float   Hfi_Speed      = {0};
+float   Hfi_Error      = {0};
+Clark_t Hfi_IClarkFdbk = {0};
+Park_t  Hfi_IParkFdbk  = {0};
+Clark_t Hfi_IClarkResp = {0};  // 提取的高频响应电流
+Clark_t Hfi_IClarkFilt = {0};  // 滤波后的静止坐标系电流
+Park_t  Hfi_VoltageInj = {0};  // 将要注入的高频电压
 
-static IIR1stFilter_t Hfi_Error_Filter = {0};
-static IIR2ndFilter_t Hfi_Speed_Filter = {0};
-static PID_Handler_t  Hfi_Theta_Pid    = {0};
-
-bool Hfi_Set_SampleTime(const SystemTimeConfig_t* time_config)
-{
-    if (time_config == NULL)
-    {
-        Hfi_ParamError = true;
-        return false;
-    }
-
-    /* 设置采样时间 */
-    Hfi_SampleTime = time_config->current.time;
-    Hfi_SampleFreq = time_config->current.freq;
-    return true;
-}
+IIR1stFilter_t Hfi_Error_Filter = {0};
+IIR2ndFilter_t Hfi_Speed_Filter = {0};
+PID_Handler_t  Hfi_Theta_Pid    = {0};
 
 bool Hfi_Initialization(const hf_injection_params_t* params)
 {
@@ -73,13 +55,10 @@ bool Hfi_Initialization(const hf_injection_params_t* params)
 
     Hfi_InjFreq = params->injection_freq;
     Hfi_InjVolt = params->injection_voltage;
-    Hfi_Ld      = params->Ld;
-    Hfi_Lq      = params->Lq;
     Hfi_Delta_L = params->delta_L;
-    Hfi_InvPn   = params->inv_Pn;
 
-    IIR2ndFilter_Init(&Hfi_Speed_Filter, 10.0F, Hfi_SampleFreq / 10.0F);
-    IIR1stFilter_Init(&Hfi_Error_Filter, 500.0F, Hfi_SampleFreq);
+    IIR2ndFilter_Init(&Hfi_Speed_Filter, 10.0F, Speed_Freq);
+    IIR1stFilter_Init(&Hfi_Error_Filter, 500.0F, SampleFreq);
 
     return true;
 }
@@ -173,6 +152,10 @@ static inline void update_signal(void)
 
 Park_t Hfi_Get_Inject_Voltage(void)
 {
+    if (!Hfi_Enabled)
+    {
+        return (Park_t){0};
+    }
     update_signal();
     generate_signal();
     return Hfi_VoltageInj;
@@ -182,7 +165,7 @@ static inline float pll_update(float error, bool reset)
 {
     // 更新锁相环
     float omega = Pid_Update(error, reset, &Hfi_Theta_Pid);
-    Hfi_Theta += omega * Hfi_SampleTime;
+    Hfi_Theta += omega * SampleTime;
     Hfi_Theta = wrap_theta_2pi(Hfi_Theta);
 
     Hfi_Omega = omega;
@@ -233,7 +216,7 @@ static inline float calculate_speed(float omega)
     static uint16_t hfi_count = 0x0000U;
     static float    hfi_integ = 0.0F;
     float           speed     = 0.0F;
-    hfi_integ += radps2rpm(omega) * Hfi_InvPn * 0.1F;
+    hfi_integ += radps2rpm(omega) * Motor_InvPn * 0.1F;
     hfi_count++;
     if (hfi_count < 0x000AU)
     {

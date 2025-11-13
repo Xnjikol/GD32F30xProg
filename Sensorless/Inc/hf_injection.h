@@ -38,15 +38,17 @@ extern "C"
 
     /* 函数声明 */
 
-    /**
- * @brief 设置高频注入采样时间配置
- *
- * 此函数根据提供的系统时间配置结构体，设置高频注入操作的采样时间。
- *
- * @param[in] time_config 指向 SystemTimeConfig_t 结构体的指针，包含所需的采样时间设置。
- * @return 设置成功返回 true，否则返回 false。
- */
-    bool Hfi_Set_SampleTime(const SystemTimeConfig_t* time_config);
+    extern bool Hfi_Enabled;
+
+    extern float   Hfi_Theta;
+    extern float   Hfi_Omega;
+    extern float   Hfi_Speed;
+    extern float   Hfi_Error;
+    extern Clark_t Hfi_IClarkFdbk;
+    extern Park_t  Hfi_IParkFdbk;
+    extern Clark_t Hfi_IClarkResp;
+    extern Clark_t Hfi_IClarkFilt;
+    extern Park_t  Hfi_VoltageInj;
 
     /**
  * @brief 设置高频注入观测器的参数

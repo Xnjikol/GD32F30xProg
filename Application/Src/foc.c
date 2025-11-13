@@ -25,6 +25,7 @@ volatile bool  Foc_Sweep  = true;  // FOC扫频标志
 
 VF_Parameter_t  Foc_VfParam            = {0};
 IF_Parameter_t  Foc_IfParam            = {0};
+Phase_t         Foc_IPhase             = {0};
 Clark_t         Foc_Iclark_Fdbk        = {0};
 Park_t          Foc_Idq_Ref            = {0};
 Park_t          Foc_Idq_Fdbk           = {0};

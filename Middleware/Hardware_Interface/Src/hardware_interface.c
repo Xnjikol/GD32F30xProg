@@ -172,11 +172,12 @@ MotorState_t Peripheral_Update_Position(void)
     uint16_t position_data = 0;
     ReadPositionSensor(&position_data);
 
-    Motor_Set_Position(position_data);
+    Motor_Position = position_data;
+    Motor_Update();
 
     MotorState_t result;
-    result.theta = Motor_Get_ThetaElec();
-    result.speed = Motor_Get_Speed();
+    result.theta = Motor_ThetaElec;
+    result.speed = Motor_Speed;
     return result;
 }
 
