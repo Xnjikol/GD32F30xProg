@@ -17,7 +17,6 @@
 #include "leso.h"
 #include "motor.h"
 #include "reciprocal.h"
-#include "smo.h"
 #include "transformation.h"
 #include <math.h>
 
@@ -259,7 +258,7 @@ MotorState_t Sensorless_Update_Position(void)
     case SENSORLESS_START:
         Sensorless_Method = SENSORLESS_HIGH_LESO;
 
-        error = SmoHandle.state.pll_err;
+        error = Leso_Get_PllErr();
         return default_result;
         break;
 
@@ -271,14 +270,10 @@ MotorState_t Sensorless_Update_Position(void)
         error = Leso_Get_PllErr();
         break;
 
-    case SENSORLESS_HIGH_SMO:
-        error = SmoHandle.state.pll_err;
-        break;
-
     default:
         Sensorless_Method = SENSORLESS_HIGH_LESO;
 
-        error = SmoHandle.state.pll_err;
+        error = Leso_Get_PllErr();
         break;
     }
     MotorState_t leso_result = {0};
@@ -292,8 +287,6 @@ MotorState_t Sensorless_Update_Position(void)
     Leso_Set_Theta(Sensorless_ThetaEst);
     Leso_Set_Speed(speed);
     Hfi_Set_Theta(Sensorless_ThetaEst);
-    SmoHandle.state.theta = Sensorless_ThetaEst;
-    SmoHandle.state.speed = speed;
 
     return (MotorState_t){
         .speed = Sensorless_SpeedEst,
@@ -349,16 +342,12 @@ bool Sensorless_Calculate(void)
     enable_leso(fabsf(Foc_Speed_Ramp) >= Sensorless_Threshold_Leso);
     enable_hfi(fabsf(Foc_Speed_Ramp) <= Sensorless_Threshold_Hfi);
 
-    SmoHandle.enabled = Leso_Enabled;
-
     Hfi_Update();
 
     Leso_Update_Beta();
     Leso_Update_EmfEstA();
     Leso_Update_EmfEstB();
     Leso_Update();
-
-    SMO_Update(&SmoHandle, Foc_Uclark_Ref, Foc_Iclark_Fdbk);
 
     Sensorless_Reset_Prev = Sensorless_Reset;
 

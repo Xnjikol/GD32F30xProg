@@ -15,7 +15,6 @@
 #include "position_sensor.h"
 #include "protect.h"
 #include "sensorless_interface.h"
-#include "smo.h"
 #include "systick.h"
 #include "tim.h"
 #include "usart.h"
@@ -171,15 +170,6 @@ bool init_module_leso(void)
     // Leso_Set_EmfFilter(SMO_LPF_CUTOFF_FREQ, SMO_SAMPLING_FREQ);
     Leso_Set_SpeedFilter(SPEED_LOOP_PRESCALER, SPEED_LOOP_FREQ);
 
-    return true;
-}
-
-bool init_module_smo(void)
-{
-    SMO_Param_t smo_param = {.Gain           = SMO_GAIN,
-                             .Emf_cutoffFreq = SMO_EMF_LPF_CUTOFF_FREQ,
-                             .Speed_cutoffFreq = SMO_SPEED_CUTOFF_FREQ};
-    SMO_Initialization(&SmoHandle, &smo_param);
     return true;
 }
 

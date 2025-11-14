@@ -21,7 +21,6 @@ static inline void MainInt_Update_FocCurrent(void)
     Foc_Iclark_Fdbk = ClarkTransform(Foc_IPhase);
     Foc_Iclark_Fdbk = Sensorless_FilterCurrent(Foc_Iclark_Fdbk);
     Sensorless_Set_Current(Foc_Iclark_Fdbk);
-    Foc_Set_Iclark_Fdbk(Foc_Iclark_Fdbk);
 
     Buffer_Put(Foc_Iclark_Fdbk.a, 0);
     Buffer_Put(Foc_Iclark_Fdbk.b, 1);
@@ -48,8 +47,9 @@ static inline void MainInt_Check_ProtectFlag(void)
 static inline void MainInt_Update_BusVoltage(void)
 {
     FloatWithInv_t bus_voltage = Peripheral_UpdateUdc();
-    Foc_Set_BusVoltage(bus_voltage.val);
-    Foc_Set_BusVoltageInv(bus_voltage.inv);
+
+    Foc_BusVoltage     = bus_voltage.val;
+    Foc_BusVoltage_Inv = bus_voltage.inv;
 }
 
 static inline void MainInt_Update_Angle_and_Speed(void)
@@ -87,7 +87,7 @@ static inline void MainInt_Initialization(void)
 {
     Initialization_Modules();
     Peripheral_CalibrateADC();
-    if (Foc_Get_BusVoltage() > 200.0F)
+    if (Foc_BusVoltage > 200.0F)
     {
         Peripheral_EnableHardwareProtect();
     }
@@ -120,18 +120,12 @@ static inline void MainInt_Update_Sensorless(void)
 
     Sensorless_Calculate();
 
-    ref = Foc_Get_Udq_Ref();
-    ref = Sensorless_Inject_Voltage(ref);
-    Foc_Set_Udq_Ref(ref);
+    Foc_Udq_Ref = Sensorless_Inject_Voltage(Foc_Udq_Ref);
 }
 
 static inline void MainInt_Run_Foc(void)
 {
-    Park_t vol_dq_ref = {0};
-
-    vol_dq_ref = Foc_Update_Main();
-
-    Foc_Set_Udq_Ref(vol_dq_ref);
+    Foc_Udq_Ref = Foc_Update_Main();
 }
 
 static inline void MainInt_Send_Data(void)
@@ -187,6 +181,7 @@ void Main_Int_Handler(void)
         // 运行状态：正常FOC控制
         MainInt_Run_Foc();
         MainInt_Update_Sensorless();
+        Foc_Uclark_Ref = InvParkTransform(Foc_Udq_Ref, Foc_Theta);
         break;
     }
 

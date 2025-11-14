@@ -34,7 +34,6 @@ extern "C"
         SENSORLESS_LOW2HIGH,  /*!< 低速切高速 */
         SENSORLESS_HIGH2LOW,  /*!< 高速切低速 */
         SENSORLESS_HIGH_LESO, /*!< 线性扩张状态guan */
-        SENSORLESS_HIGH_SMO,  /*!< 滑模观测器 */
     } sensorless_method_t;
 
     /**

@@ -46,6 +46,9 @@ extern float Foc_Speed_Fdbk;
 extern float Foc_Speed_Ramp;
 extern float Foc_Theta;
 
+extern float Foc_BusVoltage;
+extern float Foc_BusVoltage_Inv;
+
 void      Foc_Set_SampleTime(const SystemTimeConfig_t* config);
 void      Foc_Set_Mode(FocMode_t mode);
 FocMode_t Foc_Get_Mode(void);

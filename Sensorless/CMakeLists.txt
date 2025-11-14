@@ -7,7 +7,6 @@ set(Sensorless_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/hf_injection.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/flying.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/leso.c
-    ${CMAKE_CURRENT_SOURCE_DIR}/Src/smo.c
 )
 
 add_library(Sensorless STATIC

@@ -71,88 +71,9 @@ bool Foc_Get_ResetFlag(void)
     return Foc_Reset;  // 获取复位标志状态
 }
 
-// bool Foc_Get_ResetFlag(void) {
-//     if (Foc_Mode_Prev != Foc_Mode) {
-//         // 防止意外切换模式
-//         Foc_Mode_Prev = Foc_Mode;
-//         return true;
-//     }
-//     if (Foc_Mode == VF_MODE || Foc_Mode == IF_MODE
-//         || Foc_Mode == SPEED) {
-//         return Foc_Reset;  // 获取复位标志状态
-//     }
-//     return true;  // 在IDLE模式下始终返回true
-// }
-
-void Foc_Set_Angle(float angle)
-{
-    Foc_Theta = wrap_theta_2pi(angle);  // 确保角度在 [0, 2π) 范围内
-}
-
-void Foc_Set_BusVoltage(float voltage)
-{
-    Foc_BusVoltage = voltage;  // 设置母线电压
-}
-
-float Foc_Get_BusVoltage(void)
-{
-    return Foc_BusVoltage;  // 获取母线电压
-}
-
 Park_t Foc_Get_Inductor(void)
 {
     return Mtpa_Get_LPark();  // 获取电感
-}
-
-void Foc_Set_BusVoltageInv(float voltage)
-{
-    Foc_BusVoltage_Inv = voltage;  // 设置母线电压倒数
-}
-
-void Foc_Set_Speed(float speed)
-{
-    Foc_Speed_Fdbk = speed;  // 设置参考速度
-}
-
-float Foc_Get_SpeedRamp(void)
-{
-    return Foc_Speed_Ramp;
-}
-
-void Foc_Set_Speed_and_Angle(MotorState_t* angle_speed)
-{
-    Foc_Theta      = wrap_theta_2pi(angle_speed->theta);
-    Foc_Speed_Fdbk = angle_speed->speed;
-}
-
-void Foc_Set_Iclark_Fdbk(Clark_t current)
-{
-    Foc_Iclark_Fdbk = current;  // 设置电流反馈
-}
-
-Clark_t Foc_Get_Iclark_Fdbk(void)
-{
-    return Foc_Iclark_Fdbk;  // 获取αβ轴电流反馈
-}
-
-void Foc_Set_Idq_Ref(Park_t idq_ref)
-{
-    Foc_Idq_Ref = idq_ref;  // 设置DQ轴电流参考
-}
-
-Park_t Foc_Get_Idq_Ref(void)
-{
-    return Foc_Idq_Ref;  // 获取DQ轴电流参考
-}
-
-void Foc_Set_Idq_Fdbk(Park_t idq_fdbk)
-{
-    Foc_Idq_Fdbk = idq_fdbk;  // 设置DQ轴电流反馈
-}
-
-Park_t Foc_Get_Idq_Fdbk(void)
-{
-    return Foc_Idq_Fdbk;  // 获取DQ轴电流反馈
 }
 
 void Foc_Set_Udq_Ref(Park_t udq_ref)
@@ -166,11 +87,6 @@ void Foc_Set_Udq_Ref(Park_t udq_ref)
 Park_t Foc_Get_Udq_Ref(void)
 {
     return Foc_Udq_Ref;  // 获取DQ轴电压参考
-}
-
-void Foc_Set_Uclark_Ref(Clark_t uclark_ref)
-{
-    Foc_Uclark_Ref = uclark_ref;  // 设置αβ轴电压参考
 }
 
 Clark_t Foc_Get_Uclark_Ref(void)
