@@ -4,9 +4,9 @@
 #include "parameters.h"
 
 /* 固定大小的内部缓冲区（10 个 float） */
-static float Buffer_Pool[BUFFER_CAPACITY];
+static float Buffer_Pool[BUFFER_MAX_CAPACITY];
 /* 当前有效容量（<= 10） */
-static size_t Buffer_Capacity  = BUFFER_DEFAULT_CAPACITY;
+static size_t Buffer_Capacity  = BUFFER_CAPACITY;
 static size_t Buffer_Prescaler = BUFFER_PRESCALER;
 
 void Buffer_Init(size_t length, size_t prescalor)
@@ -14,9 +14,9 @@ void Buffer_Init(size_t length, size_t prescalor)
     /* 限制长度不超过默认容量 */
     Buffer_Capacity = (length == 0U) ? BUFFER_DEFAULT_CAPACITY : length;
     Buffer_Prescaler = prescalor;
-    if (Buffer_Capacity > BUFFER_DEFAULT_CAPACITY)
+    if (Buffer_Capacity > BUFFER_MAX_CAPACITY)
     {
-        Buffer_Capacity = BUFFER_DEFAULT_CAPACITY;
+        Buffer_Capacity = BUFFER_MAX_CAPACITY;
     }
 
     /* 清空前 Buffer_Capacity 个元素，保持其余不变无影响 */
@@ -30,6 +30,7 @@ void Buffer_Put(float value, size_t index)
         Buffer_Pool[index] = value;
     }
     /* 越界则忽略写入 */
+    return;
 }
 
 void Buffer_Send(void)

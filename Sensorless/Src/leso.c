@@ -191,8 +191,6 @@ void Leso_Update_Beta(void)
     // 根据带宽计算观测器增益
     Leso_Beta1 = 2.0F * Leso_Wc;
     Leso_Beta2 = Leso_Wc * Leso_Wc;
-
-    Motor_InvLq = 1.0F / Motor_Lq;
 }
 
 void Leso_Update_EmfEstA(void)

@@ -15,6 +15,7 @@
 #include "position_sensor.h"
 #include "protect.h"
 #include "sensorless_interface.h"
+#include "smo.h"
 #include "systick.h"
 #include "tim.h"
 #include "usart.h"
@@ -130,7 +131,6 @@ bool init_module_sensorless(void)
         = {.switch_speed = SENSORLESS_SWITCH_SPEED,
            .hysteresis   = SENSORLESS_HYSTERESIS};
     Sensorless_Initialization(&sensorless_param);
-    Sensorless_Set_SampleTime(&SysClk);
     Sensorless_Set_SpeedFilter(SPEED_LOOP_PRESCALER, SPEED_LOOP_FREQ);
 
     PID_Handler_t sensorless_pid
@@ -147,30 +147,39 @@ bool init_module_sensorless(void)
     return true;
 }
 
-bool init_module_smo(void)
+bool init_module_leso(void)
 {
     Leso_Set_SampleTime(&SysClk);
 
-    LESO_Param_t smo_param = {.wc_gain = LESO_WC_GAIN,
-                              .wc_max  = LESO_WC_MAX,
-                              .wc_min  = LESO_WC_MIN,
-                              .Ld      = MOTOR_LD,
-                              .Lq      = MOTOR_LQ,
-                              .Rs      = MOTOR_RS};
-    Leso_Initialization(&smo_param);
+    LESO_Param_t leso_param = {.wc_gain = LESO_WC_GAIN,
+                               .wc_max  = LESO_WC_MAX,
+                               .wc_min  = LESO_WC_MIN,
+                               .Ld      = MOTOR_LD,
+                               .Lq      = MOTOR_LQ,
+                               .Rs      = MOTOR_RS};
+    Leso_Initialization(&leso_param);
 
-    PID_Handler_t smo_pid = {.Kp            = LESO_PLL_KP,
-                             .Ki            = LESO_PLL_KI,
-                             .Kd            = LESO_PLL_KD,
-                             .MaxOutput     = LESO_PLL_MAX_OUTPUT,
-                             .MinOutput     = LESO_PLL_MIN_OUTPUT,
-                             .IntegralLimit = LESO_PLL_INTEGRAL_LIMIT,
-                             .Ts            = MAIN_LOOP_TIME};
-    Leso_Set_Pid_Handler(smo_pid);
+    PID_Handler_t leso_pid = {.Kp            = LESO_PLL_KP,
+                              .Ki            = LESO_PLL_KI,
+                              .Kd            = LESO_PLL_KD,
+                              .MaxOutput     = LESO_PLL_MAX_OUTPUT,
+                              .MinOutput     = LESO_PLL_MIN_OUTPUT,
+                              .IntegralLimit = LESO_PLL_INTEGRAL_LIMIT,
+                              .Ts            = MAIN_LOOP_TIME};
+    Leso_Set_Pid_Handler(leso_pid);
 
     // Leso_Set_EmfFilter(SMO_LPF_CUTOFF_FREQ, SMO_SAMPLING_FREQ);
     Leso_Set_SpeedFilter(SPEED_LOOP_PRESCALER, SPEED_LOOP_FREQ);
 
+    return true;
+}
+
+bool init_module_smo(void)
+{
+    SMO_Param_t smo_param = {.Gain           = SMO_GAIN,
+                             .Emf_cutoffFreq = SMO_EMF_LPF_CUTOFF_FREQ,
+                             .Speed_cutoffFreq = SMO_SPEED_CUTOFF_FREQ};
+    SMO_Initialization(&SmoHandle, &smo_param);
     return true;
 }
 
@@ -206,7 +215,7 @@ bool Initialization_Modules(void)
     init_module_motor();
     init_module_flying_start();
     init_module_sensorless();
-    init_module_smo();
+    init_module_leso();
     init_module_hfi();
     return true;
 }

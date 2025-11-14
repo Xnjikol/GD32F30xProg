@@ -115,9 +115,9 @@
 #define RAMP_SPEED_TIME      (SPEED_LOOP_TIME) /* 转速环采样周期 */
 
 /* 转速环PID参数配置 */
-#define PID_SPEED_LOOP_KP 0.10F /* 转速环比例系数 */
-#define PID_SPEED_LOOP_KI 2.00F /* 转速环积分系数 */
-#define PID_SPEED_LOOP_KD 0.00F /* 转速环微分系数 */
+#define PID_SPEED_LOOP_KP 0.012F /* 转速环比例系数 */
+#define PID_SPEED_LOOP_KI 0.06F  /* 转速环积分系数 */
+#define PID_SPEED_LOOP_KD 0.00F  /* 转速环微分系数 */
 
 /* 转速环输出限制 */
 #define PID_SPEED_LOOP_MAX_OUTPUT \
@@ -181,7 +181,7 @@
 #define SENSORLESS_PLL_KP         50.0F  /* PLL比例系数 */
 #define SENSORLESS_PLL_KI         625.0F /* PLL积分系数 */
 #define SENSORLESS_PLL_KD         0.0F   /* PLL微分系数 */
-#define SENSORLESS_PLL_MAX_OUTPUT 500.0F /* PLL最大输出 */
+#define SENSORLESS_PLL_MAX_OUTPUT 800.0F /* PLL最大输出 */
 #define SENSORLESS_PLL_MIN_OUTPUT \
     (-1 * SENSORLESS_PLL_MAX_OUTPUT) /* PLL最小输出 */
 #define SENSORLESS_PLL_INTEGRAL_LIMIT \
@@ -221,16 +221,15 @@
 #define LESO_PLL_MIN_OUTPUT     (-1 * LESO_PLL_MAX_OUTPUT) /* PLL最小输出 */
 #define LESO_PLL_INTEGRAL_LIMIT LESO_PLL_MAX_OUTPUT /* PLL积分限幅值 */
 
-/* 滑模观测器低通滤波器参数 */
-// #define SMO_LPF_CUTOFF_FREQ 500.0F /* 低通滤波器截止频率：500Hz */
-// #define SMO_LPF_ORDER       2      /* 低通滤波器阶数：2 */
-#define SMO_SAMPLING_FREQ \
-    MAIN_LOOP_FREQ /* 采样频率：与主循环频率相同 */
+/* 滑模观测器参数 */
+#define SMO_GAIN                200.0F /* 滑模观测器增益 */
+#define SMO_EMF_LPF_CUTOFF_FREQ 300.0F /* 反电动势低通滤波截止频率 */
+#define SMO_SPEED_CUTOFF_FREQ   10.0F  /* 速度低通滤波截止频率 */
 
 /*********************************************************************/
 /*                        Buffer参数配置                            */
 /*********************************************************************/
-#define BUFFER_CAPACITY  13U /* 默认缓冲区容量 */
+#define BUFFER_CAPACITY  10U /* 默认缓冲区容量 */
 #define BUFFER_PRESCALER 1U  /* 默认缓冲区预分频器 */
 
 #endif

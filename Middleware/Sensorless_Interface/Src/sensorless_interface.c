@@ -55,16 +55,6 @@ bool restore_states(void)
     return true;
 }
 
-bool Sensorless_Set_SampleTime(const SystemTimeConfig_t* config)
-{
-    if (config == NULL)
-    {
-        return false;
-    }
-
-    return true;
-}
-
 bool Sensorless_Initialization(const Sensorless_Param_t* param)
 {
     if (param == NULL)
@@ -267,7 +257,7 @@ MotorState_t Sensorless_Update_Position(void)
     switch (Sensorless_Method)
     {
     case SENSORLESS_START:
-        Sensorless_Method = SENSORLESS_HIGH_SMO;
+        Sensorless_Method = SENSORLESS_HIGH_LESO;
 
         error = SmoHandle.state.pll_err;
         return default_result;
@@ -286,7 +276,7 @@ MotorState_t Sensorless_Update_Position(void)
         break;
 
     default:
-        Sensorless_Method = SENSORLESS_HIGH_SMO;
+        Sensorless_Method = SENSORLESS_HIGH_LESO;
 
         error = SmoHandle.state.pll_err;
         break;

@@ -63,9 +63,6 @@ void SMO_Update(SMO_Handle_t* h, Clark_t voltage, Clark_t current)
                     ? 1.0F
                     : ((h->state.Ierror.b < 0.0F) ? -1.0F : 0.0F);
 
-    // 更新积分器状态
-    // h->integrator.a += h->param.K_i * h->state.Ierror.a * h->param.Ts;
-    // h->integrator.b += h->param.K_i * h->state.Ierror.b * h->param.Ts;
     h->state.Fdbk.a = h->param.Gain * h->sign.a;
     h->state.Fdbk.b = h->param.Gain * h->sign.b;
 
