@@ -211,7 +211,7 @@ void Leso_Update_EmfEstA(void)
 
     leso_err = Leso_CurEst.a - Leso_Current.a;
 
-    Buffer_Put(Leso_CurEst.a, 2);
+    // Buffer_Put(Leso_CurEst.a, 2);
 
     leso_f0  = -Leso_Current.a * Leso_Rs * Motor_InvLq;
     leso_b0u = Leso_Voltage.a * Motor_InvLq;
@@ -247,7 +247,7 @@ void Leso_Update_EmfEstB(void)
 
     leso_err = Leso_CurEst.b - Leso_Current.b;
 
-    Buffer_Put(Leso_CurEst.b, 3);
+    // Buffer_Put(Leso_CurEst.b, 3);
 
     leso_f0  = -Leso_Current.b * Leso_Rs * Motor_InvLq;
     leso_b0u = Leso_Voltage.b * Motor_InvLq;

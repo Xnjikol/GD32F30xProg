@@ -12,6 +12,7 @@
 
 static DeviceStateEnum_t MainInt_State        = RUNNING;
 static volatile bool     MainInt_UseRealTheta = true;
+static volatile bool     MainInt_Calculating  = false;
 //static volatile uint16_t MainInt_DataFlag     = 0x000U;
 
 static inline void MainInt_Update_FocCurrent(void)
@@ -22,8 +23,10 @@ static inline void MainInt_Update_FocCurrent(void)
     Foc_Iclark_Fdbk = Sensorless_FilterCurrent(Foc_Iclark_Fdbk);
     Sensorless_Set_Current(Foc_Iclark_Fdbk);
 
-    Buffer_Put(Foc_Iclark_Fdbk.a, 0);
-    Buffer_Put(Foc_Iclark_Fdbk.b, 1);
+    Buffer_Put(Foc_Idq_Ref.d, 0);
+    Buffer_Put(Foc_Idq_Fdbk.d, 1);
+    Buffer_Put(Foc_Idq_Ref.q, 2);
+    Buffer_Put(Foc_Idq_Fdbk.q, 3);
 }
 
 static inline void MainInt_Check_ProtectFlag(void)
@@ -162,6 +165,8 @@ static inline void MainInt_SVPWM(void)
 */
 void Main_Int_Handler(void)
 {
+    MainInt_Calculating = !MainInt_Calculating;
+
     MainInt_Update_FocCurrent();
     MainInt_Update_Angle_and_Speed();
     MainInt_Update_BusVoltage();
@@ -203,4 +208,13 @@ void Main_Int_Handler(void)
 
     MainInt_SVPWM();
     MainInt_Send_Data();
+
+    if (MainInt_Calculating)
+    {
+        MainInt_Calculating = false;
+    }
+    else
+    {
+        MainInt_Calculating = true;
+    }
 }
