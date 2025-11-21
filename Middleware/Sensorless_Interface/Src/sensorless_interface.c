@@ -20,7 +20,7 @@
 #include "transformation.h"
 #include <math.h>
 
-volatile bool Sensorless_Enabled = {0};
+bool Sensorless_Enabled = {0};
 
 bool  Sensorless_Reset          = {0};
 bool  Sensorless_Reset_Prev     = {0};
@@ -74,10 +74,8 @@ bool Sensorless_Set_SpeedFilter(float cutoff_freq, float sample_freq)
     {
         return false;
     }
-    IIR2ndFilter_Init(
-        &Sensorless_SpeedFilter2, cutoff_freq, sample_freq);
-    IIR1stFilter_Init(
-        &Sensorless_SpeedFilter1, cutoff_freq, sample_freq);
+    IIR2ndFilter_Init(&Sensorless_SpeedFilter2, cutoff_freq, sample_freq);
+    IIR1stFilter_Init(&Sensorless_SpeedFilter1, cutoff_freq, sample_freq);
     return true;
 }
 
@@ -164,7 +162,7 @@ bool Sensorless_Calculate_Err(MotorState_t result)
     float speed = result.speed;
     float error = 0.0F;
 
-    error = wrap_theta_2pi(theta - Sensorless_ThetaEst + PI) - PI;
+    error               = wrap_theta_2pi(theta - Sensorless_ThetaEst + PI) - PI;
     Sensorless_ThetaErr = rad2deg(error);
     if (Sensorless_ThetaErr > 90.0F)
     {
@@ -206,8 +204,6 @@ static inline float pll_update(float error, bool reset)
     }
     Sensorless_ThetaEst = wrap_theta_2pi(Sensorless_ThetaEst);
 
-    Buffer_Put(Sensorless_ThetaEst, 9);
-
     return omega;
 }
 
@@ -235,8 +231,6 @@ static inline float calculate_speed(float omega)
     // }
     speed_int           = 0.0F;
     Sensorless_SpeedEst = speed;
-
-    Buffer_Put(Sensorless_SpeedEst, 8);
 
     return speed;
 }
@@ -288,9 +282,8 @@ MotorState_t Sensorless_Update_Position(void)
     Leso_Set_Speed(speed);
     Hfi_Set_Theta(Sensorless_ThetaEst);
 
-    return (MotorState_t){
-        .speed = Sensorless_SpeedEst,
-        .theta = Sensorless_ThetaEst + Sensorless_ThetAdj};
+    return (MotorState_t){.speed = Sensorless_SpeedEst,
+                          .theta = Sensorless_ThetaEst + Sensorless_ThetAdj};
 }
 
 static inline void enable_leso(bool enable)

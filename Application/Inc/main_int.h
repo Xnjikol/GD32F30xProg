@@ -1,6 +1,8 @@
 #ifndef __MAIN_INT_H__
 #define __MAIN_INT_H__
 
+#include <stdbool.h>
+
 typedef enum
 {
     INIT,        // 基础初始化：仅获取系统参数
@@ -8,6 +10,8 @@ typedef enum
     SENSORLESS,  // 传感器无位置模式
     EXIT
 } DeviceStateEnum_t;
+
+extern volatile bool MainInt_UseRealTheta;
 
 void Main_Int_Handler(void);
 

@@ -34,12 +34,13 @@ typedef struct
     bool   use_sensor;  // 是否使用传感器
 } IF_Parameter_t;
 
-extern Phase_t Foc_IPhase;
-extern Clark_t Foc_Iclark_Fdbk;
-extern Park_t  Foc_Idq_Ref;
-extern Park_t  Foc_Idq_Fdbk;
-extern Clark_t Foc_Uclark_Ref;
-extern Park_t  Foc_Udq_Ref;
+extern FocMode_t Foc_Mode;
+extern Phase_t   Foc_IPhase;
+extern Clark_t   Foc_Iclark_Fdbk;
+extern Park_t    Foc_Idq_Ref;
+extern Park_t    Foc_Idq_Fdbk;
+extern Clark_t   Foc_Uclark_Ref;
+extern Park_t    Foc_Udq_Ref;
 
 extern float Foc_Speed_Ref;
 extern float Foc_Speed_Fdbk;
@@ -49,28 +50,20 @@ extern float Foc_Theta;
 extern float Foc_BusVoltage;
 extern float Foc_BusVoltage_Inv;
 
+extern PID_Handler_t   Foc_Pid_Speed_Handler;
+extern PID_Handler_t   Foc_Pid_CurD_Handler;
+extern PID_Handler_t   Foc_Pid_CurQ_Handler;
+extern RampGenerator_t Foc_Ramp_Speed_Handler;
+extern SawtoothWave_t  Foc_Sawtooth_Handler;
+
 void      Foc_Set_SampleTime(const SystemTimeConfig_t* config);
 void      Foc_Set_Mode(FocMode_t mode);
 FocMode_t Foc_Get_Mode(void);
 void      Foc_Set_ResetFlag(bool reset);
 bool      Foc_Get_ResetFlag(void);
-void      Foc_Set_BusVoltage(float voltage);
-float     Foc_Get_BusVoltage(void);
 Park_t    Foc_Get_Inductor(void);
-void      Foc_Set_BusVoltageInv(float voltage);
-void      Foc_Set_Angle(float angle);
-void      Foc_Set_Speed(float speed);
-float     Foc_Get_SpeedRamp(void);
-void      Foc_Set_Speed_and_Angle(MotorState_t* angle_speed);
-void      Foc_Set_Iclark_Fdbk(Clark_t current);
-Clark_t   Foc_Get_Iclark_Fdbk(void);
-void      Foc_Set_Idq_Ref(Park_t idq_ref);
-Park_t    Foc_Get_Idq_Ref(void);
-void      Foc_Set_Idq_Fdbk(Park_t idq_fdbk);
-Park_t    Foc_Get_Idq_Fdbk(void);
 void      Foc_Set_Udq_Ref(Park_t udq_ref);
 Park_t    Foc_Get_Udq_Ref(void);
-void      Foc_Set_Uclark_Ref(Clark_t uclark_ref);
 Clark_t   Foc_Get_Uclark_Ref(void);
 Phase_t   Foc_Get_Tcm(void);
 void      Foc_Set_Vf_Param(VF_Parameter_t* vf_param);

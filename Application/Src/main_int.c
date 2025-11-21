@@ -10,14 +10,17 @@
 #include "sensorless_interface.h"
 #include "transformation.h"
 
-static DeviceStateEnum_t MainInt_State        = RUNNING;
-static volatile bool     MainInt_UseRealTheta = true;
-static volatile bool     MainInt_Calculating  = false;
-//static volatile uint16_t MainInt_DataFlag     = 0x000U;
+DeviceStateEnum_t MainInt_State        = RUNNING;
+volatile bool     MainInt_UseRealTheta = true;
+volatile bool     MainInt_Calculating  = false;
+// volatile uint16_t MainInt_DataFlag     = 0x000U;
 
 static inline void MainInt_Update_FocCurrent(void)
 {
     Foc_IPhase = Peripheral_Get_PhaseCurrent();
+    Buffer_Put(Foc_IPhase.a, 7);
+    Buffer_Put(Foc_IPhase.b, 8);
+    Buffer_Put(Foc_IPhase.c, 9);
 
     Foc_Iclark_Fdbk = ClarkTransform(Foc_IPhase);
     Foc_Iclark_Fdbk = Sensorless_FilterCurrent(Foc_Iclark_Fdbk);
@@ -63,6 +66,10 @@ static inline void MainInt_Update_Angle_and_Speed(void)
 
     real = Peripheral_Update_Position();
     est  = Sensorless_Update_Position();
+
+    Buffer_Put(real.speed, 4);
+    Buffer_Put(Foc_Speed_Ramp, 5);
+    Buffer_Put(est.speed, 6);
 
     Sensorless_Calculate_Err(real);
 

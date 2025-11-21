@@ -8,6 +8,8 @@
 #include "theta_calc.h"
 #include "transformation.h"
 
+extern bool Stop;
+
 extern volatile bool ShutFlag;
 
 bool Peripheral_Get_SoftwareBrk(void);

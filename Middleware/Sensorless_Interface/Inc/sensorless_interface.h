@@ -55,7 +55,7 @@ extern "C"
 
     extern sensorless_method_t Sensorless_Method;
 
-    extern volatile bool Sensorless_Enabled;
+    extern bool Sensorless_Enabled;
 
     extern bool  Sensorless_Reset;
     extern bool  Sensorless_Reset_Prev;

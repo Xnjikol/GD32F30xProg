@@ -1,11 +1,15 @@
 #include "FlyingStart.h"
 #include "Buffer.h"
+#include "foc.h"
 #include "hardware_interface.h"
+#include "main_int.h"
 #include "motor.h"
+#include "sensorless_interface.h"
 #include "theta_calc.h"
 #include "transformation.h"
 
 volatile bool FlyingStartEnabled = false;
+volatile bool RestartEnabled     = false;
 
 FS_Handler_t Fs_Hnd = {0};
 
@@ -54,6 +58,8 @@ void FlyingStart_Update(FS_Handler_t* hnd, Clark_t current)
     {
         return;
     }
+
+    static float speedI3 = 0.0F;
 
     switch (hnd->state)
     {
@@ -135,8 +141,7 @@ void FlyingStart_Update(FS_Handler_t* hnd, Clark_t current)
         if (hnd->ExeCnt == 0)
         {
             ATAN2(current.b, current.a, &hnd->ThetaI3);
-            float delta_theta
-                = hnd->ThetaI1 + hnd->ThetaI3 - 2 * hnd->ThetaI2;
+            float delta_theta = hnd->ThetaI1 + hnd->ThetaI3 - 2 * hnd->ThetaI2;
             if (delta_theta > M_PI)
             {
                 delta_theta -= M_2PI;
@@ -145,18 +150,14 @@ void FlyingStart_Update(FS_Handler_t* hnd, Clark_t current)
             {
                 delta_theta += M_2PI;
             }
-            hnd->WeI3     = delta_theta / (hnd->Ts * hnd->DeltaCnt);
-            float speedI3 = radps2rpm(hnd->WeI3 * Motor_InvPn);
-
-            Buffer_Put(speedI3, 6);
+            hnd->WeI3 = delta_theta / (hnd->Ts * hnd->DeltaCnt);
+            speedI3   = radps2rpm(hnd->WeI3 * Motor_InvPn);
 
             float theta = (hnd->WeI3) * hnd->Ts * hnd->ShortCnt;
             float respd = Motor_Ld * SIN(theta);
             float respq = Motor_Lq * (1 - COS(theta));
             ATAN2(-respd, -respq, &hnd->Thetad3);
             hnd->ThetaE = wrap_theta_2pi(hnd->ThetaI3 - hnd->Thetad3);
-
-            Buffer_Put(hnd->ThetaE, 7);
 
             hnd->SpeedErr = Motor_Speed - speedI3;
             hnd->ThetaErr = Motor_ThetaElec - hnd->ThetaE;
@@ -165,13 +166,41 @@ void FlyingStart_Update(FS_Handler_t* hnd, Clark_t current)
         }
         hnd->ExeCnt++;
         ShutFlag = false;
-        Peripheral_Set_Stop(true);
-        if (hnd->ExeCnt >= hnd->ReleaseCnt)
+
+        Stop = true;
+        if (hnd->ExeCnt < hnd->ReleaseCnt)
         {
-            hnd->state         = FS_STATE_IDLE;
-            FlyingStartEnabled = false;
-            hnd->ExeCnt        = 0;
+            break;
         }
+        hnd->ThetaE        = wrap_theta_2pi(hnd->ThetaE + hnd->WeI3 * hnd->Ts);
+        hnd->state         = FS_STATE_IDLE;
+        FlyingStartEnabled = false;
+        hnd->ExeCnt        = 0;
+
+        if (RestartEnabled && speedI3 >= 400.0F)
+        {
+            Stop     = false;
+            Foc_Mode = SPEED;
+
+            // 设置转速
+            Foc_Speed_Ref                = speedI3;
+            Foc_Ramp_Speed_Handler.value = speedI3;
+
+            // 设置电流
+            Foc_Pid_CurQ_Handler.integral = hnd->WeI3 * Motor_Flux;
+
+            MainInt_UseRealTheta       = false;
+            Sensorless_Enabled         = true;
+            Sensorless_SpeedEst        = speedI3;
+            Sensorless_SpeedFilter2.x1 = speedI3;
+            Sensorless_SpeedFilter2.x2 = speedI3;
+            Sensorless_SpeedFilter2.y1 = speedI3;
+            Sensorless_SpeedFilter2.y2 = speedI3;
+            Sensorless_ThetaEst        = hnd->ThetaE;
+
+            Sensorless_Theta_PID.integral = hnd->WeI3;
+        }
+
         break;
 
     case FS_STATE_ERROR:

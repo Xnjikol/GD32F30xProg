@@ -15,9 +15,9 @@
 
 volatile bool ShutFlag = false;
 
-static volatile bool Stop           = true;
-static bool          Software_BRK   = false;
-static volatile bool usart_dma_busy = false;
+bool Stop           = true;
+bool Software_BRK   = false;
+bool usart_dma_busy = false;
 
 static inline bool can_receive_to_frame(
     const can_receive_message_struct* hw_msg, can_frame_t* frame);
@@ -153,8 +153,7 @@ FloatWithInv_t Peripheral_UpdateUdc(void)
         Stop = true;
     }
 
-    FloatWithInv_t result
-        = {.val = voltage_bus, .inv = voltage_bus_inv};
+    FloatWithInv_t result = {.val = voltage_bus, .inv = voltage_bus_inv};
     return result;
 }
 

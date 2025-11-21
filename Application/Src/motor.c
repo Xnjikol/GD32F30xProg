@@ -51,8 +51,6 @@ void Motor_Update(void)
     Motor_ThetaElec = Motor_ThetaMech * Motor_Pn;
     Motor_ThetaElec = wrap_theta_2pi(Motor_ThetaElec);
 
-    Buffer_Put(Motor_ThetaElec, 5);
-
     static uint16_t cnt_speed  = 0x0000;
     static float    last_theta = 0.0F;
     cnt_speed++;
@@ -66,7 +64,6 @@ void Motor_Update(void)
     Motor_Speed = IIR1stFilter_Update(&Motor_Speed_Filter, Motor_Speed);
     last_theta  = Motor_ThetaMech;
 
-    Buffer_Put(Motor_Speed, 4);
     return;
 }
 
