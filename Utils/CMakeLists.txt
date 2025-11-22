@@ -8,6 +8,7 @@ set(Utils_SOURCES
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/pll.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/signal.c
     ${CMAKE_CURRENT_SOURCE_DIR}/Src/buffer.c
+    ${CMAKE_CURRENT_SOURCE_DIR}/Src/svpwm.c
 )
 
 add_library(Utils STATIC

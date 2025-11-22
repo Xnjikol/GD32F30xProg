@@ -18,27 +18,19 @@ volatile bool     MainInt_Calculating  = false;
 static inline void MainInt_Update_FocCurrent(void)
 {
     Foc_IPhase = Peripheral_Get_PhaseCurrent();
-    Buffer_Put(Foc_IPhase.a, 7);
-    Buffer_Put(Foc_IPhase.b, 8);
-    Buffer_Put(Foc_IPhase.c, 9);
 
     Foc_Iclark_Fdbk = ClarkTransform(Foc_IPhase);
     Foc_Iclark_Fdbk = Sensorless_FilterCurrent(Foc_Iclark_Fdbk);
     Sensorless_Set_Current(Foc_Iclark_Fdbk);
 
-    Buffer_Put(Foc_Idq_Ref.d, 0);
-    Buffer_Put(Foc_Idq_Fdbk.d, 1);
-    Buffer_Put(Foc_Idq_Ref.q, 2);
-    Buffer_Put(Foc_Idq_Fdbk.q, 3);
-}
-
-static inline void MainInt_Check_ProtectFlag(void)
-{
     if (FlyingStartEnabled)
     {
         FlyingStart_Update(&Fs_Hnd, Foc_Iclark_Fdbk);
     }
+}
 
+static inline void MainInt_Check_ProtectFlag(void)
+{
     // 保护检测
     bool stop = Peripheral_Update_Break();
     if (Foc_Get_Mode() == IDLE)
@@ -120,7 +112,6 @@ static inline void MainInt_Startup(void)
 static inline void MainInt_Update_Sensorless(void)
 {
     Clark_t voltage = {0};
-    Park_t  ref     = {0};
     Park_t  induc   = Foc_Get_Inductor();
     Leso_Set_Inductor(induc);
 
@@ -162,6 +153,7 @@ static inline void MainInt_SVPWM(void)
         tcm.c = 1.0F;
     }
     Peripheral_Set_PWMChangePoint(tcm);
+    Buffer_Put(tcm.a, 9);
 }
 
 /*!

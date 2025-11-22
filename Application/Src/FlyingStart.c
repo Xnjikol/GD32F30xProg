@@ -166,8 +166,7 @@ void FlyingStart_Update(FS_Handler_t* hnd, Clark_t current)
         }
         hnd->ExeCnt++;
         ShutFlag = false;
-
-        Stop = true;
+        Stop     = true;
         if (hnd->ExeCnt < hnd->ReleaseCnt)
         {
             break;

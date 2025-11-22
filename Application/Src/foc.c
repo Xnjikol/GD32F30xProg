@@ -1,10 +1,12 @@
 #include "foc.h"
+#include "Buffer.h"
 #include "MTPA.h"
 #include "identification.h"
 #include "motor.h"
 #include "pid.h"
 #include "signal.h"
 #include "stdint.h"
+#include "svpwm.h"
 #include "transformation.h"
 
 FocMode_t Foc_Mode           = IDLE;   // 当前FOC模式
@@ -124,127 +126,6 @@ void Foc_Set_Ramp_Speed_Handler(RampGenerator_t* handler)
     Foc_Ramp_Speed_Handler = *handler;  // 设置速度环斜坡生成器
 }
 
-static inline Phase_t calculate_SVPWM_Tcm(Clark_t u_ref, float inv_Vdc)
-{
-    float   alpha  = u_ref.a;
-    float   beta   = u_ref.b;
-    uint8_t sector = 0;
-    float   v_ref1 = beta;
-    float   v_ref2 = (+SQRT3 * alpha - beta) * 0.5F;
-    float   v_ref3 = (-SQRT3 * alpha - beta) * 0.5F;
-
-    // 判断扇区（1~6）
-    if (v_ref1 > 0)
-    {
-        sector += 1;
-    }
-    if (v_ref2 > 0)
-    {
-        sector += 2;
-    }
-    if (v_ref3 > 0)
-    {
-        sector += 4;
-    }
-
-    // Clarke to t1/t2 projection
-    float X = SQRT3 * beta * inv_Vdc;
-    float Y = (+1.5F * alpha + SQRT3_2 * beta) * inv_Vdc;
-    float Z = (-1.5F * alpha + SQRT3_2 * beta) * inv_Vdc;
-
-    float t1 = 0.0F, t2 = 0.0F;
-
-    switch (sector)
-    {
-    case 1:
-        t1 = Z;
-        t2 = Y;
-        break;
-    case 2:
-        t1 = Y;
-        t2 = -X;
-        break;
-    case 3:
-        t1 = -Z;
-        t2 = X;
-        break;
-    case 4:
-        t1 = -X;
-        t2 = Z;
-        break;
-    case 5:
-        t1 = X;
-        t2 = -Y;
-        break;
-    case 6:
-        t1 = -Y;
-        t2 = -Z;
-        break;
-    default:
-        t1 = 0.0F;
-        t2 = 0.0F;
-        break;
-    }
-
-    // 过调制处理
-    float T_sum = t1 + t2;
-    if (T_sum > 1.0F)
-    {
-        t1 /= T_sum;
-        t2 /= T_sum;
-    }
-
-    // 中心对称调制时间计算
-    float t0 = (1.0F - t1 - t2) * 0.5F;
-    float ta = t0;
-    float tb = t0 + t1;
-    float tc = tb + t2;
-
-    Phase_t tcm = {0.0F, 0.0F, 0.0F};
-
-    // 扇区映射到ABC换相点
-    switch (sector)
-    {
-    case 1:
-        tcm.a = tb;
-        tcm.b = ta;
-        tcm.c = tc;
-        break;
-    case 2:
-        tcm.a = ta;
-        tcm.b = tc;
-        tcm.c = tb;
-        break;
-    case 3:
-        tcm.a = ta;
-        tcm.b = tb;
-        tcm.c = tc;
-        break;
-    case 4:
-        tcm.a = tc;
-        tcm.b = tb;
-        tcm.c = ta;
-        break;
-    case 5:
-        tcm.a = tc;
-        tcm.b = ta;
-        tcm.c = tb;
-        break;
-    case 6:
-        tcm.a = tb;
-        tcm.b = tc;
-        tcm.c = ta;
-        break;
-    default:
-        tcm.a = 0.5F;
-        tcm.b = 0.5F;
-        tcm.c = 0.5F;
-        break;
-    }
-
-    return tcm;
-}
-
 Phase_t Foc_Get_Tcm(void)
 {
     Phase_t tcm = {.a = 0.5F, .b = 0.5F, .c = 0.5F};
@@ -272,9 +153,7 @@ static inline float dispatch_current(float cur_ref)
     return out;
 }
 
-static inline Park_t Foc_Update_SpeedLoop(float ref,
-                                          float fdbk,
-                                          bool  reset)
+static inline Park_t Foc_Update_SpeedLoop(float ref, float fdbk, bool reset)
 {
     static uint16_t counter = 0x0000U;
     counter++;
@@ -287,7 +166,7 @@ static inline Park_t Foc_Update_SpeedLoop(float ref,
     Park_t output                 = {0};
     float  ramp    = RampGenerator(&Foc_Ramp_Speed_Handler, reset);
     Foc_Speed_Ramp = ramp;
-    output.q = Pid_Update(ramp - fdbk, reset, &Foc_Pid_Speed_Handler);
+    output.q       = Pid_Update(ramp - fdbk, reset, &Foc_Pid_Speed_Handler);
 #if defined(FOC_DEBUG_IQ)
     static float iqtest = 0;
     iqtest              = iqtest + 0.0002F;
@@ -302,9 +181,7 @@ static inline Park_t Foc_Update_SpeedLoop(float ref,
     return output;  // 返回DQ轴电流参考
 }
 
-static inline Park_t Foc_Update_CurrentLoop(Park_t ref,
-                                            Park_t fdbk,
-                                            bool   reset)
+static inline Park_t Foc_Update_CurrentLoop(Park_t ref, Park_t fdbk, bool reset)
 {
     Park_t output = {0};
 
@@ -332,7 +209,7 @@ static inline Park_t Foc_Update_VfMode(bool reset)
                           Foc_Current_Ts);
     }
     Foc_Sawtooth_Handler.frequency = Foc_VfParam.freq;
-    output = Foc_VfParam.vol_ref;  // 获取电压参考
+    output                         = Foc_VfParam.vol_ref;  // 获取电压参考
 
     float phase = 0.0F;
     phase       = SawtoothWaveGenerator(&Foc_Sawtooth_Handler,
@@ -400,8 +277,7 @@ static inline Park_t Foc_Update_IfMode(bool reset)
 
     Foc_Idq_Fdbk = ParkeTransform(Foc_Iclark_Fdbk, Foc_Theta);
 
-    output = Foc_Update_CurrentLoop(
-        Foc_IfParam.cur_ref, Foc_Idq_Fdbk, reset);
+    output = Foc_Update_CurrentLoop(Foc_IfParam.cur_ref, Foc_Idq_Fdbk, reset);
 
     reset_prev = reset;
     return output;
@@ -409,6 +285,8 @@ static inline Park_t Foc_Update_IfMode(bool reset)
 
 static inline Park_t Foc_Update_SpeedMode(bool reset)
 {
+    Buffer_Put(reset, 7);
+
     if (reset)
     {
         // 对Foc_Speed_Ref进行一次写入操作，防止变量被优化掉
@@ -416,14 +294,20 @@ static inline Park_t Foc_Update_SpeedMode(bool reset)
     }
 
     Foc_Idq_Fdbk = ParkeTransform(Foc_Iclark_Fdbk, Foc_Theta);
+    Buffer_Put(Foc_Idq_Fdbk.d, 1);
+    Buffer_Put(Foc_Idq_Fdbk.q, 3);
 
     Park_t output = {0};
     // 更新转速环
-    Foc_Idq_Ref
-        = Foc_Update_SpeedLoop(Foc_Speed_Ref, Foc_Speed_Fdbk, reset);
+    Foc_Idq_Ref = Foc_Update_SpeedLoop(Foc_Speed_Ref, Foc_Speed_Fdbk, reset);
+
+    Buffer_Put(Foc_Idq_Ref.d, 0);
+    Buffer_Put(Foc_Idq_Ref.q, 2);
 
     // 更新电流环
     output = Foc_Update_CurrentLoop(Foc_Idq_Ref, Foc_Idq_Fdbk, reset);
+
+    Buffer_Put(output.q, 8);
 
     return output;
 }
@@ -468,27 +352,21 @@ Park_t Foc_Update_Main(void)
                             12,
                             1,
                             100);
-            MTPA_build_table(
-                mtpa_table, MTPA_TABLE_POINTS, 0.0f, 50.0f);
+            MTPA_build_table(mtpa_table, MTPA_TABLE_POINTS, 0.0f, 50.0f);
         }
         else if (Experiment.Complete == true)
         {
-            float ad0 = 0.0F, add = 0.0F, aq0 = 0.0F, aqq = 0.0F,
-                  adq = 0.0F;
+            float ad0 = 0.0F, add = 0.0F, aq0 = 0.0F, aqq = 0.0F, adq = 0.0F;
             Get_Identification_Results(
                 &Experiment, &ad0, &add, &aq0, &aqq, &adq);
             MTPA_Get_Parameter(ad0, add, aq0, aqq, adq);
-            MTPA_build_table(
-                mtpa_table, MTPA_TABLE_POINTS, 0.0f, 50.0f);
+            MTPA_build_table(mtpa_table, MTPA_TABLE_POINTS, 0.0f, 50.0f);
             Foc_Mode = IDLE;
             break;
         }
         Foc_Idq_Fdbk = ParkeTransform(Foc_Iclark_Fdbk, Foc_Theta);
-        Experiment_Step(&Experiment,
-                        Foc_Idq_Fdbk.d,
-                        Foc_Idq_Fdbk.q,
-                        &output.d,
-                        &output.q);
+        Experiment_Step(
+            &Experiment, Foc_Idq_Fdbk.d, Foc_Idq_Fdbk.q, &output.d, &output.q);
         break;
     }
     default:
