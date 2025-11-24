@@ -153,7 +153,6 @@ static inline void MainInt_SVPWM(void)
         tcm.c = 1.0F;
     }
     Peripheral_Set_PWMChangePoint(tcm);
-    Buffer_Put(tcm.a, 9);
 }
 
 /*!

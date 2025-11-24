@@ -211,7 +211,8 @@ void Leso_Update_EmfEstA(void)
 
     leso_err = Leso_CurEst.a - Leso_Current.a;
 
-    // Buffer_Put(Leso_CurEst.a, 2);
+    Buffer_Put(Leso_CurEst.a, 0);
+    Buffer_Put(Leso_Current.a, 1);
 
     leso_f0  = -Leso_Current.a * Leso_Rs * Motor_InvLq;
     leso_b0u = Leso_Voltage.a * Motor_InvLq;
@@ -222,8 +223,7 @@ void Leso_Update_EmfEstA(void)
     leso_dcur = leso_f0 + leso_b0u + leso_f1a - Leso_Beta1 * leso_err;
     Leso_CurEst.a += leso_dcur * SampleTime;
 
-    Leso_CurEst.a
-        = clamp_f32(Leso_CurEst.a, -Leso_Int_limit, Leso_Int_limit);
+    Leso_CurEst.a = clamp_f32(Leso_CurEst.a, -Leso_Int_limit, Leso_Int_limit);
     Leso_EmfEst.a = -Motor_Lq * leso_f1a;
 
     return;
@@ -247,7 +247,8 @@ void Leso_Update_EmfEstB(void)
 
     leso_err = Leso_CurEst.b - Leso_Current.b;
 
-    // Buffer_Put(Leso_CurEst.b, 3);
+    Buffer_Put(Leso_CurEst.b, 2);
+    Buffer_Put(Leso_Current.b, 3);
 
     leso_f0  = -Leso_Current.b * Leso_Rs * Motor_InvLq;
     leso_b0u = Leso_Voltage.b * Motor_InvLq;
@@ -258,8 +259,7 @@ void Leso_Update_EmfEstB(void)
     leso_dcur = leso_f0 + leso_b0u + leso_f1b - Leso_Beta1 * leso_err;
     Leso_CurEst.b += leso_dcur * SampleTime;
 
-    Leso_CurEst.b
-        = clamp_f32(Leso_CurEst.b, -Leso_Int_limit, Leso_Int_limit);
+    Leso_CurEst.b = clamp_f32(Leso_CurEst.b, -Leso_Int_limit, Leso_Int_limit);
     Leso_EmfEst.b = -Motor_Lq * leso_f1b;
 
     return;

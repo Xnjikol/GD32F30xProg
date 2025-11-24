@@ -164,15 +164,10 @@ bool Sensorless_Calculate_Err(MotorState_t result)
 
     error               = wrap_theta_2pi(theta - Sensorless_ThetaEst + PI) - PI;
     Sensorless_ThetaErr = rad2deg(error);
-    if (Sensorless_ThetaErr > 90.0F)
-    {
-        Sensorless_ThetaErr -= 180.0F;
-    }
-    else if (Sensorless_ThetaErr < -90.0F)
-    {
-        Sensorless_ThetaErr += 180.0F;
-    }
     Sensorless_SpeedErr = speed - Sensorless_SpeedEst;
+
+    Buffer_Put(Sensorless_ThetaErr, 8);
+    Buffer_Put(Sensorless_SpeedErr, 9);
 
     Hfi_Calc_ThetaErr(theta);
     Hfi_Calc_SpeedErr(speed);
@@ -270,13 +265,8 @@ MotorState_t Sensorless_Update_Position(void)
         error = Leso_Get_PllErr();
         break;
     }
-    MotorState_t leso_result = {0};
-    MotorState_t hfi_result  = {0};
-
-    leso_result = Leso_Get_Result();
-    hfi_result  = Hfi_Get_Result();
-    omega       = pll_update(error, Sensorless_Reset);
-    speed       = calculate_speed(omega);
+    omega = pll_update(error, Sensorless_Reset);
+    speed = calculate_speed(omega);
 
     Leso_Set_Theta(Sensorless_ThetaEst);
     Leso_Set_Speed(speed);

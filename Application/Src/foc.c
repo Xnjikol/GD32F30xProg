@@ -285,8 +285,6 @@ static inline Park_t Foc_Update_IfMode(bool reset)
 
 static inline Park_t Foc_Update_SpeedMode(bool reset)
 {
-    Buffer_Put(reset, 7);
-
     if (reset)
     {
         // 对Foc_Speed_Ref进行一次写入操作，防止变量被优化掉
@@ -294,20 +292,15 @@ static inline Park_t Foc_Update_SpeedMode(bool reset)
     }
 
     Foc_Idq_Fdbk = ParkeTransform(Foc_Iclark_Fdbk, Foc_Theta);
-    Buffer_Put(Foc_Idq_Fdbk.d, 1);
-    Buffer_Put(Foc_Idq_Fdbk.q, 3);
 
     Park_t output = {0};
     // 更新转速环
     Foc_Idq_Ref = Foc_Update_SpeedLoop(Foc_Speed_Ref, Foc_Speed_Fdbk, reset);
 
-    Buffer_Put(Foc_Idq_Ref.d, 0);
-    Buffer_Put(Foc_Idq_Ref.q, 2);
-
     // 更新电流环
     output = Foc_Update_CurrentLoop(Foc_Idq_Ref, Foc_Idq_Fdbk, reset);
 
-    Buffer_Put(output.q, 8);
+    Buffer_Put(output.q, 7);
 
     return output;
 }
