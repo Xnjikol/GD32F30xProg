@@ -16,6 +16,7 @@
 volatile bool ShutFlag = false;
 
 bool Stop           = true;
+bool Stop_Prev      = true;
 bool Software_BRK   = false;
 bool usart_dma_busy = false;
 
@@ -82,16 +83,6 @@ void Peripheral_SCISendCallback(void)
 bool Peripheral_Get_SoftwareBrk(void)
 {
     return Software_BRK;
-}
-
-void Peripheral_Set_Stop(bool stop)
-{
-    Stop = stop;
-}
-
-bool Peripheral_Get_Stop(void)
-{
-    return Stop;
 }
 
 bool Peripheral_Update_Break(void)

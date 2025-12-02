@@ -11,8 +11,8 @@ typedef struct {
     float integral; /* Integral term */
     float
         previous_error;  /* Previous error for derivative calculation */
-    float MaxOutput;     /* Maximum output limit */
-    float MinOutput;     /* Minimum output limit */
+    float Max;     /* Maximum output limit */
+    float Min;     /* Minimum output limit */
     float output;        /* PID output value */
     float IntegralLimit; /* Integral limit to prevent windup */
     float Ts;            /* Sample time */
@@ -59,8 +59,8 @@ static inline float Pid_Update(float          error,
     // 计算未限幅输出（用于条件积分判断）
     const float output_unclamped = proportional + handler->integral;
     const bool  is_output_limited
-        = (output_unclamped > handler->MaxOutput)
-          || (output_unclamped < handler->MinOutput);
+        = (output_unclamped > handler->Max)
+          || (output_unclamped < handler->Min);
 
     // 条件积分抗饱和：仅当输出未限幅且Ki有效时才累加积分
     if (!is_output_limited && handler->Ki != 0.0F
@@ -88,10 +88,10 @@ static inline float Pid_Update(float          error,
         = proportional + handler->integral + derivative;
 
     // 输出限幅
-    if (total_output > handler->MaxOutput) {
-        handler->output = handler->MaxOutput;
-    } else if (total_output < handler->MinOutput) {
-        handler->output = handler->MinOutput;
+    if (total_output > handler->Max) {
+        handler->output = handler->Max;
+    } else if (total_output < handler->Min) {
+        handler->output = handler->Min;
     } else {
         handler->output = total_output;
     }

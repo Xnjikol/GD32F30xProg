@@ -59,8 +59,8 @@ extern "C"
 
     extern bool  Sensorless_Reset;
     extern bool  Sensorless_Reset_Prev;
-    extern float Sensorless_Threshold_Hfi;
-    extern float Sensorless_Threshold_Leso;
+    extern float Sensorless_Threshold_High;
+    extern float Sensorless_Threshold_Low;
     extern float Sensorless_Switch_Speed;
     extern float Sensorless_SpeedRef;
     extern float Sensorless_SpeedFdbk;
@@ -79,8 +79,7 @@ extern "C"
 
     bool Sensorless_Initialization(const Sensorless_Param_t* param);
 
-    bool Sensorless_Set_SpeedFilter(float cutoff_freq,
-                                    float sample_freq);
+    bool Sensorless_Set_SpeedFilter(float cutoff_freq, float sample_freq);
 
     bool Sensorless_Set_PidParams(const PID_Handler_t* pid_handler);
 

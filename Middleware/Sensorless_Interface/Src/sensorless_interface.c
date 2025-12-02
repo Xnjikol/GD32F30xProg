@@ -10,6 +10,7 @@
 
 #include <stdbool.h>
 #include "Buffer.h"
+#include "FlyingStart.h"
 #include "filter.h"
 #include "flying.h"
 #include "foc.h"
@@ -24,14 +25,13 @@ bool Sensorless_Enabled = {0};
 
 bool  Sensorless_Reset          = {0};
 bool  Sensorless_Reset_Prev     = {0};
-float Sensorless_Threshold_Hfi  = {0};
-float Sensorless_Threshold_Leso = {0};
+float Sensorless_Threshold_High = {0};
+float Sensorless_Threshold_Low  = {0};
 float Sensorless_Switch_Speed   = {0};
 float Sensorless_SpeedRef       = {0};
 float Sensorless_SpeedFdbk      = {0};
 float Sensorless_SpeedEst       = {0};
 float Sensorless_ThetaEst       = {0};
-float Sensorless_InvPn          = {0};
 float Sensorless_ThetaErr       = {0};
 float Sensorless_SpeedErr       = {0};
 
@@ -61,8 +61,8 @@ bool Sensorless_Initialization(const Sensorless_Param_t* param)
         return false;
     }
 
-    Sensorless_Threshold_Hfi  = param->switch_speed + param->hysteresis;
-    Sensorless_Threshold_Leso = param->switch_speed - param->hysteresis;
+    Sensorless_Threshold_High = param->switch_speed + param->hysteresis;
+    Sensorless_Threshold_Low  = param->switch_speed - param->hysteresis;
     Sensorless_Switch_Speed   = param->switch_speed;
 
     return true;
@@ -89,27 +89,6 @@ bool Sensorless_Set_PidParams(const PID_Handler_t* pid_handler)
     return true;
 }
 
-bool Sensorless_Set_MotorParams(const MotorParam_t* motor_param)
-{
-    if (motor_param == NULL || motor_param->inv_MotorPn <= 0)
-    {
-        return false;
-    }
-
-    Sensorless_InvPn = motor_param->inv_MotorPn;
-    return true;
-}
-
-sensorless_method_t Sensorless_Get_Method(void)
-{
-    return Sensorless_Method;
-}
-
-Clark_t Sensorless_Get_SmoEmf(void)
-{
-    return Leso_Get_EmfEst();
-}
-
 bool Sensorless_Set_Voltage(Clark_t voltage)
 {
     if (Hfi_Get_Enabled())
@@ -133,22 +112,6 @@ bool Sensorless_Set_Current(Clark_t current)
     Leso_Set_Current(current);
 
     return true;
-}
-
-void Sensorless_Set_SpeedFdbk(float fdbk)
-{
-    Sensorless_SpeedFdbk = fdbk;
-}
-
-void Sensorless_Set_SpeedRef(float ref)
-{
-    Sensorless_SpeedRef = ref;
-}
-
-MotorState_t Sensorless_Get_Error(void)
-{
-    return (MotorState_t){.theta = Sensorless_ThetaErr,
-                          .speed = Sensorless_SpeedErr};
 }
 
 bool Sensorless_Calculate_Err(MotorState_t result)
@@ -185,7 +148,7 @@ static inline float pll_update(float error, bool reset)
 
     if (reset)
     {
-        return omega;
+        Sensorless_ThetaEst = 0.0F;
     }
 
     Sensorless_ThetaEst += omega * SampleTime;
@@ -209,7 +172,7 @@ static inline float calculate_speed(float omega)
     // float           speed1    = 0.0F;
     // float           speed2    = 0.0F;
     float speed = 0.0F;
-    speed_int += radps2rpm(omega) * Sensorless_InvPn * 0.1F;
+    speed_int += radps2rpm(omega) * Motor_InvPn * 0.1F;
     speed_cnt++;
     if (speed_cnt < 0x000AU)
     {
@@ -232,37 +195,92 @@ static inline float calculate_speed(float omega)
 
 MotorState_t Sensorless_Update_Position(void)
 {
-    MotorState_t default_result
-        = {.speed = Sensorless_SpeedEst,
-           .theta = Sensorless_ThetaEst + Sensorless_ThetAdj};
+    MotorState_t default_result = {0};
+    // = {.speed = Sensorless_SpeedEst,
+    //    .theta = Sensorless_ThetaEst + Sensorless_ThetAdj};
     if (!Sensorless_Enabled)
     {
         return default_result;
     }
+
+    return (MotorState_t){.speed = Sensorless_SpeedEst,
+                          .theta = Sensorless_ThetaEst + Sensorless_ThetAdj};
+}
+
+bool Sensorless_Calculate(void)
+{
     float error = 0.0F;
     float omega = 0.0F;
     float speed = 0.0F;
+
+    if (FlyingStartEnabled)
+    {
+        Sensorless_Method = SENSORLESS_START;
+    }
+
     switch (Sensorless_Method)
     {
     case SENSORLESS_START:
-        Sensorless_Method = SENSORLESS_HIGH_LESO;
-
-        error = Leso_Get_PllErr();
-        return default_result;
+        error        = 0.0F;
+        Hfi_Enabled  = false;
+        Leso_Enabled = false;
+        if (!FlyingStartEnabled)
+        {
+            if (Sensorless_SpeedEst > Sensorless_Switch_Speed)
+            {
+                Sensorless_Method = SENSORLESS_HIGH_LESO;
+            }
+            else
+            {
+                Sensorless_Method = SENSORLESS_LOW;
+            }
+        }
         break;
 
     case SENSORLESS_LOW:
-        return default_result;
+        error = Hfi_Error;
+
+        Hfi_Enabled = true;
+
+        Leso_Enabled = fabsf(Foc_Speed_Ramp) >= Sensorless_Threshold_Low;
+        if (fabsf(Foc_Speed_Ramp) > Sensorless_Switch_Speed)
+        {
+            Sensorless_Method = SENSORLESS_LOW2HIGH;
+        }
+        break;
+
+    case SENSORLESS_LOW2HIGH:
+        error = Hfi_Error;
+        if (Foc_Speed_Fdbk > Sensorless_Switch_Speed)
+        {
+            Sensorless_Method = SENSORLESS_HIGH_LESO;
+        }
         break;
 
     case SENSORLESS_HIGH_LESO:
-        error = Leso_Get_PllErr();
+        error = Leso_Error;
+
+        Leso_Enabled = true;
+
+        Hfi_Enabled = fabsf(Foc_Speed_Ramp) <= Sensorless_Threshold_High;
+        if (fabsf(Foc_Speed_Ramp) < Sensorless_Switch_Speed)
+        {
+            Sensorless_Method = SENSORLESS_HIGH2LOW;
+        }
+        break;
+
+    case SENSORLESS_HIGH2LOW:
+        error = Leso_Error;
+        if (Foc_Speed_Fdbk < Sensorless_Switch_Speed)
+        {
+            Sensorless_Method = SENSORLESS_LOW;
+        }
         break;
 
     default:
         Sensorless_Method = SENSORLESS_HIGH_LESO;
 
-        error = Leso_Get_PllErr();
+        error = Leso_Error;
         break;
     }
     omega = pll_update(error, Sensorless_Reset);
@@ -271,59 +289,6 @@ MotorState_t Sensorless_Update_Position(void)
     Leso_Set_Theta(Sensorless_ThetaEst);
     Leso_Set_Speed(speed);
     Hfi_Set_Theta(Sensorless_ThetaEst);
-
-    return (MotorState_t){.speed = Sensorless_SpeedEst,
-                          .theta = Sensorless_ThetaEst + Sensorless_ThetAdj};
-}
-
-static inline void enable_leso(bool enable)
-{
-    if (enable)
-    {
-        if (!Leso_Get_Enabled())
-        {
-            Leso_Set_Enabled(true);
-        }
-    }
-    else
-    {
-        if (Leso_Get_Enabled())
-        {
-            Leso_Set_Enabled(false);
-        }
-    }
-}
-
-static inline void enable_hfi(bool enable)
-{
-    if (enable)
-    {
-        if (!Hfi_Get_Enabled())
-        {
-            Hfi_Set_Enabled(true);
-            float estimate = 0.0F, target = 0.0F, error = 0.0F;
-            estimate = Hfi_Get_Result().theta;
-            target   = Sensorless_ThetaEst;
-            error    = wrap_theta_2pi(target - estimate + PI) - PI;
-            if (error >= M_PI_4 || error <= -M_PI_4)
-            {
-                Hfi_Set_InitialPosition(target);
-            }
-        }
-    }
-    else
-    {
-        if (Hfi_Get_Enabled())
-        {
-            Hfi_Set_Enabled(false);
-        }
-    }
-}
-
-bool Sensorless_Calculate(void)
-{
-    enable_leso(fabsf(Foc_Speed_Ramp) >= Sensorless_Threshold_Leso);
-    enable_hfi(fabsf(Foc_Speed_Ramp) <= Sensorless_Threshold_Hfi);
 
     Hfi_Update();
 

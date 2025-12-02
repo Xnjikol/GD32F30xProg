@@ -44,40 +44,39 @@ bool init_module_foc(void)
 
     PID_Handler_t pid_cfg = {0};
 
-    pid_cfg = (PID_Handler_t){
-        .Kp            = PID_SPEED_LOOP_KP,
-        .Ki            = PID_SPEED_LOOP_KI,
-        .Kd            = PID_SPEED_LOOP_KD,
-        .MaxOutput     = PID_SPEED_LOOP_MAX_OUTPUT,
-        .MinOutput     = PID_SPEED_LOOP_MIN_OUTPUT,
-        .IntegralLimit = PID_SPEED_LOOP_INTEGRAL_LIMIT,
-        .Ts            = PID_SPEED_LOOP_TIME,
-        .Reset         = true,
-        .output        = 0.0F};
+    pid_cfg = (PID_Handler_t){.Kp            = PID_SPEED_LOOP_KP,
+                              .Ki            = PID_SPEED_LOOP_KI,
+                              .Kd            = PID_SPEED_LOOP_KD,
+                              .Max           = PID_SPEED_LOOP_MAX_OUTPUT,
+                              .Min           = PID_SPEED_LOOP_MIN_OUTPUT,
+                              .IntegralLimit = PID_SPEED_LOOP_INTEGRAL_LIMIT,
+                              .Ts            = PID_SPEED_LOOP_TIME,
+                              .Reset         = true,
+                              .output        = 0.0F};
     Foc_Set_Pid_Speed_Handler(&pid_cfg);
 
-    pid_cfg = (PID_Handler_t){
-        .Kp            = PID_CURRENT_D_LOOP_KP,
-        .Ki            = PID_CURRENT_D_LOOP_KI,
-        .Kd            = PID_CURRENT_D_LOOP_KD,
-        .MaxOutput     = PID_CURRENT_D_LOOP_MAX_OUTPUT,
-        .MinOutput     = PID_CURRENT_D_LOOP_MIN_OUTPUT,
-        .IntegralLimit = PID_CURRENT_D_LOOP_INTEGRAL_LIMIT,
-        .Ts            = PID_CURRENT_D_LOOP_TIME,
-        .Reset         = true,
-        .output        = 0.0F};
+    pid_cfg
+        = (PID_Handler_t){.Kp            = PID_CURRENT_D_LOOP_KP,
+                          .Ki            = PID_CURRENT_D_LOOP_KI,
+                          .Kd            = PID_CURRENT_D_LOOP_KD,
+                          .Max           = PID_CURRENT_D_LOOP_MAX_OUTPUT,
+                          .Min           = PID_CURRENT_D_LOOP_MIN_OUTPUT,
+                          .IntegralLimit = PID_CURRENT_D_LOOP_INTEGRAL_LIMIT,
+                          .Ts            = PID_CURRENT_D_LOOP_TIME,
+                          .Reset         = true,
+                          .output        = 0.0F};
     Foc_Set_Pid_CurD_Handler(&pid_cfg);
 
-    pid_cfg = (PID_Handler_t){
-        .Kp            = PID_CURRENT_Q_LOOP_KP,
-        .Ki            = PID_CURRENT_Q_LOOP_KI,
-        .Kd            = PID_CURRENT_Q_LOOP_KD,
-        .MaxOutput     = PID_CURRENT_Q_LOOP_MAX_OUTPUT,
-        .MinOutput     = PID_CURRENT_Q_LOOP_MIN_OUTPUT,
-        .IntegralLimit = PID_CURRENT_Q_LOOP_INTEGRAL_LIMIT,
-        .Ts            = PID_CURRENT_Q_LOOP_TIME,
-        .Reset         = true,
-        .output        = 0.0F};
+    pid_cfg
+        = (PID_Handler_t){.Kp            = PID_CURRENT_Q_LOOP_KP,
+                          .Ki            = PID_CURRENT_Q_LOOP_KI,
+                          .Kd            = PID_CURRENT_Q_LOOP_KD,
+                          .Max           = PID_CURRENT_Q_LOOP_MAX_OUTPUT,
+                          .Min           = PID_CURRENT_Q_LOOP_MIN_OUTPUT,
+                          .IntegralLimit = PID_CURRENT_Q_LOOP_INTEGRAL_LIMIT,
+                          .Ts            = PID_CURRENT_Q_LOOP_TIME,
+                          .Reset         = true,
+                          .output        = 0.0F};
     Foc_Set_Pid_CurQ_Handler(&pid_cfg);
 
     RampGenerator_t ramp_cfg = {.slope     = RAMP_SPEED_SLOPE,
@@ -116,11 +115,8 @@ bool init_module_protect(void)
 
 bool init_module_flying_start(void)
 {
-    FlyingStart_Init(&Fs_Hnd,
-                     SHORT_COUNT,
-                     RELEASE_COUNT,
-                     DELTA_COUNT,
-                     MAIN_LOOP_TIME);
+    FlyingStart_Init(
+        &Fs_Hnd, SHORT_COUNT, RELEASE_COUNT, DELTA_COUNT, MAIN_LOOP_TIME);
     return true;
 }
 
@@ -136,12 +132,11 @@ bool init_module_sensorless(void)
         = {.Kp            = SENSORLESS_PLL_KP,
            .Ki            = SENSORLESS_PLL_KI,
            .Kd            = SENSORLESS_PLL_KD,
-           .MaxOutput     = SENSORLESS_PLL_MAX_OUTPUT,
-           .MinOutput     = SENSORLESS_PLL_MIN_OUTPUT,
+           .Max           = SENSORLESS_PLL_MAX_OUTPUT,
+           .Min           = SENSORLESS_PLL_MIN_OUTPUT,
            .IntegralLimit = SENSORLESS_PLL_INTEGRAL_LIMIT,
            .Ts            = MAIN_LOOP_TIME};
     Sensorless_Set_PidParams(&sensorless_pid);
-    Sensorless_Set_MotorParams(&motor_param);
 
     return true;
 }
@@ -161,8 +156,8 @@ bool init_module_leso(void)
     PID_Handler_t leso_pid = {.Kp            = LESO_PLL_KP,
                               .Ki            = LESO_PLL_KI,
                               .Kd            = LESO_PLL_KD,
-                              .MaxOutput     = LESO_PLL_MAX_OUTPUT,
-                              .MinOutput     = LESO_PLL_MIN_OUTPUT,
+                              .Max           = LESO_PLL_MAX_OUTPUT,
+                              .Min           = LESO_PLL_MIN_OUTPUT,
                               .IntegralLimit = LESO_PLL_INTEGRAL_LIMIT,
                               .Ts            = MAIN_LOOP_TIME};
     Leso_Set_Pid_Handler(leso_pid);
@@ -175,23 +170,21 @@ bool init_module_leso(void)
 
 bool init_module_hfi(void)
 {
-    hf_injection_params_t hfi_param
-        = {.injection_freq    = HF_INJECTION_FREQ,
-           .injection_voltage = HF_INJECTION_AMP,
-           .Ld                = MOTOR_LD,
-           .Lq                = MOTOR_LQ,
-           .delta_L           = MOTOR_LQ - MOTOR_LD,
-           .inv_Pn            = 1.0F / MOTOR_PN};
+    hf_injection_params_t hfi_param = {.injection_freq    = HF_INJECTION_FREQ,
+                                       .injection_voltage = HF_INJECTION_AMP,
+                                       .Ld                = MOTOR_LD,
+                                       .Lq                = MOTOR_LQ,
+                                       .delta_L           = MOTOR_LQ - MOTOR_LD,
+                                       .inv_Pn            = 1.0F / MOTOR_PN};
     Hfi_Initialization(&hfi_param);
 
-    PID_Handler_t hfi_pid_param
-        = {.Kp            = HFI_PLL_KP,
-           .Ki            = HFI_PLL_KI,
-           .Kd            = HFI_PLL_KD,
-           .MaxOutput     = HFI_PLL_MAX_OUTPUT,
-           .MinOutput     = HFI_PLL_MIN_OUTPUT,
-           .IntegralLimit = HFI_PLL_INTEGRAL_LIMIT,
-           .Ts            = HFI_SAMPLE_TIME};
+    PID_Handler_t hfi_pid_param = {.Kp            = HFI_PLL_KP,
+                                   .Ki            = HFI_PLL_KI,
+                                   .Kd            = HFI_PLL_KD,
+                                   .Max           = HFI_PLL_MAX_OUTPUT,
+                                   .Min           = HFI_PLL_MIN_OUTPUT,
+                                   .IntegralLimit = HFI_PLL_INTEGRAL_LIMIT,
+                                   .Ts            = HFI_SAMPLE_TIME};
     Hfi_Set_PidParams(&hfi_pid_param);
 
     return true;

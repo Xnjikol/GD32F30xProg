@@ -64,8 +64,9 @@ void FlyingStart_Update(FS_Handler_t* hnd, Clark_t current)
     switch (hnd->state)
     {
     case FS_STATE_IDLE:
-        Peripheral_Set_Stop(false);
+        Stop     = false;  // 防止程序直接停掉
         ShutFlag = true;
+
         if (current.a <= 0.1F && current.b <= 0.1F)
         {
             hnd->state  = FS_STATE_SHORT1;
@@ -176,7 +177,7 @@ void FlyingStart_Update(FS_Handler_t* hnd, Clark_t current)
         FlyingStartEnabled = false;
         hnd->ExeCnt        = 0;
 
-        if (RestartEnabled && speedI3 >= 400.0F)
+        if (RestartEnabled && speedI3 >= 200.0F)
         {
             Stop     = false;
             Foc_Mode = SPEED;

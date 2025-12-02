@@ -21,6 +21,20 @@ typedef struct
 
 extern bool Leso_Enabled;
 
+extern float Leso_Beta1;
+extern float Leso_Beta2;
+extern float Leso_Rs;
+
+extern float Leso_Gain;
+extern float Leso_Factor;
+extern float Leso_Wc;
+extern float Leso_Wc_Min;
+extern float Leso_Wc_Max;
+extern float Leso_We;
+extern float Leso_Theta;
+extern float Leso_Speed;
+extern float Leso_Error;
+
 /**
  * @brief SMO参数设置与获取接口
  */

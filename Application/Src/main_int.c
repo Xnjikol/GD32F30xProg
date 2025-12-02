@@ -6,6 +6,7 @@
 #include "hardware_interface.h"
 #include "justfloat.h"
 #include "leso.h"
+#include "protect.h"
 #include "reciprocal.h"
 #include "sensorless_interface.h"
 #include "transformation.h"
@@ -32,14 +33,14 @@ static inline void MainInt_Update_FocCurrent(void)
 static inline void MainInt_Check_ProtectFlag(void)
 {
     // 保护检测
-    bool stop = Peripheral_Update_Break();
     if (Foc_Get_Mode() == IDLE)
     {
-        stop = true;
+        Stop = true;
     }
-    Foc_Set_ResetFlag(stop || FlyingStartEnabled);
-    Peripheral_Set_Stop(stop);
-    Sensorless_Reset = stop;
+    Peripheral_Update_Break();
+    Foc_Reset = Stop || FlyingStartEnabled;
+
+    Sensorless_Reset = Stop;
 }
 
 static inline void MainInt_Update_BusVoltage(void)
@@ -136,10 +137,10 @@ static inline void MainInt_Send_Data(void)
 
 static inline void MainInt_Exit(void)
 {
-    Peripheral_Set_Stop(true);       // 停止所有操作
-    Foc_Set_ResetFlag(true);         // 设置复位标志
-    Foc_Set_Mode(IDLE);              // 切换到IDLE模式
-    Peripheral_Reset_ProtectFlag();  // 重置保护标志
+    Stop      = true;      // 停止所有操作
+    Foc_Reset = true;      // 设置复位标志
+    Foc_Mode  = IDLE;      // 切换到IDLE模式
+    Protect_Reset_Flag();  // 重置保护标志
     Peripheral_DisableHardwareProtect();
 }
 
@@ -206,6 +207,8 @@ void Main_Int_Handler(void)
 
     MainInt_SVPWM();
     MainInt_Send_Data();
+
+    Stop_Prev = Stop;
 
     if (MainInt_Calculating)
     {

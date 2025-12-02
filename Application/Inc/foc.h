@@ -41,6 +41,7 @@ extern Park_t    Foc_Idq_Ref;
 extern Park_t    Foc_Idq_Fdbk;
 extern Clark_t   Foc_Uclark_Ref;
 extern Park_t    Foc_Udq_Ref;
+extern bool      Foc_Reset;
 
 extern float Foc_Speed_Ref;
 extern float Foc_Speed_Fdbk;

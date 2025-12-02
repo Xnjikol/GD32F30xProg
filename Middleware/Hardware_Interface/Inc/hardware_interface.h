@@ -9,7 +9,9 @@
 #include "transformation.h"
 
 extern bool Stop;
+extern bool Stop_Prev;
 
+// 作用与Stop相同，但是防止Stop==true后程序不运行
 extern volatile bool ShutFlag;
 
 bool Peripheral_Get_SoftwareBrk(void);

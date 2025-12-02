@@ -202,17 +202,18 @@ void Leso_Update_EmfEstA(void)
     float        leso_err  = 0.0F;
     float        leso_dcur = 0.0F;
 
+    Buffer_Put(Leso_CurEst.a, 0);
+    Buffer_Put(Leso_Current.a, 1);
+
     if (!Leso_Enabled)
     {
         leso_f1a      = 0.0F;
+        Leso_CurEst.a = 0.0F;
         Leso_EmfEst.a = -Motor_Lq * leso_f1a;
         return;
     }
 
     leso_err = Leso_CurEst.a - Leso_Current.a;
-
-    Buffer_Put(Leso_CurEst.a, 0);
-    Buffer_Put(Leso_Current.a, 1);
 
     leso_f0  = -Leso_Current.a * Leso_Rs * Motor_InvLq;
     leso_b0u = Leso_Voltage.a * Motor_InvLq;
@@ -238,17 +239,18 @@ void Leso_Update_EmfEstB(void)
     float        leso_err  = 0.0F;
     float        leso_dcur = 0.0F;
 
+    Buffer_Put(Leso_CurEst.b, 2);
+    Buffer_Put(Leso_Current.b, 3);
+
     if (!Leso_Enabled)
     {
         leso_f1b      = 0.0F;
+        Leso_CurEst.b = 0.0F;
         Leso_EmfEst.b = -Motor_Lq * leso_f1b;
         return;
     }
 
     leso_err = Leso_CurEst.b - Leso_Current.b;
-
-    Buffer_Put(Leso_CurEst.b, 2);
-    Buffer_Put(Leso_Current.b, 3);
 
     leso_f0  = -Leso_Current.b * Leso_Rs * Motor_InvLq;
     leso_b0u = Leso_Voltage.b * Motor_InvLq;
@@ -264,13 +266,6 @@ void Leso_Update_EmfEstB(void)
 
     return;
 }
-
-// static inline float compensate_theta(float theta, float omega) {
-//     // 角度补偿
-//     float comp = 0.0F;
-//     ATAN2(omega, Leso_Gain, &comp);
-//     return theta + comp;
-// }
 
 static inline float pll_update(float error, bool reset)
 {
@@ -350,7 +345,4 @@ static inline float calculate_speed(float omega)
 void Leso_Update(void)
 {
     Leso_Error = calculate_error(Leso_EmfEst, Leso_Theta);
-    // 计算电动势的相位角
-    // float omega = pll_update(Leso_Error, !Leso_Enabled);
-    // Leso_Speed  = calculate_speed(omega);
 }
