@@ -91,11 +91,11 @@ bool Sensorless_Set_PidParams(const PID_Handler_t* pid_handler)
 
 bool Sensorless_Set_Voltage(Clark_t voltage)
 {
-    if (Hfi_Get_Enabled())
+    if (Hfi_Enabled)
     {
     }
 
-    if (Leso_Get_Enabled())
+    if (Leso_Enabled)
     {
         Leso_Set_Voltage(voltage);
     }
@@ -151,6 +151,11 @@ static inline float pll_update(float error, bool reset)
         Sensorless_ThetaEst = 0.0F;
     }
 
+    if (isnanf(omega))
+    {
+        omega = 0.0F;
+    }
+
     Sensorless_ThetaEst += omega * SampleTime;
     if (Sensorless_ThetaEst > M_2PI)
     {
@@ -169,25 +174,16 @@ static inline float calculate_speed(float omega)
 {
     static uint16_t speed_cnt = 0x0000U;
     static float    speed_int = 0.0F;
-    // float           speed1    = 0.0F;
-    // float           speed2    = 0.0F;
-    float speed = 0.0F;
+    float           speed     = 0.0F;
     speed_int += radps2rpm(omega) * Motor_InvPn * 0.1F;
     speed_cnt++;
-    if (speed_cnt < 0x000AU)
+    if (speed_cnt < Speed_Prescaler)
     {
         return Sensorless_SpeedEst;
     }
     speed_cnt = 0x0000U;
-    // speed1 = IIR1stFilter_Update(&Sensorless_SpeedFilter1, speed_int);
-    // speed2 = IIR2ndFilter_Update(&Sensorless_SpeedFilter2, speed_int);
-    speed = IIR2ndFilter_Update(&Sensorless_SpeedFilter2, speed_int);
-    // if (Sensorless_Method == SENSORLESS_LOW2HIGH) {
-    //     speed = speed2;
-    // } else {
-    //     speed = speed2;
-    // }
-    speed_int           = 0.0F;
+    speed     = IIR2ndFilter_Update(&Sensorless_SpeedFilter2, speed_int);
+    speed_int = 0.0F;
     Sensorless_SpeedEst = speed;
 
     return speed;
@@ -196,8 +192,6 @@ static inline float calculate_speed(float omega)
 MotorState_t Sensorless_Update_Position(void)
 {
     MotorState_t default_result = {0};
-    // = {.speed = Sensorless_SpeedEst,
-    //    .theta = Sensorless_ThetaEst + Sensorless_ThetAdj};
     if (!Sensorless_Enabled)
     {
         return default_result;
@@ -279,22 +273,19 @@ bool Sensorless_Calculate(void)
 
     default:
         Sensorless_Method = SENSORLESS_HIGH_LESO;
-
-        error = Leso_Error;
+        error             = Leso_Error;
         break;
     }
     omega = pll_update(error, Sensorless_Reset);
     speed = calculate_speed(omega);
 
-    Leso_Set_Theta(Sensorless_ThetaEst);
-    Leso_Set_Speed(speed);
-    Hfi_Set_Theta(Sensorless_ThetaEst);
+    Leso_Theta = Sensorless_ThetaEst;
+    Leso_Speed = speed;
+    Leso_We    = rpm2radps(speed) * Motor_Pn;
+
+    Hfi_Theta = Sensorless_ThetaEst;
 
     Hfi_Update();
-
-    Leso_Update_Beta();
-    Leso_Update_EmfEstA();
-    Leso_Update_EmfEstB();
     Leso_Update();
 
     Sensorless_Reset_Prev = Sensorless_Reset;

@@ -20,6 +20,7 @@ typedef struct
 } LESO_Param_t;
 
 extern bool Leso_Enabled;
+extern bool Leso_NanFault;
 
 extern float Leso_Beta1;
 extern float Leso_Beta2;
