@@ -76,12 +76,16 @@ bool Leso_Initialization(const LESO_Param_t* param)
 
 void Leso_Set_Inductor(Park_t inductance)
 {
-    float leso_Ld = inductance.d <= 0.001 ? 0.001 : inductance.d;
-    float leso_Lq = inductance.q <= 0.001 ? 0.001 : inductance.q;
+    // float leso_Ld = inductance.d <= 0.001 ? 0.001 : inductance.d;
+    // float leso_Lq = inductance.q <= 0.001 ? 0.001 : inductance.q;
     // float leso_InvLd = 1.0F / leso_Ld;
     // float leso_InvLq = 1.0F / leso_Lq;
+
+    Motor_InvLd = 1.0F / Motor_Ld;
+    Motor_InvLq = 1.0F / Motor_Lq;
+
     Park_t Idq  = ParkeTransform(Leso_Current, Leso_Theta);
-    float  temp = (leso_Ld - leso_Lq) / leso_Lq * Idq.q + Motor_Flux;
+    float  temp = ((Motor_Ld - Motor_Lq) * Idq.d + Motor_Flux) / Motor_InvLq;
     if (temp < 0.0f)
         temp = 0.0f;
     SQRT(temp, &Leso_Factor);
@@ -289,10 +293,6 @@ static inline float calculate_error(Clark_t emf, float angle)
     if (norm > 0.0001F)
     {
         angleErr /= norm;
-    }
-    else
-    {
-        angleErr = 0.0F;
     }
 
     Leso_Error = angleErr;

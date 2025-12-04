@@ -29,11 +29,12 @@ extern "C"
  */
     typedef enum
     {
-        SENSORLESS_START,     /*!< 启动阶段 */
-        SENSORLESS_LOW,       /*!< 高频注入 */
-        SENSORLESS_LOW2HIGH,  /*!< 低速切高速 */
-        SENSORLESS_HIGH2LOW,  /*!< 高速切低速 */
-        SENSORLESS_HIGH_LESO, /*!< 线性扩张状态guan */
+        SENSORLESS_START,       /*!< 启动阶段 */
+        SENSORLESS_FLYINGSTART, /*!< 带速重投启动阶段 */
+        SENSORLESS_LOW,         /*!< 高频注入 */
+        SENSORLESS_LOW2HIGH,    /*!< 低速切高速 */
+        SENSORLESS_HIGH2LOW,    /*!< 高速切低速 */
+        SENSORLESS_HIGH_LESO,   /*!< 线性扩张状态观测器 */
     } sensorless_method_t;
 
     /**

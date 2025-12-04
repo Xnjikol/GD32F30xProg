@@ -177,7 +177,7 @@ void FlyingStart_Update(FS_Handler_t* hnd, Clark_t current)
         FlyingStartEnabled = false;
         hnd->ExeCnt        = 0;
 
-        if (RestartEnabled && speedI3 >= 200.0F)
+        if (RestartEnabled)
         {
             Stop     = false;
             Foc_Mode = SPEED;

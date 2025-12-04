@@ -100,6 +100,15 @@ static inline void MainInt_Initialization(void)
 
 static inline void MainInt_Startup(void)
 {
+    if (FlyingStartEnabled)
+    {
+        Sensorless_Method = SENSORLESS_FLYINGSTART;
+    }
+    else if (!Stop && Stop_Prev)
+    {
+        Sensorless_Method = SENSORLESS_START;
+    }
+
     if (Sensorless_Method == SENSORLESS_START)
     {
         Foc_Set_Mode(STARTUP);

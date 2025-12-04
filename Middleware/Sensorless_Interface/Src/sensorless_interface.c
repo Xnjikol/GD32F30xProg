@@ -7,13 +7,13 @@
  */
 
 #include "sensorless_interface.h"
-
 #include <stdbool.h>
 #include "Buffer.h"
 #include "FlyingStart.h"
 #include "filter.h"
 #include "flying.h"
 #include "foc.h"
+#include "hardware_interface.h"
 #include "hf_injection.h"
 #include "leso.h"
 #include "motor.h"
@@ -156,6 +156,11 @@ static inline float pll_update(float error, bool reset)
         omega = 0.0F;
     }
 
+    if (isinff(omega))
+    {
+        omega = 0.0F;
+    }
+
     Sensorless_ThetaEst += omega * SampleTime;
     if (Sensorless_ThetaEst > M_2PI)
     {
@@ -207,14 +212,9 @@ bool Sensorless_Calculate(void)
     float omega = 0.0F;
     float speed = 0.0F;
 
-    if (FlyingStartEnabled)
-    {
-        Sensorless_Method = SENSORLESS_START;
-    }
-
     switch (Sensorless_Method)
     {
-    case SENSORLESS_START:
+    case SENSORLESS_FLYINGSTART:
         error        = 0.0F;
         Hfi_Enabled  = false;
         Leso_Enabled = false;
@@ -234,10 +234,11 @@ bool Sensorless_Calculate(void)
     case SENSORLESS_LOW:
         error = Hfi_Error;
 
-        Hfi_Enabled = true;
+        Hfi_Enabled  = true;
+        Leso_Enabled = false;
 
-        Leso_Enabled = fabsf(Foc_Speed_Ramp) >= Sensorless_Threshold_Low;
-        if (fabsf(Foc_Speed_Ramp) > Sensorless_Switch_Speed)
+        // Leso_Enabled = fabsf(Foc_Speed_Ramp) >= Sensorless_Threshold_Low;
+        if (fabsf(Foc_Speed_Fdbk) >= Sensorless_Switch_Speed)
         {
             Sensorless_Method = SENSORLESS_LOW2HIGH;
         }
@@ -245,19 +246,28 @@ bool Sensorless_Calculate(void)
 
     case SENSORLESS_LOW2HIGH:
         error = Hfi_Error;
-        if (Foc_Speed_Fdbk > Sensorless_Switch_Speed)
+
+        Hfi_Enabled  = true;
+        Leso_Enabled = true;
+
+        if (fabsf(Foc_Speed_Fdbk) > Sensorless_Threshold_High)
         {
             Sensorless_Method = SENSORLESS_HIGH_LESO;
+        }
+        if (fabsf(Foc_Speed_Fdbk) < Sensorless_Threshold_Low)
+        {
+            Sensorless_Method = SENSORLESS_LOW;
         }
         break;
 
     case SENSORLESS_HIGH_LESO:
         error = Leso_Error;
 
+        Hfi_Enabled  = false;
         Leso_Enabled = true;
 
-        Hfi_Enabled = fabsf(Foc_Speed_Ramp) <= Sensorless_Threshold_High;
-        if (fabsf(Foc_Speed_Ramp) < Sensorless_Switch_Speed)
+        // Hfi_Enabled = fabsf(Foc_Speed_Ramp) <= Sensorless_Threshold_High;
+        if (fabsf(Foc_Speed_Ramp) <= Sensorless_Switch_Speed)
         {
             Sensorless_Method = SENSORLESS_HIGH2LOW;
         }
@@ -265,7 +275,15 @@ bool Sensorless_Calculate(void)
 
     case SENSORLESS_HIGH2LOW:
         error = Leso_Error;
-        if (Foc_Speed_Fdbk < Sensorless_Switch_Speed)
+
+        Hfi_Enabled  = true;
+        Leso_Enabled = true;
+
+        if (fabsf(Foc_Speed_Fdbk) > Sensorless_Threshold_High)
+        {
+            Sensorless_Method = SENSORLESS_HIGH_LESO;
+        }
+        if (fabsf(Foc_Speed_Fdbk) < Sensorless_Threshold_Low)
         {
             Sensorless_Method = SENSORLESS_LOW;
         }

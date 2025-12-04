@@ -61,12 +61,12 @@
 /*                        电机物理参数                                 */
 /*********************************************************************/
 /* 电机电气参数 */
-#define MOTOR_RS   1.15F              /* 定子电阻 (Ω) */
-#define MOTOR_LD   3.2E-3F            /* d轴电感 (H) */
-#define MOTOR_LQ   3.2E-3F            /* q轴电感 (H) */
-#define MOTOR_FLUX 0.377197215127792F /* 永磁体磁链 (Wb) */
-#define MOTOR_PN   4.0F               /* 电机极对数 */
-#define MOTOR_J    0.0038F            /* 转动惯量 (kg·m²) */
+#define MOTOR_RS   1.15F   /* 定子电阻 (Ω) */
+#define MOTOR_LD   3.2E-3F /* d轴电感 (H) */
+#define MOTOR_LQ   3.2E-3F /* q轴电感 (H) */
+#define MOTOR_FLUX 0.38F   /* 永磁体磁链 (Wb) */
+#define MOTOR_PN   4.0F    /* 电机极对数 */
+#define MOTOR_J    0.0038F /* 转动惯量 (kg·m²) */
 
 /* 位置传感器配置 */
 #ifdef RESOLVER_POSITION
