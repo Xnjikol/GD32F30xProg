@@ -42,23 +42,23 @@
             },
             "command": "",
             "args": [
-                "${workspaceFolder}/Tools/a2ltool.exe",
+                "${workspaceFolder}\\Tools\\a2ltool.exe",
                 "--create",
                 "--elffile",
-                "build/${workspaceFolderBasename}.elf",
+                "build\\${workspaceFolderBasename}.elf",
                 "--measurement-regex",
                 ".*",
                 "--a2lversion",
                 "1.5.0",
                 "--output",
-                "build/${workspaceFolderBasename}.a2l",
+                "build\\${workspaceFolderBasename}.a2l",
                 "&&",
                 "python",
-                "Tools/A2LFilter.py",
+                "Tools\\A2LFilter.py",
                 "--input",
-                "build/${workspaceFolderBasename}.a2l",
+                "build\\${workspaceFolderBasename}.a2l",
                 "--output",
-                "build/${workspaceFolderBasename}.a2l"
+                "build\\${workspaceFolderBasename}.a2l"
             ],
             "group": {
                 "kind": "build",
@@ -82,10 +82,10 @@
                 "/c",
                 "if",
                 "exist",
-                "build/${workspaceFolderBasename}.elf",
+                "build\\${workspaceFolderBasename}.elf",
                 "del",
                 "/f",
-                "build/${workspaceFolderBasename}.elf"
+                "build\\${workspaceFolderBasename}.elf"
             ],
             "problemMatcher": []
         },
@@ -115,7 +115,7 @@
                 },
                 "cwd": "${workspaceFolder}"
             },
-            "command": "JLink.exe -CommanderScript Tools/flash.jlink",
+            "command": "JLink.exe -CommanderScript Tools\\flash.jlink",
             "group": {
                 "kind": "build",
                 "isDefault": false

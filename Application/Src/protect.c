@@ -2,12 +2,12 @@
 #include <stdbool.h>
 #include <stdint.h>
 
-//static bool           Protect_Enable     = false;
-static float          Protect_BusVolRate = 0.0F;
-static float          Protect_BusVolFluc = 0.0F;
-static float          Protect_CurrentMax = 0.0F;
-static float          Protect_TempMax    = 0.0F;
-static Protect_Flag_t Protect_Flag       = {0};
+//bool           Protect_Enable     = false;
+float          Protect_BusVolRate = 0.0F;
+float          Protect_BusVolFluc = 0.0F;
+float          Protect_CurrentMax = 0.0F;
+float          Protect_TempMax    = 0.0F;
+Protect_Flag_t Protect_Flag       = {0};
 
 bool Protect_Initialization(const Protect_Parameter_t* param)
 {

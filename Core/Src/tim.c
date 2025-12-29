@@ -43,7 +43,7 @@ void TIM0_PWM_Init(uint16_t prescaler, uint32_t period, uint32_t deadtime_ns)
     oc_param.ocidlestate  = TIMER_OC_IDLE_STATE_HIGH;
     oc_param.ocnidlestate = TIMER_OCN_IDLE_STATE_HIGH;
 
-    for (int ch = TIMER_CH_0; ch <= TIMER_CH_2; ch++)
+    for (int ch = TIMER_CH_0; ch <= TIMER_CH_3; ch++)
     {
         timer_channel_output_config(TIMER0, ch, &oc_param);
         timer_channel_output_mode_config(
@@ -77,7 +77,7 @@ void TIM0_PWM_Init(uint16_t prescaler, uint32_t period, uint32_t deadtime_ns)
               GPIO_MODE_AF_PP,
               GPIO_OSPEED_50MHZ,
               GPIO_PIN_8 | GPIO_PIN_9 | GPIO_PIN_10 | GPIO_PIN_11 | GPIO_PIN_12
-                  | GPIO_PIN_13);
+                  | GPIO_PIN_13 | GPIO_PIN_14);
 
     gpio_init(GPIOE,
               GPIO_MODE_IN_FLOATING,

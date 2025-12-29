@@ -16,10 +16,9 @@ extern volatile bool ShutFlag;
 
 bool Peripheral_Get_SoftwareBrk(void);
 bool Peripheral_Get_HardwareBrk(void);
-void Peripheral_Set_Stop(bool stop);
-bool Peripheral_Get_Stop(void);
 bool Peripheral_Update_Break(void);
 void Peripheral_Set_PWMChangePoint(Phase_t tcm);
+void Peripheral_Set_BrkRatio(float ratio);
 
 bool Peripheral_CANSend(const can_frame_t* frame);
 bool Peripheral_CANReceive(can_frame_t* frame);

@@ -61,12 +61,12 @@
 /*                        电机物理参数                                 */
 /*********************************************************************/
 /* 电机电气参数 */
-#define MOTOR_RS   1.15F   /* 定子电阻 (Ω) */
-#define MOTOR_LD   3.2E-3F /* d轴电感 (H) */
-#define MOTOR_LQ   3.2E-3F /* q轴电感 (H) */
-#define MOTOR_FLUX 0.38F   /* 永磁体磁链 (Wb) */
-#define MOTOR_PN   4.0F    /* 电机极对数 */
-#define MOTOR_J    0.0038F /* 转动惯量 (kg·m²) */
+#define MOTOR_RS   1.15F              /* 定子电阻 (Ω) */
+#define MOTOR_LD   3.2E-3F            /* d轴电感 (H) */
+#define MOTOR_LQ   3.2E-3F            /* q轴电感 (H) */
+#define MOTOR_FLUX 0.377197215127792F /* 永磁体磁链 (Wb) */
+#define MOTOR_PN   4.0F               /* 电机极对数 */
+#define MOTOR_J    0.0038F            /* 转动惯量 (kg·m²) */
 
 /* 位置传感器配置 */
 #ifdef RESOLVER_POSITION
@@ -94,10 +94,10 @@
 /*********************************************************************/
 /* 电压保护参数 */
 #define PROTECT_VOLTAGE_RATE        560.0F /* 额定电压 (V) */
-#define PROTECT_VOLTAGE_FLUCTUATION 60.0F  /* 允许电压波动 (V) */
+#define PROTECT_VOLTAGE_FLUCTUATION 160.0F /* 允许电压波动 (V) */
 
 /* 电流和温度保护参数 */
-#define PROTECT_CURRENT_MAX 30.0F /* 最大电流限制 (A) */
+#define PROTECT_CURRENT_MAX 50.0F /* 最大电流限制 (A) */
 #define PROTECT_TEMPERATURE 80.0F /* 最高温度限制 (℃) */
 
 /*********************************************************************/

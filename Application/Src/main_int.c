@@ -16,6 +16,8 @@ volatile bool     MainInt_UseRealTheta = true;
 volatile bool     MainInt_Calculating  = false;
 // volatile uint16_t MainInt_DataFlag     = 0x000U;
 
+float MainInt_BrkDuty = 0.0F;
+
 static inline void MainInt_Update_FocCurrent(void)
 {
     Foc_IPhase = Peripheral_Get_PhaseCurrent();
@@ -70,13 +72,13 @@ static inline void MainInt_Update_Angle_and_Speed(void)
     {
         res = real;
     }
-    else if (Foc_Speed_Ramp >= Sensorless_Switch_Speed)
-    {
-        res = est;
-    }
+    // else if (Foc_Speed_Ramp < Sensorless_Switch_Speed)
+    // {
+    //     res = real;
+    // }
     else
     {
-        res = real;
+        res = est;
     }
 
     Foc_Speed_Fdbk = res.speed;
@@ -165,6 +167,23 @@ static inline void MainInt_SVPWM(void)
     Peripheral_Set_PWMChangePoint(tcm);
 }
 
+static inline void MainInt_Update_BrkDuty(void)
+{
+    if (Foc_BusVoltage >= MAIN_INT_BRK_VOLTAGE)
+    {
+        MainInt_BrkDuty = (Foc_BusVoltage - MAIN_INT_BRK_VOLTAGE) / 80.0F;
+        if (MainInt_BrkDuty > 1.0F)
+        {
+            MainInt_BrkDuty = 1.0F;
+        }
+    }
+    else
+    {
+        MainInt_BrkDuty = 0.0F;
+    }
+    Peripheral_Set_BrkRatio(MainInt_BrkDuty);
+}
+
 /*!
     \brief      主中断函数
     \param[in]  none
@@ -215,6 +234,7 @@ void Main_Int_Handler(void)
     }
 
     MainInt_SVPWM();
+    MainInt_Update_BrkDuty();
     MainInt_Send_Data();
 
     Stop_Prev = Stop;

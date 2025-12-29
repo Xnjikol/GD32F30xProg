@@ -14,19 +14,21 @@ static float    adc_ch0_offset = 0;
 static float    adc_ch1_offset = 0;
 static float    adc_ch2_offset = 0;
 
-void Adc_Calibrate_CurrentOffset(void) {
-    for (uint16_t offset_count = 0; offset_count < 2000;
-         offset_count++) {
+void Adc_Calibrate_CurrentOffset(void)
+{
+    for (uint16_t offset_count = 0; offset_count < 2000; offset_count++)
+    {
         float adc_value_ch0 = (float)(ADC_IDATA0(ADC0) & 0xFFFF);
         float adc_value_ch1 = (float)(ADC_IDATA1(ADC0) & 0xFFFF);
         float adc_value_ch2 = (float)(ADC_IDATA2(ADC0) & 0xFFFF);
-        adc_ch0_offset = 0.05f * adc_value_ch0 + 0.95f * adc_ch0_offset;
-        adc_ch1_offset = 0.05f * adc_value_ch1 + 0.95f * adc_ch1_offset;
-        adc_ch2_offset = 0.05f * adc_value_ch2 + 0.95f * adc_ch2_offset;
+        adc_ch0_offset      = 0.05f * adc_value_ch0 + 0.95f * adc_ch0_offset;
+        adc_ch1_offset      = 0.05f * adc_value_ch1 + 0.95f * adc_ch1_offset;
+        adc_ch2_offset      = 0.05f * adc_value_ch2 + 0.95f * adc_ch2_offset;
     }
 }
 
-void Adc_Get_ThreePhaseCurrent(float* Ia, float* Ib, float* Ic) {
+void Adc_Get_ThreePhaseCurrent(float* Ia, float* Ib, float* Ic)
+{
     // 读取注入通道数据
     float adc_value_ch0 = (float)(ADC_IDATA0(ADC0) & 0xFFFF);
     float adc_value_ch1 = (float)(ADC_IDATA1(ADC0) & 0xFFFF);
@@ -35,12 +37,14 @@ void Adc_Get_ThreePhaseCurrent(float* Ia, float* Ib, float* Ic) {
     // 计算实际电流值
     //> 电流正方向为流出控制器，流入电机 <//
     //< ( 8*1.1*Inom<17> / sqrt(2)*4095 ) = 0.025832277036754 >//
-    *Ia = 0.025832277036754f * (adc_value_ch0 - adc_ch0_offset);
-    *Ib = 0.025832277036754f * (adc_value_ch1 - adc_ch1_offset);
-    *Ic = 0.025832277036754f * (adc_value_ch2 - adc_ch2_offset);
+    //< ( 8*1.1*Inom<45> / sqrt(2)*4095 ) = 0.0683795568619958 >//
+    *Ia = 0.0683795568619958f * (adc_value_ch0 - adc_ch0_offset);
+    *Ib = 0.0683795568619958f * (adc_value_ch1 - adc_ch1_offset);
+    *Ic = 0.0683795568619958f * (adc_value_ch2 - adc_ch2_offset);
 }
 
-void Adc_Init_DMA(void) {
+void Adc_Init_DMA(void)
+{
     /* ADC_DMA_channel configuration */
     dma_parameter_struct dma_data_parameter;
 
@@ -67,7 +71,8 @@ void Adc_Init_DMA(void) {
     dma_channel_enable(DMA0, DMA_CH0);
 }
 
-void Adc_Init_GPIO(void) {
+void Adc_Init_GPIO(void)
+{
     /* 启用 ADC 时钟 */
     rcu_periph_clock_enable(RCU_ADC0);
     rcu_adc_clock_config(RCU_CKADC_CKAPB2_DIV4);
@@ -128,31 +133,34 @@ void Adc_Init_GPIO(void) {
     adc_dma_mode_enable(ADC0);
 
     /* 触发规则通道 */
-    adc_software_trigger_enable(
-        ADC0, ADC_REGULAR_CHANNEL);  // 触发一次即开始连续采样
+    adc_software_trigger_enable(ADC0,
+                                ADC_REGULAR_CHANNEL);  // 触发一次即开始连续采样
 }
 
 /* initialize ADC */
-void Adc_Initialization(void) {
+void Adc_Initialization(void)
+{
     //< For ADC DMA, DMA must be initialized before ADC >//
     Adc_Init_DMA();
     Adc_Init_GPIO();
 }
 
-float Adc_Get_Temperature(void) {
+float Adc_Get_Temperature(void)
+{
     Adc_Temperature = adc_to_temp(adc_value[1] & 0xFFFF);
     return Adc_Temperature;
 }
 
-float Adc_Get_VoltageBus(void) {
+float Adc_Get_VoltageBus(void)
+{
     dc_raw         = adc_value[0] & 0xFFFF;
     Adc_VoltageBus = 0.2686202686202686f * ((float)dc_raw - 88.0f);
     return Adc_VoltageBus;
 }
 
-float Adc_Get_VoltageBusInv(void) {
+float Adc_Get_VoltageBusInv(void)
+{
     float bus_voltage_inv = 1.0F / Adc_VoltageBus;
-    Adc_VoltageBusInv
-        = bus_voltage_inv > 0.01F ? 0.0F : bus_voltage_inv;
+    Adc_VoltageBusInv     = bus_voltage_inv > 0.01F ? 0.0F : bus_voltage_inv;
     return Adc_VoltageBusInv;
 }

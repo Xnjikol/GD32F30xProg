@@ -3,6 +3,8 @@
 
 #include <stdbool.h>
 
+#define MAIN_INT_BRK_VOLTAGE 620.0F
+
 typedef enum
 {
     INIT,        // 基础初始化：仅获取系统参数

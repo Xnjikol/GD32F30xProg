@@ -14,4 +14,9 @@ static inline void Set_PWM_Compare(float Tcm1, float Tcm2, float Tcm3)
     TIMER_CH2CV(TIMER0) = (uint32_t)((float)(TIMER_CAR(TIMER0) + 1) * Tcm3);
 }
 
+static inline void Set_Brk_Compare(float Tcm)
+{
+    TIMER_CH3CV(TIMER0) = (uint32_t)((float)(TIMER_CAR(TIMER0) + 1) * Tcm);
+}
+
 #endif /* _TIM0_H_ */

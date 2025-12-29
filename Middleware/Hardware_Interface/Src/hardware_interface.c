@@ -135,6 +135,25 @@ void Peripheral_Set_PWMChangePoint(Phase_t tcm)
     Set_PWM_Compare(tcm.a, tcm.b, tcm.c);
 }
 
+void Peripheral_Set_BrkRatio(float ratio)
+{
+    if (ratio > 1.0F)
+    {
+        ratio = 1.0F;
+    }
+    else if (ratio < 0.0F)
+    {
+        ratio = 0.0F;
+    }
+
+    if (ratio <= 0.05F)
+    {
+        ratio = 0.0F;
+    }
+
+    Set_Brk_Compare(1.0F - ratio);
+}
+
 FloatWithInv_t Peripheral_UpdateUdc(void)
 {
     float voltage_bus     = Adc_Get_VoltageBus();

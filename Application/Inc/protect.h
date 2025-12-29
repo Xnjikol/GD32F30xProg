@@ -23,7 +23,8 @@
  * @brief  电机保护标志位枚举
  * @note   使用位域方式定义，便于进行位操作和状态合并
  */
-typedef enum {
+typedef enum
+{
     No_Protect       = 0,      /* 无保护标志 */
     Over_Avg_Current = 1 << 0, /* 过流保护 */
     Over_Max_Current = 1 << 1, /* 超过最大允许电流 */
@@ -38,13 +39,20 @@ typedef enum {
  * @brief  电机保护参数结构体
  * @note   用于配置保护阈值和标志位
  */
-typedef struct {
+typedef struct
+{
     float          Udc_rate;        /* 额定母线电压值(V) */
     float          Udc_fluctuation; /* 允许的电压波动范围(V) */
     float          I_Max;           /* 最大允许电流值(A) */
     float          Temperature;     /* 温度阈值(℃) */
     Protect_Flag_t Flag;            /* 保护标志位 */
 } Protect_Parameter_t;
+
+extern float          Protect_BusVolRate;
+extern float          Protect_BusVolFluc;
+extern float          Protect_CurrentMax;
+extern float          Protect_TempMax;
+extern Protect_Flag_t Protect_Flag;
 
 /*-------------------- 保护功能函数声明 --------------------*/
 /**
