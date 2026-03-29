@@ -137,7 +137,7 @@ static inline float clamp_f32(float val, float min, float max)
 
 void Leso_Update_Beta(void)
 {
-    Leso_Wc = Leso_Gain * Leso_Factor * Leso_We;
+    Leso_Wc = Leso_Gain * Leso_Factor * fabsf(Leso_We);
     if (Leso_Wc > Leso_Wc_Max)
     {
         Leso_Wc = Leso_Wc_Max;
@@ -287,6 +287,7 @@ static inline float calculate_error(Clark_t emf, float angle)
     errorAlpha = -emf.a * cos_leso;
     errorBeta  = emf.b * sin_leso;
     angleErr   = errorAlpha - errorBeta;
+    angleErr *= Leso_We >= 0 ? 1.0F : -1.0F;
 
     float norm = 0.0F;
     SQRT(emf.a * emf.a + emf.b * emf.b, &norm);

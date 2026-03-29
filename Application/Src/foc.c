@@ -323,8 +323,8 @@ Park_t Foc_Update_Main(void)
     }
     case STARTUP:
     {
-        output.d = 5.0F;  // D轴电压参考为5
-        output.q = 0.0F;  // Q轴电压参考为0
+        output.d = 10.0F;  // D轴电压参考为5
+        output.q = 0.0F;   // Q轴电压参考为0
         break;
     }
     case SPEED:

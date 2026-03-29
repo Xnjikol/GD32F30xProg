@@ -9,7 +9,7 @@
         "--log=verbose"
     ],
     "C_Cpp.default.compilerPath": "arm-none-eabi-gcc.exe",
-    "C_Cpp.default.intelliSenseMode": "gcc-arm",
+    "C_Cpp.default.intelliSenseMode": "clang-arm",
     "C_Cpp.default.cStandard": "c11",
     "C_Cpp.default.compileCommands": "${workspaceFolder}/build/compile_commands.json",
     "C_Cpp.codeAnalysis.clangTidy.enabled": true,

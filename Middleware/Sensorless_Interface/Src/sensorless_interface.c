@@ -231,6 +231,19 @@ bool Sensorless_Calculate(void)
         }
         break;
 
+    case SENSORLESS_START:
+        static uint16_t start_cnt = 0x0000U;
+        start_cnt++;
+
+        error = Hfi_Error;
+
+        if (start_cnt >= 10U)
+        {
+            Sensorless_Method = SENSORLESS_LOW;
+            start_cnt         = 0x0000U;
+        }
+        break;
+
     case SENSORLESS_LOW:
         error = Hfi_Error;
 
